@@ -1,0 +1,47 @@
+#ifndef __LANGUAGE__FUNCTION_H_
+#define __LANGUAGE__FUNCTION_H_ 1
+
+#include "../SourceToken.h"
+#include "Variable.h"
+#include "Token.h"
+#include <memory>
+#include <vector>
+
+using SourceTokenList = std::vector<SourceToken>;
+using TokenList = std::vector<std::shared_ptr<Language::Token>>;
+
+namespace Language
+{
+
+    struct Function : public Token
+    {
+        VariableType ReturnType;
+        std::string ReturnValue;
+        std::string ReturnVariableName;
+
+        std::vector<std::shared_ptr<Variable>> mParameters;
+        SourceTokenList mInnerTokens;
+        TokenList mTokens;
+
+        /**
+         * @brief Construct a new `Function` object
+         */
+        Function();
+
+        /**
+         * @brief Parse the current inner tokens
+         */
+        void ParseTokens(TokenList& globalTokens);
+
+        /**
+         * @returns The string representation of this `Function`
+         */
+        std::string ToString() override;
+    
+    private:
+        bool FunctionReturnRequested();
+    };
+
+}
+
+#endif

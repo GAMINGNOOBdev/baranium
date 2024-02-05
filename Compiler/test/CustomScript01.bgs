@@ -1,0 +1,104 @@
+#
+# This is a custom test script that is only here to test if compiling and
+# interpreting the produced binaries works
+#
+
+#
+# Note: Scripts only get executed when they are attached to a game object or when invoked to run directly by the runtime
+# Another note: This project will get uploaded to github once it's finished and working
+#
+
+# an example for including a library
++include Library0.bgs
+
+# an example for including multiple files at once
+# note that there are no spaces between the comma and the filenames, this is optional
++include Library1.bgs,Library2.bgs,Library3.bgs
+
+# fields
+field gameobject myObject = ATTACHED;   # ATTACHED should just get the object on which
+                                        # this script is attached, if not attached to an
+                                        # object or run directly by the user it will be
+                                        # set to null
+
+field float EnemySpawnRate;             # if no initialization is done when creating a
+                                        # field or variable, it will default to 'null'
+
+# examples for globally accessible variables
+string TestString = "this is some random string value";
+
+# quick note: variables and fields that are global cannot be initialized with function calls
+#             instead they have to either hold a specific value or stay uninitialized until
+#             they are initialized inside a function or externally set in case of fields
+
+# functions
+define moveObject()
+{
+    # variables
+    float variable0 = 10.0;
+    int variable1 = -10;
+    uint variable2 = 10;
+    gameobject object = myObject;
+    # vec2 position2D = vec2(0,0);
+    # vec3 position3D = vec3(0,0,0);
+    # vec4 color4D = vec4(0,0,0,1.0);
+
+    #
+    # assignment of variables using functions
+    #
+    # position3D = getPostion3D(object); # getPosition3D is a builtin function
+
+    #
+    # builtin functions
+    #
+    warning("Warning! This is a test warning!");
+    debug("int");
+    error("Error! This is a test error!");
+
+    if (object == null)
+        return;
+    else if (object != ATTACHED)
+        return;
+    else
+        return;
+
+    #if (variable1 + variable2 + variable0 == 10)
+    #{
+    #    debug("wow this actually works!");
+    #    return;
+    #}
+    #else
+    #{
+    #    error("ah crap");
+    #    return;
+    #}
+
+    #
+    # builtin special functions
+    #
+    move(object, 10, -5, 7);        # move an object
+    rotate(object, -90, 0, 0);      # rotate an object
+    scale(object, 0.5, 0.5, 0.5);   # scale an object
+
+    #
+    # builtin keywords/functions for object/script management
+    #
+    instantiate object;             # create new objects in the scene, will default
+                                    # it's position to the origin of 0,0,0
+    attach object;                  # as the name suggests, attach this script to another object
+    detach object;                  # as the name suggests, detach this script from the object
+    delete object;                  # deletes an object and therefore all attachments it has
+}
+
+define update(float delta)
+{
+    # function calls
+    moveObject();
+
+    return;
+}
+
+define f(float x, float y, float z, int w, gameobject object)
+{
+    return w;
+}
