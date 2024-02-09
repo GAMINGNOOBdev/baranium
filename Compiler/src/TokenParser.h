@@ -117,6 +117,24 @@ struct TokenParser
      */
     static std::string ParseVariableValue(SourceTokenList tokens, Language::VariableType varType);
 
+    /**
+     * @brief Read contents (i.e. if/else statements and loops, expressions) that
+     *        start with a specific type of token and have a corresponding ending token
+     * 
+     * @note Will have to be called once it is identified that there are contents,
+     *       meaning the next token will NOT be of type `startType`
+     * 
+     * @param index Index of the current token
+     * @param startType Token type of the start
+     * @param endType Token type of the end
+     * @param tokens List of all tokens including the start and end one
+     * @param output The output list of all tokens that are considered as content
+     * 
+     * @returns `true` when the depth is the same as when it was in the beginning,
+     *          otherwise `false? 
+     */
+    static bool ReadContentUsingDepth(int& index, SourceToken::Type startType, SourceToken::Type endType, SourceTokenList tokens, SourceTokenList& output);
+
 private:
     static void WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::string indentation = std::string());
 

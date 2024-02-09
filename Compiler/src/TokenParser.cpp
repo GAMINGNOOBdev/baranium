@@ -250,15 +250,12 @@ bool TokenParser::ReadExpression(int& index, SourceToken& current, SourceTokenLi
 
     auto& nextToken = tokens.at(index);
     expression->mInnerTokens.push_back(nextToken);
-    while (nextToken.mType != SourceToken::Type::Semicolon && index+1 < tokens.size())
+    if (!ReadContentUsingDepth(index, SourceToken::Type::Invalid, SourceToken::Type::Semicolon, tokens, expression->mInnerTokens))
     {
-        index++;
-        nextToken = tokens.at(index);
-        expression->mInnerTokens.push_back(nextToken);
+        Logging::Log(stringf("Line %d: Expected a ';' at the end", nextToken.LineNumber), Logging::Level::Error);
+        Logging::Dispose();
+        exit(-1);
     }
-
-    // to remove the last pushed semicolon
-    expression->mInnerTokens.pop_back();
 
     expression->Identify(output, globalTokens);
 
@@ -344,15 +341,12 @@ functionReadContents:
         exit(-1);
     }
 
-    while (functionContents.mType != SourceToken::Type::CurlyBracketClose && index+1 < tokens.size())
+    if (!ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, function->mInnerTokens))
     {
-        index++;
-        functionContents = tokens.at(index);
-        function->mInnerTokens.push_back(functionContents);
+        Logging::Log(stringf("Line %d: Invalid contents for function contents, invalid content depth", functionContents.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
     }
-
-    // to remove the last curly bracket
-    function->mInnerTokens.pop_back();
 
     function->ParseTokens(output);
 
@@ -385,15 +379,12 @@ void TokenParser::ReadIfStatement(int& index, SourceToken& current, SourceTokenL
     index++;
     auto& nextToken = tokens.at(index);
     ifElseStatement->Condition.mInnerTokens.push_back(nextToken);
-    while (nextToken.mType != SourceToken::Type::ParenthesisClose && index+1 < tokens.size())
+    if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, ifElseStatement->Condition.mInnerTokens))
     {
-        index++;
-        nextToken = tokens.at(index);
-        ifElseStatement->Condition.mInnerTokens.push_back(nextToken);
+        Logging::Log(stringf("Line %d: Invalid condition contents for if-statement", nextToken.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
     }
-
-    // to remove the last pushed closing parenthesis
-    ifElseStatement->Condition.mInnerTokens.pop_back();
 
     ifElseStatement->Condition.Identify(output, globalTokens);
 
@@ -413,15 +404,15 @@ void TokenParser::ReadIfStatement(int& index, SourceToken& current, SourceTokenL
     goto readNextPart;
 
 readStatementContents:
-    while (nextToken.mType != SourceToken::Type::CurlyBracketClose && index+1 < tokens.size())
+    if (!ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, ifElseStatement->mInnerTokens))
     {
-        index++;
         nextToken = tokens.at(index);
-        ifElseStatement->mInnerTokens.push_back(nextToken);
+        Logging::Log(stringf("Line %d: Invalid contents for if-statement, invalid content depth", nextToken.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
     }
 
-    // to remove the last pushed closing curly bracket
-    ifElseStatement->mInnerTokens.pop_back();
+    goto readNextPart;
 
 readNextPart:
     if (index+1 < tokens.size())
@@ -446,15 +437,12 @@ readAlternativeConditions:
     }
 
     alternativeCondition = Language::IfElseStatement();
-    while (nextToken.mType != SourceToken::Type::ParenthesisClose && index+1 < tokens.size())
+    if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, alternativeCondition.Condition.mInnerTokens))
     {
-        index++;
-        nextToken = tokens.at(index);
-        alternativeCondition.Condition.mInnerTokens.push_back(nextToken);
+        Logging::Log(stringf("Line %d: Invalid condition contents for if-statement", nextToken.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
     }
-
-    // to remove the last pushed closing parenthesis
-    alternativeCondition.Condition.mInnerTokens.pop_back();
 
     alternativeCondition.Condition.Identify(output, globalTokens);
 
@@ -474,15 +462,13 @@ readAlternativeConditions:
     goto endAlternateCondition;
 
 readAlternaticeConditionContents:
-    while (nextToken.mType != SourceToken::Type::CurlyBracketClose && index+1 < tokens.size())
+    if (!ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, alternativeCondition.mInnerTokens))
     {
-        index++;
         nextToken = tokens.at(index);
-        alternativeCondition.mInnerTokens.push_back(nextToken);
+        Logging::Log(stringf("Line %d: Invalid contents for else-if-statement, invalid content depth", nextToken.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
     }
-
-    // to remove the last pushed closing curly bracket
-    alternativeCondition.mInnerTokens.pop_back();
     alternativeCondition.ParseTokens(output, globalTokens);
 
     goto endAlternateCondition;
@@ -513,15 +499,15 @@ readElse:
     goto readElseEnd;
 
 readElseContents:
-    while (nextToken.mType != SourceToken::Type::CurlyBracketClose && index+1 < tokens.size())
+    if (!ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, elseStatement.mInnerTokens))
     {
-        index++;
         nextToken = tokens.at(index);
-        elseStatement.mInnerTokens.push_back(nextToken);
+        Logging::Log(stringf("Line %d: Invalid contents for else-statement, invalid content depth", nextToken.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
     }
 
-    // to remove the last pushed closing curly bracket
-    elseStatement.mInnerTokens.pop_back();
+    goto readElseEnd;
 
 readElseEnd:
 
@@ -753,6 +739,47 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
     }
 
     return "null";
+}
+
+/**
+ * @brief Read contents (i.e. if/else statements and loops, expressions) that
+ *        start with a specific type of token and have a corresponding ending token
+ * 
+ * @note Will have to be called once it is identified that there are contents,
+ *       meaning the next token will NOT be of type `startType`
+ * 
+ * @param index Index of the current token
+ * @param startType Token type of the start
+ * @param endType Token type of the end
+ * @param tokens List of all tokens including the start and end one
+ * @param output The output list of all tokens that are considered as content
+ * 
+ * @returns `true` when the depth is the same as when it was in the beginning,
+ *          otherwise `false? 
+ */
+bool TokenParser::ReadContentUsingDepth(int& index, SourceToken::Type startType, SourceToken::Type endType, SourceTokenList tokens, SourceTokenList& output)
+{
+    auto nextToken = tokens.at(index);
+    int depth = 1;
+    while (depth >= 1 && index+1 < tokens.size())
+    {
+        index++;
+        nextToken = tokens.at(index);
+
+        if (nextToken.mType == startType)
+            depth++;
+
+        if (nextToken.mType == endType)
+            depth--;
+
+        output.push_back(nextToken);
+    }
+
+    // to remove the last pushed closing curly bracket
+    if (nextToken.mType == endType)
+        output.pop_back();
+    
+    return depth == 0;
 }
 
 void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::string indentation)

@@ -62,16 +62,18 @@ define moveObject()
     else
         return;
 
-    #if (variable1 + variable2 + variable0 == 10)
-    #{
-    #    debug("wow this actually works!");
-    #    return;
-    #}
-    #else
-    #{
-    #    error("ah crap");
-    #    return;
-    #}
+    if (variable1 + variable2 + variable0 == 10)
+    {
+        debug("wow this actually works!");
+        if (true)
+            debug("this sentence is false!");
+        return;
+    }
+    else
+    {
+        error("ah crap");
+        return;
+    }
 
     #
     # builtin special functions
