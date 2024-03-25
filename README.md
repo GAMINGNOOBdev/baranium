@@ -7,6 +7,11 @@ and redesigned for use as an actual programming language.<br/>
 It's design allows easy expansion of it's runtime and easy embedding
 into other C(++) projects for various purposes.
 
+# Info
+THIS PROJECT IS STILL INCOMPLETE AT THE MOMENT!!!
+Expect soemwhat regular updates but don't expect a fully finished
+release in a short time.
+
 # Language specifications
 
 baranium was originally designed to be used with a game engine and
