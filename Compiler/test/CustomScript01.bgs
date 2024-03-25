@@ -5,7 +5,7 @@
 
 #
 # Note: Scripts only get executed when they are attached to a game object or when invoked to run directly by the runtime
-# Another note: This project will get uploaded to github once it's finished and working
+# Another note: This script currently contains random code that doesn't make sense and is only here for testing purposes
 #
 
 # an example for including a library
@@ -57,12 +57,12 @@ define moveObject()
 
     if (object == null)
         return;
-    else if (object != ATTACHED)
+    else if (object != ATTACHED || ~variable0 || ^variable1)
         return;
     else
         return;
 
-    if (variable1 + variable2 + variable0 == 10)
+    if (variable1 + variable2 + variable0 == 10 && variable0 == 0)
     {
         debug("wow this actually works!");
         if (true)

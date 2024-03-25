@@ -67,6 +67,21 @@ const char* SourceTokenTypeToString(SourceToken::Type type)
 
         case SourceToken::Type::Divided:
             return "Divided";
+        
+        case SourceToken::Type::Modulo:
+            return "Modulo";
+
+        case SourceToken::Type::And:
+            return "And";
+
+        case SourceToken::Type::Or:
+            return "Or";
+
+        case SourceToken::Type::Tilde:
+            return "Tilde";
+        
+        case SourceToken::Type::Not:
+            return "Not";
 
         case SourceToken::Type::EqualSign:
             return "EqualSign";

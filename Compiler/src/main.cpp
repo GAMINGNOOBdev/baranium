@@ -123,7 +123,6 @@ void PrintUsage()
 {
     printf("bgsc [options] files...\n\n");
     printf("Options:\n");
-    printf("\t-i <path>\tSpecify input file\n");
     printf("\t-o <path>\tSpecify output file\n");
     printf("\t-h\t\tShow this help message\n\n");
 }

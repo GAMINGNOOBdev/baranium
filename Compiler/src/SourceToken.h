@@ -38,6 +38,11 @@ struct SourceToken
         Minus,
         Times,
         Divided,
+        Modulo,
+        And,
+        Or,
+        Tilde,
+        Not, // "^"
         EqualSign,
         
         // strings
