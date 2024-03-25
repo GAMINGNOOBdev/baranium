@@ -12,6 +12,7 @@ namespace Language
     // but they technically have the same
     // functionality, except that fields can be set
     // from outside the program while variables can't
+    // AND SHOULDN'T ;)
     struct Field : public Token
     {
         VariableType Type;

@@ -2,6 +2,7 @@
 #   pragma warning(disable: 4996)
 #endif
 
+#include "Binaries/CompiledScript.h"
 #include "ArgumentParser.h"
 #include "TokenParser.h"
 #include "StringUtil.h"
@@ -36,6 +37,13 @@ int main(const int argc, const char** argv)
 
     parser.ParseArguments(argc - 1, &argv[1]);
 
+    auto fileList = parser.GetUnparsedArguments();
+    if (fileList.size() > 1)
+    {
+        PrintUsage();
+        return -1;
+    }
+
     Argument output = parser.GetArgument("-o");
 
     bool helpRequested = parser.HasArgument("-h");
@@ -63,7 +71,7 @@ int main(const int argc, const char** argv)
     Logging::FileLogging = false;
     Logging::Init();
 
-    for (auto& file : parser.GetUnparsedArguments())
+    for (auto& file : fileList)
     {
         Source source;
         BgeFile inputFile = BgeFile(file.Value, false);
@@ -92,6 +100,18 @@ int main(const int argc, const char** argv)
         //////////////////////////
         /// Writing the binary ///
         //////////////////////////
+
+        Binaries::CompiledScript script = Binaries::CompiledScript();
+        script.ParseTokens(tokenParser.GetTokens());
+
+        BgeFile outputFile = BgeFile(output.Value, true);
+        if (!outputFile.Ready())
+        {
+            Logging::Log(Logging::Format("Error: cannot create or open file '%s'\n", output.Value.c_str()), Logging::Level::Error);
+            continue;
+        }
+        script.Save(outputFile);
+        outputFile.Close();
     }
 
     Logging::Dispose();

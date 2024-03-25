@@ -33,9 +33,15 @@ namespace Language
 
             if (token.KeywordIndex == KeywordIndex_define)
             {
-                Logging::Log("Invalid function syntax: function inside function", Logging::Level::Error);
+                Logging::Log(stringf("Line %d: Invalid function syntax: function inside function", token.LineNumber), Logging::Level::Error);
                 Logging::Dispose();
                 exit(-1);
+            }
+
+            if (token.KeywordIndex >= KeywordIndex_do && token.KeywordIndex <= KeywordIndex_while)
+            {
+                TokenParser::ReadLoop(index, token, mInnerTokens, mTokens, mTokens);
+                continue;
             }
 
             if (token.KeywordIndex == KeywordIndex_if)
@@ -53,7 +59,7 @@ namespace Language
 
             if (token.mType == SourceToken::Type::Field)
             {
-                Logging::Log("Invalid function syntax: fields inside function not allowed", Logging::Level::Error);
+                Logging::Log(stringf("Line %d: Invalid function syntax: fields inside function not allowed", token.LineNumber), Logging::Level::Error);
                 Logging::Dispose();
                 exit(-1);
             }

@@ -57,15 +57,23 @@ void TokenParser::ParseTokens(SourceTokenList& tokens)
             continue;
         }
 
+        if (token.KeywordIndex >= KeywordIndex_do && token.KeywordIndex <= KeywordIndex_while)
+        {
+            Logging::Log(stringf("Line %d: cannot have loops in the global scope", token.LineNumber));
+            Logging::Dispose();
+            exit(-1);
+        }
+
         if (token.KeywordIndex == KeywordIndex_if)
         {
-            ReadIfStatement(index, token, tokens, mPublicTokens);
-            continue;
+            Logging::Log(stringf("Line %d: cannot have `if` in the global scope", token.LineNumber));
+            Logging::Dispose();
+            exit(-1);
         }
 
         if (token.KeywordIndex == KeywordIndex_else)
         {
-            Logging::Log(stringf("Line %d: missing `if` for `else` statement", token.LineNumber));
+            Logging::Log(stringf("Line %d: cannot have `else` in the global scope", token.LineNumber));
             Logging::Dispose();
             exit(-1);
         }
@@ -82,8 +90,20 @@ void TokenParser::ParseTokens(SourceTokenList& tokens)
             continue;
         }
 
-        ReadExpression(index, token, tokens, mPublicTokens);
+        Logging::Log(stringf("Line %d: cannot have expressions in the global scope", token.LineNumber));
+        Logging::Dispose();
+        exit(-1);
     }
+}
+
+/**
+ * @brief Get the parsed token objects
+ * 
+ * @return The list of parsed tokens
+ */
+TokenList& TokenParser::GetTokens()
+{
+    return mPublicTokens;
 }
 
 /**
@@ -100,6 +120,14 @@ void TokenParser::ReadVariable(int& index, SourceToken& current, SourceTokenList
     std::shared_ptr<Language::Variable> variable = std::make_shared<Language::Variable>();
     SourceTokenList valueTokens = SourceTokenList();
     variable->Type = Language::Variable::TypeFromToken(current);
+
+    if (variable->Type == Language::VariableType::Invalid)
+    {
+        Logging::Log(stringf("Line %d: Inalid variable type '%s'", current.LineNumber, current.Contents.c_str()), Logging::Level::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+
     index++;
     auto& nameToken = tokens.at(index);
     if (nameToken.mType != SourceToken::Type::Text)
@@ -520,6 +548,47 @@ end:
     output.push_back(ifElseStatement);
 }
 
+void ReadDoWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens);
+void ReadForLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens);
+void ReadWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens);
+
+/**
+ * @brief Read a loop
+ * 
+ * @param index Index of the current token
+ * @param current The current token
+ * @param tokens List of all tokens including the current one
+ * @param output The output list where the read token will be saved
+ * @param globalTokens A list where the tokens that are globally available are saved
+ */
+void TokenParser::ReadLoop(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
+{
+    Language::TokenType type;
+    auto loop = std::make_shared<Language::Loop>();
+    Language::LoopTypeFromToken(current, loop);
+    index++;
+
+    if (current.KeywordIndex == KeywordIndex_do)
+    {
+        ReadDoWhileLoop(loop, index, current, tokens, output, globalTokens);
+        loop->mTokenType = Language::TokenType::DoWhileLoop;
+    }
+
+    if (current.KeywordIndex == KeywordIndex_for)
+    {
+        ReadForLoop(loop, index, current, tokens, output, globalTokens);
+        loop->mTokenType = Language::TokenType::ForLoop;
+    }
+
+    if (current.KeywordIndex == KeywordIndex_while)
+    {
+        ReadWhileLoop(loop, index, current, tokens, output, globalTokens);
+        loop->mTokenType = Language::TokenType::WhileLoop;
+    }
+    
+    output.push_back(loop);
+}
+
 /**
  * @brief Read a function parameter
  * 
@@ -578,9 +647,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
     int tokenIndex = 0;
 
     if (varType == Language::VariableType::Invalid)
-    {
         return "null";
-    }
 
     if (varType == Language::VariableType::GameObject)
     {
@@ -746,7 +813,11 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
  *        start with a specific type of token and have a corresponding ending token
  * 
  * @note Will have to be called once it is identified that there are contents,
- *       meaning the next token will NOT be of type `startType`
+ *       meaning the next token will NOT be of type `startType`. The current
+ *       `index` will be at the last instance of a token with the type `endType`,
+ *       meaning to proceed with reading other tokens, first increase the
+ *       value of `index`.
+ * 
  * 
  * @param index Index of the current token
  * @param startType Token type of the start
@@ -755,13 +826,13 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
  * @param output The output list of all tokens that are considered as content
  * 
  * @returns `true` when the depth is the same as when it was in the beginning,
- *          otherwise `false? 
+ *          otherwise `false`
  */
 bool TokenParser::ReadContentUsingDepth(int& index, SourceToken::Type startType, SourceToken::Type endType, SourceTokenList tokens, SourceTokenList& output)
 {
-    auto nextToken = tokens.at(index);
+    auto nextToken = SourceToken();
     int depth = 1;
-    while (depth >= 1 && index+1 < tokens.size())
+    while (depth > 0 && index+1 < tokens.size())
     {
         index++;
         nextToken = tokens.at(index);
@@ -796,7 +867,7 @@ void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::st
         {
             case Language::TokenType::Expression:
             {
-                std::shared_ptr<Language::Expression> tokenObject = std::static_pointer_cast<Language::Expression, Language::Token>(token);
+                auto tokenObject = std::static_pointer_cast<Language::Expression>(token);
                 outputFile.WriteLine(stringf("%s\t\t\"name\": \"%s\",", indentation.c_str(), tokenObject->mName.c_str()));
                 outputFile.WriteLine(stringf("%s\t\t\"expression-type\": \"%s\"", indentation.c_str(), Language::ExpressionTypeToString(tokenObject->Type)));
                 break;
@@ -804,7 +875,7 @@ void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::st
 
             case Language::TokenType::Field:
             {
-                std::shared_ptr<Language::Field> tokenObject = std::static_pointer_cast<Language::Field, Language::Token>(token);
+                auto tokenObject = std::static_pointer_cast<Language::Field>(token);
                 outputFile.WriteLine(stringf("%s\t\t\"name\": \"%s\",", indentation.c_str(), tokenObject->mName.c_str()));
                 outputFile.WriteLine(stringf("%s\t\t\"type\": \"%s\",", indentation.c_str(), Language::VariableTypeToString(tokenObject->Type)));
                 outputFile.WriteLine(stringf("%s\t\t\"value\": \"%s\"", indentation.c_str(), tokenObject->Value.c_str()));
@@ -813,7 +884,7 @@ void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::st
 
             case Language::TokenType::Function:
             {
-                std::shared_ptr<Language::Function> tokenObject = std::static_pointer_cast<Language::Function, Language::Token>(token);
+                auto tokenObject = std::static_pointer_cast<Language::Function>(token);
                 outputFile.WriteLine(stringf("%s\t\t\"name\": \"%s\",", indentation.c_str(), tokenObject->mName.c_str()));
                 outputFile.WriteLine(stringf("%s\t\t\"return-type\": \"%s\",", indentation.c_str(), Language::VariableTypeToString(tokenObject->ReturnType)));
                 outputFile.WriteLine(stringf("%s\t\t\"return-value\": \"%s\",", indentation.c_str(), tokenObject->ReturnValue.c_str()));
@@ -838,14 +909,49 @@ void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::st
                 outputFile.WriteLine(stringf("%s\t\t],", indentation.c_str()));
                 outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
                 outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
-                WriteTokens(outputFile, tokenObject->mTokens, "\t\t");
+                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
+                outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
+                break;
+            }
+
+            case Language::TokenType::ForLoop:
+            {
+                auto tokenObject = std::static_pointer_cast<Language::Loop>(token);
+                outputFile.WriteLine(stringf("%s\t\t\"iteration\": \"%s\",", indentation.c_str(), tokenObject->Iteration.ToString().c_str()));
+                outputFile.WriteLine(stringf("%s\t\t\"condition\": \"%s\",", indentation.c_str(), tokenObject->Condition.ToString().c_str()));
+                outputFile.WriteLine(stringf("%s\t\t\"variable\": \"%s\",", indentation.c_str(), tokenObject->StartVariable->ToString().c_str()));
+                outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
+                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
+                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
+                outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
+                break;
+            }
+
+            case Language::TokenType::DoWhileLoop:
+            {
+                auto tokenObject = std::static_pointer_cast<Language::Loop>(token);
+                outputFile.WriteLine(stringf("%s\t\t\"condition\": \"%s\",", indentation.c_str(), tokenObject->Condition.ToString().c_str()));
+                outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
+                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
+                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
+                outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
+                break;
+            }
+
+            case Language::TokenType::WhileLoop:
+            {
+                auto tokenObject = std::static_pointer_cast<Language::Loop>(token);
+                outputFile.WriteLine(stringf("%s\t\t\"condition\": \"%s\",", indentation.c_str(), tokenObject->Condition.ToString().c_str()));
+                outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
+                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
+                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
                 outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
                 break;
             }
 
             case Language::TokenType::Variable:
             {
-                std::shared_ptr<Language::Variable> tokenObject = std::static_pointer_cast<Language::Variable, Language::Token>(token);
+                auto tokenObject = std::static_pointer_cast<Language::Variable>(token);
                 outputFile.WriteLine(stringf("%s\t\t\"name\": \"%s\",", indentation.c_str(), tokenObject->mName.c_str()));
                 outputFile.WriteLine(stringf("%s\t\t\"type\": \"%s\",", indentation.c_str(), Language::VariableTypeToString(tokenObject->Type)));
                 outputFile.WriteLine(stringf("%s\t\t\"value\": \"%s\"", indentation.c_str(), tokenObject->Value.c_str()));
@@ -854,7 +960,7 @@ void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::st
 
             case Language::TokenType::IfElseStatement:
             {
-                std::shared_ptr<Language::IfElseStatement> tokenObject = std::static_pointer_cast<Language::IfElseStatement, Language::Token>(token);
+                auto tokenObject = std::static_pointer_cast<Language::IfElseStatement>(token);
                 outputFile.WriteLine(stringf("%s\t\t\"hasElseStatement\": \"%s\",", indentation.c_str(), tokenObject->HasElseStatement ? "true" : "false"));
                 outputFile.WriteLine(stringf("%s\t\t\"chainedStatementCount\": %d", indentation.c_str(), tokenObject->ChainedStatements.size()));
                 break;
@@ -873,4 +979,238 @@ void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::st
 
         index++;
     }
+}
+
+/**
+ * @brief Read a do-while loop
+ * 
+ * @param loop Loop object that will contain the loop information & instructions
+ * @param index Index of the current token
+ * @param current The current token
+ * @param tokens List of all tokens including the current one
+ * @param output The output list where the read token will be saved
+ * @param globalTokens A list where the tokens that are globally available are saved
+ */
+void ReadDoWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
+{
+    auto nextToken = tokens.at(index);
+    if (nextToken.mType != SourceToken::Type::CurlyBracketOpen)
+    {
+        Logging::Log(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected '{'", nextToken.LineNumber, nextToken.Contents.c_str()),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+
+    if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, loop->mInnerTokens))
+    {
+        Logging::Log(stringf("Line %d: Invalid contents for do-while loop contents, invalid content depth", current.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+    index++;
+
+    nextToken = tokens.at(index);
+    if (nextToken.KeywordIndex != KeywordIndex_while)
+    {
+        Logging::Log(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected 'while'", nextToken.LineNumber, nextToken.Contents.c_str()),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+    index++;
+
+    nextToken = tokens.at(index);
+    if (nextToken.mType != SourceToken::Type::ParenthesisOpen)
+    {
+        Logging::Log(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+
+    if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, loop->Condition.mInnerTokens))
+    {
+        Logging::Log(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+    index++;
+
+    nextToken = tokens.at(index);
+    if (nextToken.mType != SourceToken::Type::Semicolon)
+    {
+        Logging::Log(stringf("Line %d: Invalid do-while loop, expected ';'", nextToken.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+
+    loop->Condition.Identify(output, globalTokens);
+    loop->ParseTokens(output, globalTokens);
+}
+
+/**
+ * @brief Read a for loop
+ * 
+ * @param loop Loop object that will contain the loop information & instructions
+ * @param index Index of the current token
+ * @param current The current token
+ * @param tokens List of all tokens including the current one
+ * @param output The output list where the read token will be saved
+ * @param globalTokens A list where the tokens that are globally available are saved
+ */
+void ReadForLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
+{
+    auto loopInitializerTokens = SourceTokenList();
+    auto loopVarTokens = SourceTokenList();
+
+    auto nextToken = tokens.at(index);
+    if (nextToken.mType != SourceToken::Type::ParenthesisOpen)
+    {
+        Logging::Log(stringf("Line %d: Invalid for loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+
+    if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, loopInitializerTokens))
+    {
+        Logging::Log(stringf("Line %d: Invalid for loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+    index++;
+
+    nextToken = tokens.at(index);
+    if (nextToken.mType == SourceToken::Type::CurlyBracketOpen)
+    {
+        if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, loop->mInnerTokens))
+        {
+            Logging::Log(stringf("Line %d: Invalid contents for for loop contents, invalid content depth", current.LineNumber),Logging::Error);
+            Logging::Dispose();
+            exit(-1);
+        }
+
+        goto parseLoopInitializers;
+    }
+    else if (nextToken.mType == SourceToken::Type::Semicolon)
+        goto parseLoopInitializers;
+
+    if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::Invalid, SourceToken::Type::Semicolon, tokens, loop->mInnerTokens))
+    {
+        Logging::Log(stringf("Line %d: Invalid for loop, unexpected depth", nextToken.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+
+parseLoopInitializers:
+
+    if (loopInitializerTokens.empty())
+    {
+        Logging::Log(stringf("Line %d: Invalid for loop, unexpected depth", nextToken.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+
+    int subIndex = 0;
+    if (loopInitializerTokens.at(subIndex).mType != SourceToken::Type::Semicolon)
+    {
+        // because the "read content using depth" function increases the value
+        // by 1 once the function starts, we have to decrease our index so
+        // that it also adds the first token
+        subIndex--;
+        TokenParser::ReadContentUsingDepth(subIndex, SourceToken::Type::Invalid, SourceToken::Type::Semicolon, loopInitializerTokens, loopVarTokens);
+
+        // because of the `ReadVariable` function we have to add a semicolon at the end of the tokens
+        SourceToken finalizerToken = SourceToken();
+        finalizerToken.Contents = ";";
+        finalizerToken.KeywordIndex = -1;
+        finalizerToken.LineNumber = current.LineNumber;
+        finalizerToken.mType = SourceToken::Type::Semicolon;
+        loopVarTokens.push_back(finalizerToken);
+    }
+    subIndex++;
+    if (loopInitializerTokens.at(subIndex).mType != SourceToken::Type::Semicolon)
+    {
+        // because the "read content using depth" function increases the value
+        // by 1 once the function starts, we have to decrease our index so
+        // that it also adds the first token
+        subIndex--;
+        TokenParser::ReadContentUsingDepth(subIndex, SourceToken::Type::Invalid, SourceToken::Type::Semicolon, loopInitializerTokens, loop->Condition.mInnerTokens);
+    }
+    subIndex++;
+    if (loopInitializerTokens.at(subIndex).mType != SourceToken::Type::Semicolon)
+    {
+        // because the "read content using depth" function increases the value
+        // by 1 once the function starts, we have to decrease our index so
+        // that it also adds the first token
+        subIndex--;
+        TokenParser::ReadContentUsingDepth(subIndex, SourceToken::Type::Invalid, SourceToken::Type::Semicolon, loopInitializerTokens, loop->Iteration.mInnerTokens);
+    }
+
+    if (!loopVarTokens.empty())
+    {
+        int outputSize = output.size();
+        subIndex = 0;
+        SourceToken varToken = loopVarTokens.at(subIndex);
+        TokenParser::ReadVariable(subIndex, varToken, loopVarTokens, output, globalTokens);
+
+        if (outputSize+1 == output.size())
+        {
+            loop->StartVariable = std::static_pointer_cast<Language::Variable>(output.at(outputSize));
+            output.pop_back();
+        }
+    }
+
+    loop->ParseTokens(output, globalTokens);
+}
+
+/**
+ * @brief Read a while loop
+ * 
+ * @param loop Loop object that will contain the loop information & instructions
+ * @param index Index of the current token
+ * @param current The current token
+ * @param tokens List of all tokens including the current one
+ * @param output The output list where the read token will be saved
+ * @param globalTokens A list where the tokens that are globally available are saved
+ */
+void ReadWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
+{
+    auto nextToken = tokens.at(index);
+    if (nextToken.mType != SourceToken::Type::ParenthesisOpen)
+    {
+        Logging::Log(stringf("Line %d: Invalid while loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+
+    if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, loop->Condition.mInnerTokens))
+    {
+        Logging::Log(stringf("Line %d: Invalid while loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+    index++;
+
+    nextToken = tokens.at(index);
+    if (nextToken.mType == SourceToken::Type::CurlyBracketOpen)
+    {
+        if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, loop->mInnerTokens))
+        {
+            Logging::Log(stringf("Line %d: Invalid contents for while loop contents, invalid content depth", current.LineNumber),Logging::Error);
+            Logging::Dispose();
+            exit(-1);
+        }
+
+        goto end;
+    }
+    else if (nextToken.mType == SourceToken::Type::Semicolon)
+        goto end;
+
+    if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::Invalid, SourceToken::Type::Semicolon, tokens, loop->mInnerTokens))
+    {
+        Logging::Log(stringf("Line %d: Invalid while loop, unexpected depth", nextToken.LineNumber),Logging::Error);
+        Logging::Dispose();
+        exit(-1);
+    }
+
+end:
+    loop->ParseTokens(output, globalTokens);
 }

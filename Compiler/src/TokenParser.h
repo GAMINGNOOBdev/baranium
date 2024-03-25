@@ -41,6 +41,13 @@ struct TokenParser
     void ParseTokens(SourceTokenList& tokens);
 
     /**
+     * @brief Get the parsed token objects
+     * 
+     * @return The list of parsed tokens
+     */
+    TokenList& GetTokens();
+
+    /**
      * @brief Read a variable
      * 
      * @param index Index of the current token
@@ -98,6 +105,17 @@ struct TokenParser
     static void ReadIfStatement(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens = Language::EmptyTokenList);
 
     /**
+     * @brief Read a loop
+     * 
+     * @param index Index of the current token
+     * @param current The current token
+     * @param tokens List of all tokens including the current one
+     * @param output The output list where the read token will be saved
+     * @param globalTokens A list where the tokens that are globally available are saved
+     */
+    static void ReadLoop(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens = Language::EmptyTokenList);
+
+    /**
      * @brief Read a function parameter
      * 
      * @param index Index of the current token
@@ -122,7 +140,11 @@ struct TokenParser
      *        start with a specific type of token and have a corresponding ending token
      * 
      * @note Will have to be called once it is identified that there are contents,
-     *       meaning the next token will NOT be of type `startType`
+     *       meaning the next token will NOT be of type `startType`. The current
+     *       `index` will be at the last instance of a token with the type `endType`,
+     *       meaning to proceed with reading other tokens, first increase the
+     *       value of `index`.
+     * 
      * 
      * @param index Index of the current token
      * @param startType Token type of the start
@@ -131,7 +153,7 @@ struct TokenParser
      * @param output The output list of all tokens that are considered as content
      * 
      * @returns `true` when the depth is the same as when it was in the beginning,
-     *          otherwise `false? 
+     *          otherwise `false`
      */
     static bool ReadContentUsingDepth(int& index, SourceToken::Type startType, SourceToken::Type endType, SourceTokenList tokens, SourceTokenList& output);
 

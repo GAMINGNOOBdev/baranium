@@ -6,12 +6,14 @@ include_directories(../include)
 
 set(bgscSources
     src/Language/IfElseStatement.cpp
+    src/Binaries/CompiledScript.cpp
     src/Language/Expression.cpp
     src/Language/Language.cpp
     src/Language/Variable.cpp
     src/Language/Function.cpp
     src/Language/Token.cpp
     src/Language/Field.cpp
+    src/Language/Loop.cpp
     src/ArgumentParser.cpp
     src/SourceToken.cpp
     src/TokenParser.cpp

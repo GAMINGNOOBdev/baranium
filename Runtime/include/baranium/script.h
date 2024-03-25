@@ -8,9 +8,14 @@
 #define MAGIC_NUM_2 'S'
 #define MAGIC_NUM_3 'L'
 
+#define VERSION_CREATE(year, month, day) ((year << 16) | (month << 8) | day)
+
+#define VERSION_FIRST VERSION_CREATE(2024, 2, 10)
+#define VERSION_CURRENT VERSION_FIRST
+
 enum BaraniumSectionType
 {
-    Invalid = -1,
+    Invalid,
     Fields,
     Variables,
     Functions,
@@ -26,9 +31,7 @@ typedef struct BaraniumSection
 typedef struct BaraniumScriptHeader
 {
     uint8_t MagicNumber[4];
-    uint16_t VersionHigh;
-    uint8_t VersionMid;
-    uint8_t VersionLow;
+    uint32_t Version;
     uint64_t SectionCount;
 } BaraniumScriptHeader;
 

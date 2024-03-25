@@ -27,6 +27,9 @@
 #define KeywordIndex_delete        16
 #define KeywordIndex_attach        17
 #define KeywordIndex_detach        18
+#define KeywordIndex_do            19
+#define KeywordIndex_for           20
+#define KeywordIndex_while         21
 
 namespace Language
 {

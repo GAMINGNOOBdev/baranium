@@ -26,12 +26,21 @@ namespace Language
 
             case TokenType::Variable:
                 return "Variable";
-            
+
             case TokenType::Expression:
                 return "Expression";
-            
+
             case TokenType::IfElseStatement:
                 return "IfElseStatement";
+
+            case TokenType::DoWhileLoop:
+                return "DoWhileLoop";
+
+            case TokenType::WhileLoop:
+                return "WhileLoop";
+
+            case TokenType::ForLoop:
+                return "ForLoop";
         }
     }
 

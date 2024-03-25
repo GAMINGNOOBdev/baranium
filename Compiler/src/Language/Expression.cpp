@@ -99,6 +99,9 @@ namespace Language
 
     void Expression::ParseTokens(TokenList& localTokens, TokenList& globalTokens)
     {
+        if (mInnerTokens.empty())
+            return;
+
         auto& firstToken = mInnerTokens.front();
 
         if (firstToken.mType == SourceToken::Type::Text)

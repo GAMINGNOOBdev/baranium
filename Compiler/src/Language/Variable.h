@@ -31,6 +31,15 @@ namespace Language
      */
     const char* VariableTypeToString(VariableType type);
 
+    /**
+     * @brief Get the amount of bytes a specific variable type takes up
+     * 
+     * @param type The variable type
+     * 
+     * @return The number of bytes the variable type takes up
+     */
+    uint8_t VariableTypeBytes(VariableType type);
+
     struct Variable : public Token
     {
         /**
@@ -61,6 +70,13 @@ namespace Language
          * @brief Construct a new `Variable` object
          */
         Variable();
+
+        /**
+         * @brief Construct a new `Variable` object based on another object
+         * 
+         * @param object The object whose contents will be copied
+         */
+        Variable(std::shared_ptr<Variable> object);
 
         /**
          * @returns The string representation of this `Variable`

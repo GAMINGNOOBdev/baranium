@@ -16,6 +16,9 @@ namespace Language
         Function,
         Expression,
         IfElseStatement,
+        DoWhileLoop,
+        WhileLoop,
+        ForLoop,
     };
 
     /**

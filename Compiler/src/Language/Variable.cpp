@@ -43,6 +43,40 @@ namespace Language
     }
 
     /**
+     * @brief Get the amount of bytes a specific variable type takes up
+     * 
+     * @param type The variable type
+     * 
+     * @return The number of bytes the variable type takes up
+     */
+    uint8_t VariableTypeBytes(VariableType type)
+    {
+        switch (type)
+        {
+            default:
+            case VariableType::Void:
+            case VariableType::Invalid:
+                return 0; // zero means that nothing is being stored here
+
+            case VariableType::GameObject:
+                return 8; // int64_t internally
+
+            case VariableType::String:
+                return -1;// -1 should inform about storing a string, therefore it could have any length
+
+            case VariableType::Float:
+                return 4; // floats are still 32-bit, we can change to using double-like 64-bits later
+
+            case VariableType::Bool:
+                return 1; // just use a simple single-byte integer
+
+            case VariableType::Int:
+            case VariableType::Uint:
+                return 4; // default 32-bit integer
+        }
+    }
+
+    /**
      * @brief Get the variable type from a single token
      * 
      * @param token The token that will be converted into the variable type
@@ -117,6 +151,20 @@ namespace Language
         : Token()
     {
         mTokenType = TokenType::Variable;
+    }
+
+    /**
+     * @brief Construct a new `Variable` object based on another object
+     * 
+     * @param object The object whose contents will be copied
+     */
+    Variable::Variable(std::shared_ptr<Variable> object)
+        : Token()
+    {
+        mTokenType = TokenType::Variable;
+        mName = object->mName;
+        Value = object->Value;
+        Type = object->Type;
     }
 
     /**

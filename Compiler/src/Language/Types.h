@@ -2,6 +2,7 @@
 #define __LANGUAGE__TYPES_H_ 1
 
 #include "Token.h"
+#include "Loop.h"
 #include "Field.h"
 #include "Function.h"
 #include "Variable.h"

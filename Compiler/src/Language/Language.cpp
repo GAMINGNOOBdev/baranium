@@ -36,6 +36,11 @@ std::vector<Keyword> Language::Keywords = {
     // script related stuff
     Keyword{"attach",       SourceToken::Type::Keyword},
     Keyword{"detach",       SourceToken::Type::Keyword},
+
+    // loops
+    Keyword{"do",           SourceToken::Type::Keyword},
+    Keyword{"for",          SourceToken::Type::Keyword},
+    Keyword{"while",        SourceToken::Type::Keyword},
 };
 
 /**

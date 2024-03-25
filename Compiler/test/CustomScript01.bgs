@@ -75,6 +75,21 @@ define moveObject()
         return;
     }
 
+    for (int i = 0; i < 10; i++)
+    {
+        move(object, i, i, i);
+    }
+
+    for (int j = 0; j < 223; j += 23);
+
+    while (true);
+
+    do
+    {
+        error("i hate you");
+    }
+    while (true);
+
     #
     # builtin special functions
     #

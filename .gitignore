@@ -5,3 +5,5 @@ obj
 no_src
 .vscode
 .vs
+*.bxs
+DevLogStuff
