@@ -9,8 +9,10 @@ into other C(++) projects for various purposes.
 
 # Info
 THIS PROJECT IS STILL INCOMPLETE AT THE MOMENT!!!
-Expect soemwhat regular updates but don't expect a fully finished
-release in a short time.
+Expect somewhat regular updates but don't expect a fully finished
+release in a short time. <br/>
+To see more indepth stuff, join the newly created discord server that
+will be as inactive as every other server you may know.
 
 # Language specifications
 
@@ -23,11 +25,12 @@ moment because of this feature being oriented towards integration of
 the language in other projects.
 
 # Building
-To build, simply run `make` in either the `Compiler` or the `Runtime`
-directory.<br/>
-Note: Windows is not supported at the moment and build support for
-Windows will not come from me, I don't like Windows so don't expect
-support for that operating system.
+On Linux and Mac OS simply run `make` in either the `Compiler` or the
+`Runtime` directory.<br/>
+For windows builds create a `build` directory, run cmake in that
+directory and pointing cmake to the CMakeLists.txt file's location
+and then building the project using visual studio or mingw, whatever
+you may have installed.
 
 # Using the compiler
 just let the compiler print out the help message, it'll tell you everything.

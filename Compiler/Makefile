@@ -13,13 +13,6 @@ CFLAGS=-I$(SRCDIR) -I$(GLOBAL_INCLUDE) -g -Wno-overflow $(DEFINES)
 
 TARGET=$(BINDIR)/bgsc
 
-RWILDCARD=$(foreach d,$(wildcard $(1:=/*)),$(call RWILDCARD,$d,$2) $(filter $(subst *,%,$2),$d))
-
-# SRC=$(call RWILDCARD,$(SRCDIR),*.c)
-# SRC+=$(call RWILDCARD,$(SRCDIR),*.cpp)
-# OBJS=$(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.c.o, $(SRC))
-# OBJS+=$(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.cxx.o, $(SRC))
-
 Sources = 	\
 			src/Language/IfElseStatement.cpp \
 			src/Binaries/CompiledScript.cpp \

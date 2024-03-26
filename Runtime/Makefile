@@ -13,11 +13,6 @@ CFLAGS=-I$(INCDIR) -I$(GLOBAL_INCLUDE) -Wno-overflow -g $(DEFINES)
 
 TARGET=$(BINDIR)/bgs
 
-RWILDCARD=$(foreach d,$(wildcard $(1:=/*)),$(call RWILDCARD,$d,$2) $(filter $(subst *,%,$2),$d))
-
-# SRC=$(call RWILDCARD,$(SRCDIR),*.c)
-# OBJS=$(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.c.o, $(SRC))
-
 Sources = 	\
 			src/baranium/runtime.c \
 			src/baranium/bcpu.c \
