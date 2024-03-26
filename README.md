@@ -12,7 +12,7 @@ THIS PROJECT IS STILL INCOMPLETE AT THE MOMENT!!!
 Expect somewhat regular updates but don't expect a fully finished
 release in a short time. <br/>
 To see more indepth stuff, join the newly created discord server that
-will be as inactive as every other server you may know.
+will be as inactive as every other server you may know. https://discord.gg/ydnHdMHf
 
 # Language specifications
 
