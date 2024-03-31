@@ -50,6 +50,11 @@
 #   define BARANIUMAPI
 #endif
 
+#define VERSION_CREATE(year, month, day) ((year << 16) | (month << 8) | day)
+
+#define VERSION_FIRST VERSION_CREATE(2024, 2, 10)
+#define VERSION_CURRENT VERSION_FIRST
+
 /////////////
 /// Types ///
 /////////////
@@ -68,5 +73,7 @@ typedef struct BaraniumRuntime
     uint64_t openHandles;
     BCpu cpu;
 } BaraniumRuntime;
+
+typedef int64_t index_t;
 
 #endif

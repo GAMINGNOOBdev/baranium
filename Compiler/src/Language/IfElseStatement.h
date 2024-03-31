@@ -33,11 +33,6 @@ namespace Language
          * @brief Identify the type of this expression
          */
         void ParseTokens(TokenList& localTokens, TokenList& globalTokens = Language::EmptyTokenList);
-
-        /**
-         * @returns The string representation of this `Expression`
-         */
-        std::string ToString() override;
     };
 
 }

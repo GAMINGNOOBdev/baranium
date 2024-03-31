@@ -59,21 +59,26 @@ namespace Language
          */
         void Identify(TokenList& localTokens, TokenList& globalTokens = Language::EmptyTokenList);
 
+    private:
+        void ParseTokens(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
+
+    private:
         /**
-         * @returns The string representation of this `Expression`
+         * @brief Check if the provided list contains any tokens that split up expressions
+         * 
+         * @param tokens The list of tokens
+         * 
+         * @returns `true` if there are splitting tokens, `false` if there aren't
          */
-        std::string ToString() override;
+        bool CheckExpressionDividers(SourceTokenList& tokens);
 
     private:
-        void ParseTokens(TokenList& localTokens, TokenList& globalTokens);
-
-    private:
-        void ParseCondition(TokenList& localTokens, TokenList& globalTokens);
-        void ParseAssignment(TokenList& localTokens, TokenList& globalTokens);
-        void ParseFunctionCall(TokenList& localTokens, TokenList& globalTokens);
-        void ParseReturnStatement(TokenList& localTokens, TokenList& globalTokens);
-        void ParseKeywordExpression(TokenList& localTokens, TokenList& globalTokens);
-        void ParseArithmeticOperation(TokenList& localTokens, TokenList& globalTokens);
+        void ParseCondition(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
+        void ParseAssignment(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
+        void ParseFunctionCall(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
+        void ParseReturnStatement(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
+        void ParseKeywordExpression(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
+        void ParseArithmeticOperation(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
     };
 
 }

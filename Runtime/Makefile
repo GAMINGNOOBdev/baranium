@@ -15,6 +15,7 @@ TARGET=$(BINDIR)/bgs
 
 Sources = 	\
 			src/baranium/runtime.c \
+			src/baranium/script.c \
 			src/baranium/bcpu.c \
 			src/test.c
 

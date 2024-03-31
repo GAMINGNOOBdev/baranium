@@ -6,8 +6,10 @@ include_directories(../include)
 
 set(bgscSources
     src/Language/IfElseStatement.cpp
+    src/Binaries/NameLookupTable.cpp
     src/Binaries/CompiledScript.cpp
     src/Language/Expression.cpp
+    src/Binaries/Compiler.cpp
     src/Language/Language.cpp
     src/Language/Variable.cpp
     src/Language/Function.cpp

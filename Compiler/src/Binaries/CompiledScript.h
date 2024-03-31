@@ -1,8 +1,11 @@
-#ifndef __COMPILEDSCRIPT_H_
-#define __COMPILEDSCRIPT_H_ 1
+#ifndef __BINARIES__COMPILEDSCRIPT_H_
+#define __BINARIES__COMPILEDSCRIPT_H_ 1
 
 #include "../Language/Types.h"
+#include "NameLookupTable.h"
 #include <BgeFile.hpp>
+#include "Compiler.h"
+#include "Section.h"
 #include <stdint.h>
 #include <vector>
 
@@ -18,23 +21,10 @@
 
 using TokenList = std::vector<std::shared_ptr<Language::Token>>;
 
+typedef int64_t index_t;
+
 namespace Binaries
 {
-
-    enum class SectionType : uint8_t
-    {
-        Invalid,
-        Field,
-        Variable,
-        Function,
-    };
-
-    struct Section
-    {
-        SectionType Type;
-        uint64_t DataSize;
-        uint64_t DataStart;
-    };
 
     struct CompiledScriptHeader
     {
@@ -67,7 +57,8 @@ namespace Binaries
     private:
         CompiledScriptHeader mHeader;
         std::vector<Section> mSections;
-        uint64_t mCurrentOffset;
+        NameLookupTable mLookupTable;
+        Compiler mCompiler;
 
     private:
         void CreateFieldSection(std::shared_ptr<Language::Field> field);

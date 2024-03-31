@@ -5,6 +5,8 @@
 #include <vector>
 #include <memory>
 
+typedef int64_t index_t;
+
 namespace Language
 {
 
@@ -32,6 +34,9 @@ namespace Language
 
     struct Token
     {
+        static index_t TokenID;
+
+        index_t ID;
         std::string mName;
         TokenType mTokenType = TokenType::Invalid;
 
@@ -41,9 +46,9 @@ namespace Language
         Token();
 
         /**
-         * @return The string representation of this `Token`
+         * @brief small function that assigns an internal ID
          */
-        virtual std::string ToString();
+        void AssignID();
     };
 
     static std::vector<std::shared_ptr<Language::Token>> EmptyTokenList;

@@ -44,21 +44,25 @@ namespace Language
         }
     }
 
+    index_t Token::TokenID = 0;
+
     /**
      * @brief Construct a new `Token` object
      */
     Token::Token()
     {
+        ID = -1;
         mName = "";
         mTokenType = TokenType::Invalid;
     }
 
     /**
-     * @return The string representation of this `Token`
+     * @brief small function that assigns an internal ID
      */
-    std::string Token::ToString()
+    void Token::AssignID()
     {
-        return std::string("Token{ Name{").append(mName).append("} Type{").append(TokenTypeToString(mTokenType)).append("} }");
+        ID = TokenID;
+        TokenID++;
     }
 
 }

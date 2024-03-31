@@ -10,6 +10,7 @@ namespace Language
      * @brief Construct a new `Loop` object
      */
     Loop::Loop()
+        : Token()
     {
         mTokenType = TokenType::Invalid;
         DoWhile = false;
@@ -23,6 +24,7 @@ namespace Language
      * @param loopType Token type for the type of this loop
      */
     Loop::Loop(TokenType loopType)
+        : Token()
     {
         mTokenType = loopType;
         DoWhile = false;
@@ -94,14 +96,6 @@ namespace Language
         mTokens.erase(mTokens.begin(), mTokens.begin()+localTokens.size());
         if (StartVariable)
             mTokens.erase(mTokens.begin(), mTokens.begin()+1);
-    }
-
-    /**
-     * @returns The string representation of this `Loop`
-     */
-    std::string Loop::ToString()
-    {
-        return std::string(stringf("Loop{ IsWhile{%s} IsDoWhile{%s} IsFor{%s} }", While ? "true" : "false", DoWhile ? "true" : "false", !While ? "true" : "false"));
     }
 
     /**

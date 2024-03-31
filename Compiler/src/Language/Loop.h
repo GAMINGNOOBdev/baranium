@@ -69,11 +69,6 @@ namespace Language
          * @brief Identify and parse inner tokens
          */
         void ParseTokens(TokenList& localTokens, TokenList& globalTokens = Language::EmptyTokenList);
-
-        /**
-         * @returns The string representation of this `Loop`
-         */
-        std::string ToString() override;
     };
 
     /**

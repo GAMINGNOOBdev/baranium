@@ -8,14 +8,13 @@ namespace Binaries
      * @brief Construct a new `CompiledScript` object
      */
     CompiledScript::CompiledScript()
-        : mHeader(), mSections(), mCurrentOffset(0)
+        : mHeader(), mSections(), mCompiler()
     {
         mHeader.MagicNumber[0] = MAGIC_NUM_0;
         mHeader.MagicNumber[1] = MAGIC_NUM_1;
         mHeader.MagicNumber[2] = MAGIC_NUM_2;
         mHeader.MagicNumber[3] = MAGIC_NUM_3;
         mHeader.Version = VERSION_CURRENT;
-        mCurrentOffset = sizeof(CompiledScriptHeader);
     }
 
     /**
@@ -29,6 +28,8 @@ namespace Binaries
 
         for (auto& token : tokens)
         {
+            mLookupTable.AddEntry(token->mName, token->ID);
+
             switch (token->mTokenType)
             {
                 case Language::TokenType::Field:
@@ -81,39 +82,83 @@ namespace Binaries
         for (auto& section : mSections)
         {
             file.Write<uint8_t>((uint8_t)section.Type);
+            file.Write<index_t>(section.ID);
             file.Write<uint64_t>(section.DataSize);
-            file.Write<uint64_t>(section.DataStart);
+            file.Write(section.Data, sizeof(uint8_t), section.DataSize);
+
+            // there will always be memory allocated by sections
+            if (section.Data != nullptr)
+                free(section.Data);
         }
+
+        mLookupTable.Write(file);
+
+        // clear up memory
+        mCompiler.ClearCompiledCode();
     }
 
     void CompiledScript::CreateFieldSection(std::shared_ptr<Language::Field> field)
     {
         Section fieldSection = Section();
+        fieldSection.ID = field->ID;
         fieldSection.Type = SectionType::Field;
-        // Size calculation: data type, initial value, name length, name
-        fieldSection.DataSize = 1 + Language::VariableTypeBytes(field->Type) + 1 + field->mName.length();
-        fieldSection.DataStart = -1;
+
+        // Size calculation: data type, data size
+        uint8_t dataTypeSize = Language::VariableTypeBytes(field->Type);
+        if (dataTypeSize == -1) // meaning this is a string
+            dataTypeSize = field->Value.length() + 1; // for now store the initial string's length + 1 because of the null-char at the end
+
+        size_t dataSize = sizeof(uint8_t) + dataTypeSize;
+        fieldSection.DataSize = dataSize;
+        fieldSection.Data = (uint8_t*)malloc(dataSize);
+        memset(fieldSection.Data, 0, dataSize);
+
+        mCompiler.CopyVariableData(fieldSection.Data, field->Value, field->Type);
+
         mSections.push_back(Section(fieldSection));
     }
 
     void CompiledScript::CreateVariableSection(std::shared_ptr<Language::Variable> variable)
     {
-        Section fieldSection = Section();
-        fieldSection.Type = SectionType::Variable;
-        // Size calculation: data type, initial value, name length, name
-        fieldSection.DataSize = 1 + Language::VariableTypeBytes(variable->Type) + 1 + variable->mName.length();
-        fieldSection.DataStart = -1;
-        mSections.push_back(Section(fieldSection));
+        Section variableSection = Section();
+        variableSection.ID = variable->ID;
+        variableSection.Type = SectionType::Variable;
+
+        // Size calculation: data type, data size
+        int8_t dataTypeSize = Language::VariableTypeBytes(variable->Type);
+        if (dataTypeSize == -1) // meaning this is a string
+            dataTypeSize = variable->Value.length() + 1; // for now store the initial string's length + 1 because of the null-char at the end
+
+        size_t dataSize = sizeof(uint8_t) + dataTypeSize;
+        variableSection.DataSize = dataSize;
+        variableSection.Data = (uint8_t*)malloc(dataSize);
+        memset(variableSection.Data, 0, dataSize);
+
+        mCompiler.CopyVariableData(variableSection.Data, variable->Value, variable->Type);
+
+        mSections.push_back(Section(variableSection));
     }
 
     void CompiledScript::CreateFunctionSection(std::shared_ptr<Language::Function> function)
     {
-        Section fieldSection = Section();
-        fieldSection.Type = SectionType::Function;
-        // Size calculation: name length, name, internal tokens size
-        fieldSection.DataSize = 1 + function->mName.length() + function->mTokens.size();
-        fieldSection.DataStart = -1;
-        mSections.push_back(Section(fieldSection));
+        Section functionSection = Section();
+        functionSection.ID = function->ID;
+        functionSection.Type = SectionType::Function;
+
+        // "compile" the code
+        mCompiler.ClearCompiledCode();
+        mCompiler.Compile(function->mTokens);
+        mCompiler.FinalizeCompilation();
+
+        // Size calculation: compiled code size
+        functionSection.DataSize = mCompiler.GetCompiledCodeSize();
+        functionSection.Data = (uint8_t*)malloc(functionSection.DataSize);
+        memcpy(functionSection.Data, mCompiler.GetCompiledCode(), functionSection.DataSize);
+
+        // prepare for the next compilation + clear up duplicated memory
+        mCompiler.ClearCompiledCode();
+
+        mSections.push_back(Section(functionSection));
     }
 
 }

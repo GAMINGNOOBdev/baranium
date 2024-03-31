@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.0)
 
 project(bgs)
 
-include_directories(../include)
+include_directories(../include include)
 
 set(bgsSources
     src/baranium/runtime.c
+    src/baranium/script.c
     src/baranium/bcpu.c
     src/test.c
     )

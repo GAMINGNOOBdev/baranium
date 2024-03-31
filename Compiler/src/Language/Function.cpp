@@ -16,6 +16,7 @@ namespace Language
         ReturnType = VariableType::Void;
         ReturnValue = "";
         ReturnVariableName = "";
+        AssignID();
     }
 
     /**
@@ -76,15 +77,6 @@ namespace Language
         FunctionReturnRequested();
 
         mTokens.erase(mTokens.begin(), mTokens.begin()+mParameters.size());
-    }
-
-    /**
-     * @returns The string representation of this `Function`
-     */
-    std::string Function::ToString()
-    {
-        return std::string(stringf("Function{ Name{'%s'} ParameterCount{%ld} InnerTokenCount{%ld} TokenCount{%ld} }",
-                                   mName.c_str(), mParameters.size(), mInnerTokens.size(), mTokens.size() ));
     }
 
     bool Function::FunctionReturnRequested()

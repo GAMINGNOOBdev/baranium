@@ -16,7 +16,7 @@
 +include Library1.bgs,Library2.bgs,Library3.bgs
 
 # fields
-field gameobject myObject = ATTACHED;   # ATTACHED should just get the object on which
+field gameobject myObject = attached;   # 'attached' should just get the object on which
                                         # this script is attached, if not attached to an
                                         # object or run directly by the user it will be
                                         # set to null
@@ -118,4 +118,9 @@ define update(float delta)
 define f(float x, float y, float z, int w, gameobject object)
 {
     return w;
+}
+
+define main(int argc, string argv)
+{
+    return -1;
 }

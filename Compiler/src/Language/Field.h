@@ -27,11 +27,6 @@ namespace Language
          * @brief Construct a new `Field` object
          */
         Field();
-
-        /**
-         * @returns The string representation of this `Field`
-         */
-        std::string ToString() override;
     };
 
 }

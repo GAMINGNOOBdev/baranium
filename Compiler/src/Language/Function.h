@@ -32,11 +32,6 @@ namespace Language
          * @brief Parse the current inner tokens
          */
         void ParseTokens(TokenList& globalTokens);
-
-        /**
-         * @returns The string representation of this `Function`
-         */
-        std::string ToString() override;
     
     private:
         bool FunctionReturnRequested();

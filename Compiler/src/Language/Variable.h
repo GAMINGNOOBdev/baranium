@@ -10,9 +10,9 @@ using SourceTokenList = std::vector<SourceToken>;
 namespace Language
 {
 
-    enum class VariableType
+    enum class VariableType : uint8_t
     {
-        Invalid = -1,
+        Invalid,
         Void,
         GameObject,
         String,
@@ -38,7 +38,7 @@ namespace Language
      * 
      * @return The number of bytes the variable type takes up
      */
-    uint8_t VariableTypeBytes(VariableType type);
+    int8_t VariableTypeBytes(VariableType type);
 
     struct Variable : public Token
     {
@@ -77,11 +77,6 @@ namespace Language
          * @param object The object whose contents will be copied
          */
         Variable(std::shared_ptr<Variable> object);
-
-        /**
-         * @returns The string representation of this `Variable`
-         */
-        std::string ToString() override;
     };
 
 }

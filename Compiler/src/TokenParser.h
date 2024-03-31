@@ -20,11 +20,6 @@ struct TokenParser
     TokenParser();
 
     /**
-     * @brief Print current details about parsed tokens
-     */
-    void PrintDetails();
-
-    /**
      * @brief Write the source code tokens into a single json file
      * 
      * @note Executed then the `-d` or `--debug` flag is passed to the main executable

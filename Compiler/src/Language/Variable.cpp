@@ -49,7 +49,7 @@ namespace Language
      * 
      * @return The number of bytes the variable type takes up
      */
-    uint8_t VariableTypeBytes(VariableType type)
+    int8_t VariableTypeBytes(VariableType type)
     {
         switch (type)
         {
@@ -151,6 +151,7 @@ namespace Language
         : Token()
     {
         mTokenType = TokenType::Variable;
+        AssignID();
     }
 
     /**
@@ -165,14 +166,7 @@ namespace Language
         mName = object->mName;
         Value = object->Value;
         Type = object->Type;
-    }
-
-    /**
-     * @returns The string representation of this `Variable`
-     */
-    std::string Variable::ToString()
-    {
-        return std::string(stringf("Variable{ Name{'%s'} Type{%s} Value{'%s'} }", mName.c_str(), VariableTypeToString(Type), Value.c_str()));
+        AssignID();
     }
 
 }

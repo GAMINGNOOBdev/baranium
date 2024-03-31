@@ -66,12 +66,4 @@ namespace Language
         mTokens.erase(mTokens.begin(), mTokens.begin()+localTokens.size());
     }
 
-    /**
-     * @returns The string representation of this `Expression`
-     */
-    std::string IfElseStatement::ToString()
-    {
-        return std::string(stringf("IfElseStatement{ HasElseStatement{%s} }", HasElseStatement ? "true" : "false"));
-    }
-
 }
