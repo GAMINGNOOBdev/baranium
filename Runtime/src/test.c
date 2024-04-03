@@ -9,8 +9,8 @@ int main(int argc, const char** argv)
         return -0xBAD;
     #endif
 
-    pritnf("don't execute atm\n");
-    return 0;
+    // printf("don't execute atm\n");
+    // return 0;
 
     if (argc < 2)
     {

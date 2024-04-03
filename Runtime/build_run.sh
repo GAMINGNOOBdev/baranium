@@ -2,4 +2,4 @@
 
 make clean
 make
-./bin/bgs -d test/CustomScript01.bxs
+./bin/bgs ../Compiler/test/CustomScript01.bxs

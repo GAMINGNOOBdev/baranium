@@ -95,6 +95,8 @@ BaraniumScript* baranium_open_script(BaraniumHandle* handle)
 
         baranium_script_append_name_table_entry(script, entry);
     }
+
+    return script;
 }
 
 void baranium_close_script(BaraniumScript* script)
@@ -108,13 +110,9 @@ void baranium_close_script(BaraniumScript* script)
         BaraniumScriptNameTableEntry* next = NULL;
         for (uint64_t i = 0; i < script->NameTable.NameCount && current != NULL; i++)
         {
-            printf("entry%d\n", i); // works
-            free(current->Name);    // not work????????? (current has weird values btw)
-            printf("freed name!\n");
+            free(current->Name);
             next = current->next;
-            printf("les goo\n");
             free(current);
-            printf("freed entry!\n");
             current = next;
         }
 
@@ -129,7 +127,6 @@ void baranium_close_script(BaraniumScript* script)
         for (uint64_t i = 0; i < script->Header.SectionCount && current != NULL; i++)
         {
             next = current->next;
-            next->prev = NULL;
             free(current->Data);
             free(current);
             current = next;
