@@ -8,11 +8,11 @@ It's design allows easy expansion of it's runtime and easy embedding
 into other C(++) projects for various purposes.
 
 # Info
-THIS PROJECT IS STILL INCOMPLETE AT THE MOMENT!!!
+THIS PROJECT IS STILL INCOMPLETE AT THE MOMENT!!! <br/>
 Expect somewhat regular updates but don't expect a fully finished
 release in a short time. <br/>
-To see more indepth stuff, join the newly created discord server that
-will be as inactive as every other server you may know. https://discord.gg/ydnHdMHf
+To see more indepth stuff and ask questions, join the newly created discord server that
+will be as inactive as every other server you may know. https://discord.gg/Bp9emHJ6
 
 # Language specifications
 
