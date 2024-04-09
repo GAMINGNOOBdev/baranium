@@ -124,11 +124,11 @@ namespace Binaries
         variableSection.ID = variable->ID;
         variableSection.Type = SectionType::Variable;
 
-        // Size calculation: data type, data size
         int8_t dataTypeSize = Language::VariableTypeBytes(variable->Type);
         if (dataTypeSize == -1) // meaning this is a string
             dataTypeSize = variable->Value.length() + 1; // for now store the initial string's length + 1 because of the null-char at the end
 
+        // Size calculation: data type (1 byte) + data size
         size_t dataSize = sizeof(uint8_t) + dataTypeSize;
         variableSection.DataSize = dataSize;
         variableSection.Data = (uint8_t*)malloc(dataSize);

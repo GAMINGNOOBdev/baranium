@@ -5,22 +5,37 @@
 
 enum BaraniumVariableType
 {
-    Invalid = -1,
-    Void,
-    GameObject,
-    String,
-    Float,
-    Bool,
-    Int,
-    Uint,
+    BaraniumVariableType_Invalid = -1,
+    BaraniumVariableType_Void,
+    BaraniumVariableType_GameObject,
+    BaraniumVariableType_String,
+    BaraniumVariableType_Float,
+    BaraniumVariableType_Bool,
+    BaraniumVariableType_Int,
+    BaraniumVariableType_Uint,
 };
 
 typedef struct BaraniumVariable
 {
     enum BaraniumVariableType Type;
     void* Value;
-    char* Name;
-    int ID;
+    index_t ID;
 } BaraniumVariable;
+
+/**
+ * @brief Dispose a variable
+ * 
+ * @param var The variable to dispose
+ */
+BARANIUMAPI void baranium_variable_dispose(BaraniumVariable* var);
+
+/**
+ * @brief Get the size for a specific variable type
+ * 
+ * @param type Variable type
+ * 
+ * @returns The size of the variable type
+ */
+BARANIUMAPI size_t baranium_variable_get_size_of_type(enum BaraniumVariableType type);
 
 #endif

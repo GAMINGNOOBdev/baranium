@@ -45,6 +45,12 @@ void baranium_script_append_name_table_entry(BaraniumScript* script, BaraniumScr
     script->NameTable.EntriesEnd = entry;
 }
 
+////////////////////////////////
+///                          ///
+/// public visible functions ///
+///                          ///
+////////////////////////////////
+
 BaraniumScript* baranium_open_script(BaraniumHandle* handle)
 {
     if (handle == NULL)
@@ -139,10 +145,26 @@ void baranium_close_script(BaraniumScript* script)
     free(script);
 }
 
-index_t baranium_script_get_location_of(BaraniumScript* script, const char* name)
+BaraniumSection* baranium_script_get_section_by_id_and_type(BaraniumScript* script, index_t id, enum BaraniumSectionType type)
+{
+    if (script == NULL || type == BaraniumSectionType_Invalid || id == INVALID_INDEX)
+        return NULL;
+    
+    BaraniumSection* current = script->SectionsStart;
+    for (uint64_t i = 0; i < script->Header.SectionCount && current != NULL; i++)
+    {
+        if (current->ID == id && current->Type == type)
+            return current;
+
+        current = current->next;
+    }
+    return NULL;
+}
+
+index_t baranium_script_get_id_of(BaraniumScript* script, const char* name)
 {
     if (script == NULL || name == NULL)
-        return -1;
+        return INVALID_INDEX;
     
     BaraniumScriptNameTableEntry* current = script->NameTable.EntriesStart;
     for (uint64_t i = 0; i < script->NameTable.NameCount && current != NULL; i++)
@@ -153,5 +175,97 @@ index_t baranium_script_get_location_of(BaraniumScript* script, const char* name
         current = current->next;
     }
 
-    return -1;
+    return INVALID_INDEX;
+}
+
+char* baranium_script_get_name_of(BaraniumScript* script, index_t id)
+{
+    if (script == NULL || id == INVALID_INDEX)
+        return NULL;
+    
+    BaraniumScriptNameTableEntry* current = script->NameTable.EntriesStart;
+    for (uint64_t i = 0; i < script->NameTable.NameCount && current != NULL; i++)
+    {
+        if (current->ID == id)
+            return current->Name;
+        
+        current = current->next;
+    }
+
+    return NULL;
+}
+
+BaraniumVariable* baranium_script_get_variable(BaraniumScript* script, const char* name)
+{
+    index_t id = baranium_script_get_id_of(script, name);
+    return baranium_script_get_variable_by_id(script, id);
+}
+
+BaraniumVariable* baranium_script_get_variable_by_id(BaraniumScript* script, index_t variableID)
+{
+    if (script == NULL || variableID == INVALID_INDEX)
+        return NULL;
+
+    BaraniumVariable* result = NULL;
+
+    BaraniumSection* foundSection = baranium_script_get_section_by_id_and_type(script, variableID, BaraniumSectionType_Variables);
+    if (foundSection == NULL)
+        return NULL;
+
+    result = malloc(sizeof(BaraniumVariable));
+    result->ID = variableID;
+    result->Type = *foundSection->Data;
+    result->Value = (void*)(((uint8_t*)foundSection->Data) + 1);
+
+    return result;
+}
+
+BaraniumField* baranium_script_get_field(BaraniumScript* script, const char* name)
+{
+    index_t id = baranium_script_get_id_of(script, name);
+    return baranium_script_get_field_by_id(script, id);
+}
+
+BaraniumField* baranium_script_get_field_by_id(BaraniumScript* script, index_t fieldID)
+{
+    if (script == NULL || fieldID == INVALID_INDEX)
+        return NULL;
+
+    BaraniumField* result = NULL;
+
+    BaraniumSection* foundSection = baranium_script_get_section_by_id_and_type(script, fieldID, BaraniumSectionType_Fields);
+    if (foundSection == NULL)
+        return NULL;
+
+    result = malloc(sizeof(BaraniumField));
+    result->ID = fieldID;
+    result->Type = *foundSection->Data;
+    result->Value = (void*)(((uint8_t*)foundSection->Data) + 1);
+
+    return result;
+}
+
+BaraniumFunction* baranium_script_get_function(BaraniumScript* script, const char* name)
+{
+    index_t id = baranium_script_get_id_of(script, name);
+    return baranium_script_get_function_by_id(script, id);
+}
+
+BaraniumFunction* baranium_script_get_function_by_id(BaraniumScript* script, index_t functionID)
+{
+    if (script == NULL || functionID == INVALID_INDEX)
+        return NULL;
+
+    BaraniumFunction* result = NULL;
+
+    BaraniumSection* foundSection = baranium_script_get_section_by_id_and_type(script, functionID, BaraniumSectionType_Functions);
+    if (foundSection == NULL)
+        return NULL;
+
+    result = malloc(sizeof(BaraniumFunction));
+    result->InstructionCount = foundSection->DataSize;
+    result->Instructions = foundSection->Data;
+    result->ID = functionID;
+
+    return result;
 }

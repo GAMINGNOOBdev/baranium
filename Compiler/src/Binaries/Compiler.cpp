@@ -56,6 +56,9 @@ namespace Binaries
      */
     void Compiler::CopyVariableData(void* __dst, std::string __src, Language::VariableType varType)
     {
+        (*(uint8_t*)__dst) = (uint8_t)varType;
+        void* dest = (void*)((uint64_t)__dst + 1);
+
         switch (varType)
         {
             default:
@@ -74,13 +77,13 @@ namespace Binaries
                     objID = -1;
                 else
                     objID = std::stoll(__src);
-                memcpy(__dst, &objID, sizeof(int64_t));
+                memcpy(dest, &objID, sizeof(int64_t));
                 break;
             }
 
             case Language::VariableType::String:
             {
-                memcpy(__dst, __src.data(), __src.length());
+                memcpy(dest, __src.data(), __src.length());
                 break;
             }
 
@@ -89,7 +92,7 @@ namespace Binaries
                 float fValue;
                 if (!__src.empty())
                     fValue = std::stof(__src);
-                memcpy(__dst, &fValue, sizeof(float));
+                memcpy(dest, &fValue, sizeof(float));
                 break;
             }
 
@@ -98,7 +101,7 @@ namespace Binaries
                 uint8_t bValue = 0;
                 if (!__src.empty())
                     bValue = __src == "true" ? 1 : 0;
-                memcpy(__dst, &bValue, sizeof(uint8_t));
+                memcpy(dest, &bValue, sizeof(uint8_t));
                 break;
             }
 
@@ -107,7 +110,7 @@ namespace Binaries
                 int32_t iValue = 0;
                 if (!__src.empty())
                     iValue = std::stoi(__src);
-                memcpy(__dst, &iValue, sizeof(int32_t));
+                memcpy(dest, &iValue, sizeof(int32_t));
                 break;
             }
 
@@ -116,7 +119,7 @@ namespace Binaries
                 uint32_t uValue = 0;
                 if (!__src.empty())
                     uValue = (uint32_t)std::stoi(__src);
-                memcpy(__dst, &uValue, sizeof(uint32_t));
+                memcpy(dest, &uValue, sizeof(uint32_t));
                 break;
             }
 

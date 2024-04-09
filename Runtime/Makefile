@@ -17,6 +17,9 @@ Sources = 	\
 			src/baranium/runtime.c \
 			src/baranium/script.c \
 			src/baranium/bcpu.c \
+			src/baranium/function.c \
+    		src/baranium/variable.c \
+    		src/baranium/field.c \
 			src/test.c
 
 OBJS=$(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.c.o, $(Sources))

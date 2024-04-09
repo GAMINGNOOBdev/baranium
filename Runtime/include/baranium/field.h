@@ -7,8 +7,14 @@ typedef struct BaraniumField
 {
     enum BaraniumVariableType Type;
     void* Value;
-    char* Name;
-    int ID;
+    index_t ID;
 } BaraniumField;
+
+/**
+ * @brief Dispose a field
+ * 
+ * @param var The field to dispose
+ */
+BARANIUMAPI void baranium_field_dispose(BaraniumField* var);
 
 #endif

@@ -74,6 +74,8 @@ typedef struct BaraniumRuntime
     BCpu cpu;
 } BaraniumRuntime;
 
+
 typedef int64_t index_t;
+#define INVALID_INDEX ((index_t)-1)
 
 #endif
