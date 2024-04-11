@@ -76,6 +76,14 @@ namespace Logging
     void Log(const char* message, Level level = Level::Debug);
 
     /**
+     * @brief Logs an error message and exits with given code
+     * 
+     * @param[in] message log message
+     * @param[in] code error code
+    */
+    void LogErrorExit(const char* message, int code = -1);
+
+    /**
      * @brief Like printf but for building a string together without using `append` on an `std::string` object
      * 
      * @param[in] formatString string which has format information

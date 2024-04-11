@@ -181,7 +181,20 @@ namespace Logging
                 printf("%s%s" LOG_COLOR_NONE, GetColorByLevel(level), logMessage.c_str());
             #endif
         }
-    }    
+    }
+
+    /**
+     * @brief Logs an error message and exits with given code
+     * 
+     * @param[in] message log message
+     * @param[in] code error code
+    */
+    void LogErrorExit(const char* message, int code)
+    {
+        Log(message, Error);
+        Dispose();
+        exit(code);
+    }
 
     /**
      * @brief Like printf but for building a string together without using `append` on an `std::string` object

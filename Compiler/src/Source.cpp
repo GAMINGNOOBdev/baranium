@@ -1,3 +1,4 @@
+#include "Preprocessor.h"
 #include "StringUtil.h"
 #include <algorithm>
 #include "Source.h"
@@ -23,30 +24,21 @@ int IsKeyword(std::string string)
     return iterator - Language::Keywords.begin();
 }
 
-/**
- * @brief Construct a new `Source` object
- */
 Source::Source()
 {
 }
 
-/**
- * @brief Construct a new `Source` object
- * 
- * @param file `BgeFile` object that can read the source file
- */
 Source::Source(BgeFile& file)
 {
     ReadSource(file);
 }
 
-/**
- * @brief Write the source code tokens into a single json file
- * 
- * @note Executed then the `-d` or `--debug` flag is passed to the main executable
- * 
- * @param name Filename of the json file where the token data will be written to
- */
+void Source::AppendSource(Source& other)
+{
+    auto& otherTokens = other.GetTokens();
+    mTokens.insert(mTokens.end(), otherTokens.begin(), otherTokens.end());
+}
+
 void Source::WriteTokensToJson(std::string name)
 {
     BgeFile outputFile = BgeFile(name, true);
@@ -73,11 +65,6 @@ void Source::WriteTokensToJson(std::string name)
     outputFile.Close();
 }
 
-/**
- * @brief Read and parse a sources contents
- * 
- * @param file `BgeFile` object that can read the source file
- */
 void Source::ReadSource(BgeFile& file)
 {
     if (!file.Ready())
@@ -101,7 +88,7 @@ void Source::ReadSource(BgeFile& file)
 
         if (line[0] == '+')
         {
-            // TODO: preprocessor stuff
+            Preprocessor::Parse(line.substr(1), this);
             continue;
         }
 
@@ -109,22 +96,11 @@ void Source::ReadSource(BgeFile& file)
     }
 }
 
-/**
- * @brief Get all the analyzed tokens
- * 
- * @return A vector of all tokens
- */
 std::vector<SourceToken>& Source::GetTokens()
 {
     return mTokens;
 }
 
-/**
- * @brief Parse a single line and analyze for tokens
- * 
- * @param line Line that will be analyzed
- * @param lineNumber The line number
- */
 void Source::ReadLine(std::string line, int lineNumber)
 {
     if (line.empty())
@@ -193,12 +169,6 @@ void Source::ReadLine(std::string line, int lineNumber)
         ReadBuffer(line, lineNumber);
 }
 
-/**
- * @brief Analyze/Lex a single buffer that should NOT contain any special characters
- * 
- * @param buffer The buffer that will be analyzed/lexed
- * @param lineNumber The line number
- */
 void Source::ReadBuffer(std::string buffer, int lineNumber)
 {
     if (buffer.empty())
@@ -235,14 +205,6 @@ void Source::ReadBuffer(std::string buffer, int lineNumber)
     mTokens.push_back(token);
 }
 
-/**
- * @brief Read and interpret a single letter
- * 
- * @note This function exists for convenience and for making the code look cleaner
- * 
- * @param chr The character that will be tokenized
- * @param lineNumber The line number
- */
 void Source::ReadLetter(char chr, int lineNumber)
 {
     SourceToken token;

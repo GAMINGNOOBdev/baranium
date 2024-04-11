@@ -24,6 +24,13 @@ struct Source
     Source(BgeFile& file);
 
     /**
+     * @brief Append tokens of another source into this source
+     * 
+     * @param other the other source that will be appened
+     */
+    void AppendSource(Source& other);
+
+    /**
      * @brief Write the source code tokens into a single json file
      * 
      * @note Executed then the `-d` or `--debug` flag is passed to the main executable

@@ -93,8 +93,8 @@ namespace Language
         if (tokens.empty())
             return;
 
-        if (CheckExpressionDividers(tokens))
-            return;
+        // if (CheckExpressionDividers(tokens))
+        //     return;
 
         auto& firstToken = tokens.front();
 
@@ -279,7 +279,6 @@ namespace Language
         if (ReturnType != VariableType::Invalid && ReturnType != VariableType::Void)
         {
             ReturnValue = TokenParser::ParseVariableValue(returnValueList, ReturnType);
-            Logging::Log(stringf("predict type '%s', value '%s'", VariableTypeToString(ReturnType), ReturnValue.c_str()));
             return;
         }
 
@@ -307,11 +306,7 @@ namespace Language
             return token->mName == valueToken.Contents;
         });
         if (nameIterator == localTokens.end() && globalNameIterator == globalTokens.end())
-        {
-            Logging::Log(stringf("Line %d: Invalid return value \"%s\"", valueToken.LineNumber, valueToken.Contents.c_str()), Logging::Level::Error);
-            Logging::Dispose();
-            exit(-1);
-        }
+            Logging::LogErrorExit(stringf("Line %d: Invalid return value \"%s\"", valueToken.LineNumber, valueToken.Contents.c_str()), -1);
 
         std::shared_ptr<Token> token;
         if (globalNameIterator != globalTokens.end())
@@ -335,9 +330,7 @@ namespace Language
             return;
         }
 
-        Logging::Log(stringf("Line %d: Invalid return value \"%s\"", valueToken.LineNumber, valueToken.Contents.c_str()), Logging::Level::Error);
-        Logging::Dispose();
-        exit(-1);
+        Logging::LogErrorExit(stringf("Line %d: Invalid return value \"%s\"", valueToken.LineNumber, valueToken.Contents.c_str()),  -1);
     }
 
     void Expression::ParseKeywordExpression(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens)

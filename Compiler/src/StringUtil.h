@@ -8,6 +8,13 @@
 #include <vector>
 
 /**
+ * Gets the file extension from a file path
+ * @param filePath File path
+ * @returns Only the extension from the file path (WITH a `.`)
+*/
+std::string GetExtension(std::string str);
+
+/**
  * Converts a number to it's hexadecimal representation
  * 
  * @param[in] num integer value

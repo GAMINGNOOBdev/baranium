@@ -16,6 +16,18 @@
 #   include <sstream>
 #endif
 
+std::string GetExtension(std::string str)
+{
+    std::string result;
+
+    size_t lastDot = str.find_last_of('.');
+
+    if (lastDot == std::string::npos)
+        return str;
+
+    return str.substr(lastDot, str.length()-1);
+}
+
 std::string to_hex_string(size_t num)
 {
     std::stringstream result = std::stringstream();

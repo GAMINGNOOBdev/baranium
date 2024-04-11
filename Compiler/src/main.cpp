@@ -15,12 +15,6 @@
 #include <sys/stat.h>
 #endif
 
-#ifndef _WIN32
-#   define DIRECTORYSEPERATOR '/'
-#else
-#   define DIRECTORYSEPERATOR '\\'
-#endif
-
 extern void PrintUsage();
 extern void CreatePathDirectory(std::string path);
 
@@ -61,7 +55,7 @@ int main(const int argc, const char** argv)
 
     // remove last directory seperator from the output path/file
     if (output.Value.length() > 2)
-        if (output.Value.at(output.Value.length()-1) == DIRECTORYSEPERATOR)
+        if (output.Value.at(output.Value.length()-1) == '\\' || output.Value.at(output.Value.length()-1) == '/')
             output.Value = output.Value.substr(0, output.Value.length()-1);
 
     /////////////////////////////////////////
@@ -77,7 +71,7 @@ int main(const int argc, const char** argv)
         BgeFile inputFile = BgeFile(file.Value, false);
         if (!inputFile.Ready())
         {
-            Logging::Log(Logging::Format("Error: file '%s' doesn't exist\n", file.Value.c_str()), Logging::Level::Error);
+            Logging::Log(stringf("Error: file '%s' doesn't exist\n", file.Value.c_str()), Logging::Level::Error);
             continue;
         }
         Logging::Log(stringf("Compiling file '%s'", file.Value.c_str()), Logging::Level::Info);
@@ -93,13 +87,9 @@ int main(const int argc, const char** argv)
         if (debugMode)
             tokenParser.WriteTokensToJson(std::string(file.Value).append(".tokens.parsed.json"));
 
-        ///////////////////////////
-        /// Compiling to binary ///
-        ///////////////////////////
-
-        //////////////////////////
-        /// Writing the binary ///
-        //////////////////////////
+        ////////////////////////////////////////
+        /// Compiling and writing the binary ///
+        ////////////////////////////////////////
 
         Binaries::CompiledScript script = Binaries::CompiledScript();
         script.ParseTokens(tokenParser.GetTokens());
@@ -107,7 +97,7 @@ int main(const int argc, const char** argv)
         BgeFile outputFile = BgeFile(output.Value, true);
         if (!outputFile.Ready())
         {
-            Logging::Log(Logging::Format("Error: cannot create or open file '%s'\n", output.Value.c_str()), Logging::Level::Error);
+            Logging::Log(stringf("Error: cannot create or open file '%s'\n", output.Value.c_str()), Logging::Level::Error);
             continue;
         }
         script.Save(outputFile);

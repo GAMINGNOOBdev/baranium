@@ -68,7 +68,7 @@ struct BgeFile
 
         if (mFileHandle == nullptr)
         {
-            BGE_LOG("Could not open file \"%s\": File not found/couldn't be created", mPath.c_str());
+            BGE_LOG("Could not open file \"%s\": File not found/couldn't be created\n", mPath.c_str());
             return;
         }
         mCursor = 0;
