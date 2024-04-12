@@ -4,16 +4,22 @@
 
 int main(int argc, const char** argv)
 {
-    /*#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
+    #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
         printf("f*ck you, your os sucks, it can't even fread into allocated memory without crashing\n");
         printf("i am too lazy to find out why so go f*ck yourself and install linux/wsl to run this shit\n");
         return -0xBAD;
-    #endif*/
+    #endif
 
     if (argc < 2)
     {
-        printf("please provide a compiled script\n");
+        printf("please provide one compiled script\n");
         return -1;
+    }
+
+    if (argc > 2)
+    {
+        printf("I SAID *ONE* COMPILED SCRIPT!!!!!!\n");
+        return -('w' + 't' + 'f');
     }
 
     BaraniumRuntime* runtime = baranium_init();
@@ -31,7 +37,7 @@ int main(int argc, const char** argv)
     baranium_function_call(runtime, main);
     baranium_function_dispose(main);
 
-    BaraniumField* myObject = baranium_script_get_field_by_id(script, myObject);
+    BaraniumField* myObject = baranium_script_get_field_by_id(script, myObjectIndex);
     baranium_field_dispose(myObject);
 
     BaraniumVariable* TestString = baranium_script_get_variable(script, "TestString");

@@ -82,7 +82,7 @@ void baranium_close_handle(BaraniumHandle* handle)
     BaraniumHandle* currentHandle = current_active_runtime->start;
     BaraniumHandle* next = handle->next;
     BaraniumHandle* prev = NULL;
-    while (currentHandle != handle)
+    while (currentHandle != handle && currentHandle != NULL)
     {
         next = currentHandle->next;
         currentHandle = next;
