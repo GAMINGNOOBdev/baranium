@@ -20,9 +20,6 @@
 #define LOG_COLOR_WARNING   "\033[33m"
 #define LOG_COLOR_ERROR     "\033[31m"
 #define LOG_COLOR_INFO      "\033[32m"
-#define LOG_COLOR_RUNTIME   "\033[37m"
-#define LOG_COLOR_GL_ERROR  "\033[35m"
-#define LOG_COLOR_GL_INFO   "\033[36m"
 
 /**
  * @brief A class that can manage logging output

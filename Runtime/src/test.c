@@ -1,24 +1,25 @@
 #include <baranium/function.h>
+#include <baranium/logging.h>
 #include <baranium/runtime.h>
 #include <baranium/script.h>
 
 int main(int argc, const char** argv)
 {
     #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
-        printf("f*ck you, your os sucks, it can't even fread into allocated memory without crashing\n");
-        printf("i am too lazy to find out why so go f*ck yourself and install linux/wsl to run this shit\n");
+        LOGERROR("f*ck you, your os sucks, it can't even fread into allocated memory without crashing\n");
+        LOGERROR("i am too lazy to find out why so go f*ck yourself and install linux/wsl to run this shit\n");
         return -0xBAD;
     #endif
 
     if (argc < 2)
     {
-        printf("please provide one compiled script\n");
+        LOGERROR("please provide one compiled script\n");
         return -1;
     }
 
     if (argc > 2)
     {
-        printf("I SAID *ONE* COMPILED SCRIPT!!!!!!\n");
+        LOGERROR("I SAID *ONE* COMPILED SCRIPT!!!!!!\n");
         return -('w' + 't' + 'f');
     }
 
@@ -31,7 +32,7 @@ int main(int argc, const char** argv)
     index_t mainIndex = baranium_script_get_id_of(script, "main");
     index_t TestStringIndex = baranium_script_get_id_of(script, "TestString");
     index_t myObjectIndex = baranium_script_get_id_of(script, "myObject");
-    printf("index of 'main': %ld, 'TestString': %ld, 'myObject': %ld \n", mainIndex, TestStringIndex, myObjectIndex);
+    LOGINFO(stringf("index of 'main': %ld, 'TestString': %ld, 'myObject': %ld", mainIndex, TestStringIndex, myObjectIndex));
 
     BaraniumFunction* main = baranium_script_get_function_by_id(script, mainIndex);
     baranium_function_call(runtime, main);

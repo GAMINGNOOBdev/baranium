@@ -14,6 +14,7 @@ CFLAGS=-I$(INCDIR) -I$(GLOBAL_INCLUDE) -Wno-overflow -g $(DEFINES)
 TARGET=$(BINDIR)/bgs
 
 Sources = 	\
+			src/baranium/logging.c \
 			src/baranium/runtime.c \
 			src/baranium/script.c \
 			src/baranium/bcpu.c \

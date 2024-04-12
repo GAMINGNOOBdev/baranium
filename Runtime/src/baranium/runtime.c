@@ -1,4 +1,5 @@
 #include <baranium/runtime.h>
+#include <baranium/logging.h>
 #include <memory.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -86,6 +87,12 @@ void baranium_close_handle(BaraniumHandle* handle)
     {
         next = currentHandle->next;
         currentHandle = next;
+    }
+
+    if (currentHandle == NULL)
+    {
+        LOGWARNING("Handle not found in runtime, is the given pointer right?");
+        return;
     }
 
     if (currentHandle == current_active_runtime->start)

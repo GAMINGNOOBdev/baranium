@@ -1,6 +1,7 @@
 #pragma warning(disable: 4996)
 
 #include <baranium/runtime.h>
+#include <baranium/logging.h>
 #include <baranium/script.h>
 #include <string.h>
 #include <memory.h>
@@ -68,7 +69,7 @@ BaraniumScript* baranium_open_script(BaraniumHandle* handle)
         return NULL;
 
     if (script->Header.Version != VERSION_CURRENT)
-        fprintf(stderr, "Warning, script may be out of date, be sure to update your compiler and recompile the script");
+        LOGWARNING("Warning, script may be out of date, be sure to update your compiler and recompile the script");
 
     BaraniumSection* section;
     for (uint64_t i = 0; i < script->Header.SectionCount; i++)

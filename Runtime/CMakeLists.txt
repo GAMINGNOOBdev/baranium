@@ -5,6 +5,7 @@ project(bgs)
 include_directories(../include include)
 
 set(bgsSources
+    src/baranium/logging.c
     src/baranium/runtime.c
     src/baranium/script.c
     src/baranium/bcpu.c
