@@ -1,6 +1,15 @@
 #include "Preprocessor.h"
 #include "StringUtil.h"
+#include "FileUtil.h"
 #include "Logging.h"
+#include <algorithm>
+
+#ifdef _WIN32
+#   undef min
+#   undef max
+#endif
+
+std::vector<std::string> Preprocessor::mIncludePaths;
 
 void Preprocessor::Parse(std::string operation, Source* source)
 {
@@ -27,13 +36,19 @@ void Preprocessor::Parse(std::string operation, Source* source)
     std::string pathsString = operation.substr(7);
     pathsString = StrTrimLeading(pathsString);
     auto paths = StrSplit(pathsString, ',');
-    std::string path;
+    std::string includeFile;
+    std::string includePath;
     for (auto& not_safe_for_work_path : paths)
     {
-        path = StrTrimLeading(not_safe_for_work_path);
-        BgeFile file = BgeFile(path, false);
+        includeFile = StrTrimLeading(not_safe_for_work_path);
+        includePath = SearchIncludePath(includeFile);
+        if (includePath.empty())
+            Logging::LogErrorExit(stringf("Including file '%s' failed", includeFile.c_str()), -includeFile.length());
+
+        BgeFile file = BgeFile(includePath, false);
+
         if (!file.Ready())
-            Logging::LogErrorExit(stringf("Including file '%s' failed", path.c_str()), -path.length());
+            Logging::LogErrorExit(stringf("Including file '%s' failed", includeFile.c_str()), -includeFile.length());
 
         Source src = Source();
         src.ReadSource(file);
@@ -41,4 +56,39 @@ void Preprocessor::Parse(std::string operation, Source* source)
         file.Close();
         src.GetTokens().clear();
     }
+}
+
+void Preprocessor::AddIncludePath(std::string path)
+{
+    std::string includePath = path;
+    if (includePath.at(includePath.length()-1) == '\\' || includePath.at(includePath.length()-1) == '/')
+        includePath = includePath.substr(0, includePath.length()-1);
+
+    if (std::find(mIncludePaths.begin(), mIncludePaths.end(), includePath) != mIncludePaths.end())
+        return;
+
+    mIncludePaths.push_back(includePath);
+}
+
+void Preprocessor::PopLastInclude()
+{
+    if (mIncludePaths.size() == 1)
+        mIncludePaths.clear();
+
+    if (mIncludePaths.size() > 2)
+        mIncludePaths.erase(mIncludePaths.end());
+}
+
+std::string Preprocessor::SearchIncludePath(std::string file)
+{
+    for (auto& includePath : mIncludePaths)
+    {
+        for (auto& fileName : FileUtil::GetDirectoryContents(includePath, FileUtil::FilterMask::Files))
+        {
+            if (fileName == file)
+                return stringf("%s/%s", includePath.c_str(), file.c_str());
+        }
+    }
+
+    return "";
 }

@@ -1,0 +1,7 @@
+## this is also just another test file
+
+define myVeryFancyFunction(int var)
+{
+    gameobject attachedObject = attached;
+    return attachedObject;
+}

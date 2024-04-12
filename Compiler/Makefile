@@ -30,6 +30,7 @@ Sources = 	\
 			src/SourceToken.cpp \
 			src/TokenParser.cpp \
 			src/StringUtil.cpp \
+			src/FileUtil.cpp \
 			src/Logging.cpp \
 			src/Source.cpp \
 			src/main.cpp

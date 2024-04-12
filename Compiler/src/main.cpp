@@ -4,15 +4,21 @@
 
 #include "Binaries/CompiledScript.h"
 #include "ArgumentParser.h"
+#include "Preprocessor.h"
 #include "TokenParser.h"
 #include "StringUtil.h"
+#include "FileUtil.h"
 #include "Logging.h"
 #include "Source.h"
 
 #ifdef _WIN32
-#include <Windows.h>
+#   include <Windows.h>
+#   define OS_DELIMITER '\\'
+#   undef max
+#   undef min
 #else
-#include <sys/stat.h>
+#   include <sys/stat.h>
+#   define OS_DELIMITER '/'
 #endif
 
 extern void PrintUsage();
@@ -28,20 +34,66 @@ int main(const int argc, const char** argv)
     parser.AddArgument(ArgumentType::Flag,  "-h",   "--help");
     parser.AddArgument(ArgumentType::Value, "-o",   "--output");
     parser.AddArgument(ArgumentType::Flag,  "-d",   "--debug-mode");
+    parser.AddArgument(ArgumentType::Value, "-I", "--include");
 
     parser.ParseArguments(argc - 1, &argv[1]);
 
     auto fileList = parser.GetUnparsedArguments();
-    if (fileList.size() > 1)
-    {
-        PrintUsage();
-        return -1;
-    }
-
     Argument output = parser.GetArgument("-o");
+    Argument userIncludes = parser.GetArgument("-I");
 
     bool helpRequested = parser.HasArgument("-h");
     bool debugMode = parser.HasArgument("-d");
+    Logging::DebugMessages = debugMode;
+
+    // read include paths
+    std::string executableFilePath = FileUtil::GetExecutableWorkingDirectory();
+    size_t executableFilePathLastSeperatorIndex = executableFilePath.find_last_of(OS_DELIMITER);
+    if (executableFilePathLastSeperatorIndex != std::string::npos)
+        executableFilePath = executableFilePath.substr(0, executableFilePathLastSeperatorIndex+1); // index + 1 to include the delimiter
+
+    Preprocessor::AddIncludePath(std::string(executableFilePath).append("../include"));
+
+    std::string includePathsFilePath = std::string(executableFilePath).append("../etc/include.paths");
+    if (FileUtil::Exists(includePathsFilePath))
+    {
+        BgeFile includePathsFile = BgeFile(includePathsFilePath, false);
+        if (!includePathsFile.Ready())
+            Logging::LogErrorExit("how in the f*ck did this error occur?!?!?!?");
+
+        std::string line;
+        while (!includePathsFile.EndOfFile())
+        {
+            line = includePathsFile.ReadLine();
+            if (line.empty())
+                continue;
+
+            Preprocessor::AddIncludePath(line);
+        }
+        includePathsFile.Close();
+    }
+
+    if (userIncludes != Argument::empty)
+    {
+        if (FileUtil::Exists(userIncludes.Value))
+        {
+            BgeFile userIncludePathsFile = BgeFile(userIncludes.Value, false);
+
+            if (!userIncludePathsFile.Ready())
+                Logging::LogErrorExit("again, how the f*ck did you get here?");
+
+            std::string line;
+            while (!userIncludePathsFile.EndOfFile())
+            {
+                line = userIncludePathsFile.ReadLine();
+                if (line.empty())
+                    continue;
+
+                Preprocessor::AddIncludePath(line);
+            }
+            userIncludePathsFile.Close();
+        }
+    }
 
     //////////////////////
     /// Error handling ///
@@ -65,8 +117,19 @@ int main(const int argc, const char** argv)
     Logging::FileLogging = false;
     Logging::Init();
 
+    Source combinedSource;
     for (auto& file : fileList)
     {
+        std::string sourceFileDirectory = file.Value;
+        size_t sourceFileDirectorySeperatorIndex = std::max((int64_t)sourceFileDirectory.find_last_of('\\'), (int64_t)sourceFileDirectory.find_last_of('/'));
+        if (sourceFileDirectorySeperatorIndex == std::string::npos)
+            sourceFileDirectory = "";
+        else
+        {
+            sourceFileDirectory = sourceFileDirectory.substr(0, sourceFileDirectorySeperatorIndex);
+            Preprocessor::AddIncludePath(sourceFileDirectory);
+        }
+
         Source source;
         BgeFile inputFile = BgeFile(file.Value, false);
         if (!inputFile.Ready())
@@ -81,28 +144,30 @@ int main(const int argc, const char** argv)
         if (debugMode)
             source.WriteTokensToJson(std::string(file.Value).append(".tokens.json"));
 
-        TokenParser tokenParser;
-        tokenParser.ParseTokens(source.GetTokens());
+        combinedSource.AppendSource(source);
 
-        if (debugMode)
-            tokenParser.WriteTokensToJson(std::string(file.Value).append(".tokens.parsed.json"));
-
-        ////////////////////////////////////////
-        /// Compiling and writing the binary ///
-        ////////////////////////////////////////
-
-        Binaries::CompiledScript script = Binaries::CompiledScript();
-        script.ParseTokens(tokenParser.GetTokens());
-
-        BgeFile outputFile = BgeFile(output.Value, true);
-        if (!outputFile.Ready())
-        {
-            Logging::Log(stringf("Error: cannot create or open file '%s'\n", output.Value.c_str()), Logging::Level::Error);
-            continue;
-        }
-        script.Save(outputFile);
-        outputFile.Close();
+        Preprocessor::PopLastInclude();
     }
+
+    TokenParser tokenParser;
+    tokenParser.ParseTokens(combinedSource.GetTokens());
+
+    if (debugMode)
+        tokenParser.WriteTokensToJson(std::string(output.Value).append(".tokens.parsed.json"));
+
+    ////////////////////////////////////////
+    /// Compiling and writing the binary ///
+    ////////////////////////////////////////
+
+    Binaries::CompiledScript script = Binaries::CompiledScript();
+    script.ParseTokens(tokenParser.GetTokens());
+
+    BgeFile outputFile = BgeFile(output.Value, true);
+    if (!outputFile.Ready())
+        Logging::LogErrorExit(stringf("Error: cannot create or open file '%s'\n", output.Value.c_str()));
+
+    script.Save(outputFile);
+    outputFile.Close();
 
     Logging::Dispose();
 
@@ -114,7 +179,9 @@ void PrintUsage()
     printf("bgsc [options] files...\n\n");
     printf("Options:\n");
     printf("\t-o <path>\tSpecify output file\n");
-    printf("\t-h\t\tShow this help message\n\n");
+    printf("\t-h\t\tShow this help message\n");
+    printf("\t-I <file>\tSpecify file containing all custom user include directories\n");
+    printf("\t-d\t\tPrint debug messages\n\n");
 }
 
 void CreatePathDirectory(std::string path)

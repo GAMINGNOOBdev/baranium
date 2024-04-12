@@ -4,11 +4,11 @@
 
 int main(int argc, const char** argv)
 {
-    #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
+    /*#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
         printf("f*ck you, your os sucks, it can't even fread into allocated memory without crashing\n");
         printf("i am too lazy to find out why so go f*ck yourself and install linux/wsl to run this shit\n");
         return -0xBAD;
-    #endif
+    #endif*/
 
     if (argc < 2)
     {

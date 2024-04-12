@@ -1,0 +1,4 @@
+define Lib1_Init()
+{
+    return true;
+}

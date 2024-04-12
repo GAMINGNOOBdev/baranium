@@ -1,0 +1,4 @@
+define Lib3_Init()
+{
+    return true;
+}
