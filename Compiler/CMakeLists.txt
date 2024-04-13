@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(bgsc)
 
-include_directories(../include)
+include_directories(../BGE-File)
 
 set(bgscSources
     src/Language/IfElseStatement.cpp

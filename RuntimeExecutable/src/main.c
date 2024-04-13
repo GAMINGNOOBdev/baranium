@@ -6,20 +6,20 @@
 int main(int argc, const char** argv)
 {
     #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
-        LOGERROR("f*ck you, your os sucks, it can't even fread into allocated memory without crashing\n");
-        LOGERROR("i am too lazy to find out why so go f*ck yourself and install linux/wsl to run this shit\n");
+        LOGERROR("f*ck you, your os sucks, it can't even fread into allocated memory without crashing");
+        LOGERROR("i am too lazy to find out why so go f*ck yourself and install linux/wsl to run this shit");
         return -0xBAD;
     #endif
 
     if (argc < 2)
     {
-        LOGERROR("please provide one compiled script\n");
+        LOGERROR("please provide one compiled script");
         return -1;
     }
 
     if (argc > 2)
     {
-        LOGERROR("I SAID *ONE* COMPILED SCRIPT!!!!!!\n");
+        LOGERROR("I SAID *ONE* COMPILED SCRIPT!!!!!!");
         return -('w' + 't' + 'f');
     }
 

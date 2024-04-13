@@ -12,12 +12,12 @@ typedef struct{
     uint8_t OV: 1;      // overlow bit
     uint8_t N: 1;       // negative bit
     uint8_t UNKNOWN: 1; // unknown/reserved
-} BCpu_flags;
+} bcpu_flags;
 
-struct BCpu;
-typedef void(*BCpu_FETCH)(struct BCpu* _this);
+struct bcpu;
+typedef void(*BCPUFETCH)(struct bcpu* _this);
 
-typedef struct BCpu
+typedef struct bcpu
 {
     uint16_t IP;        // Instruction Pointer (Program Counter)
     
@@ -25,7 +25,7 @@ typedef struct BCpu
 
     uint8_t A, X, Y;    // Accumulator, X and Y registers
 
-    BCpu_flags flags;  // Flags
+    bcpu_flags flags;  // Flags
 
     uint8_t opcode;     // operation code/instruction
 
@@ -41,23 +41,23 @@ typedef struct BCpu
     uint16_t ADDR_REL;  // Relative address added to some absolute value to get the full address
 
     uint8_t fetched;
-    BCpu_FETCH fetch;
-} BCpu;
+    BCPUFETCH fetch;
+} bcpu;
 
 // initialize the cpu
-void BCpu_init(BCpu* _this);
+void bcpu_init(bcpu* _this);
 
 // this is the method which executes the instructions from the IP value forward
 // some instructions can take multiple calls to this function to execute properly
-void BCpu_tick(BCpu* _this);
+void bcpu_tick(bcpu* _this);
 
 // resets the cpu
-void BCpu_reset(BCpu* _this);
+void bcpu_reset(bcpu* _this);
 
 // non-maskable interrupt
-void BCpu_nmi(BCpu* _this);
+void bcpu_nmi(bcpu* _this);
 
 // interrupt request
-void BCpu_irq(BCpu* _this);
+void bcpu_irq(bcpu* _this);
 
 #endif

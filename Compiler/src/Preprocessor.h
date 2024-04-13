@@ -2,6 +2,7 @@
 #define __PREPROCESSOR_H_ 1
 
 #include "Language/Language.h"
+#include <unordered_map>
 #include <BgeFile.hpp>
 #include "Source.h"
 #include <string>

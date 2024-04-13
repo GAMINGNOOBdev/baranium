@@ -1,6 +1,8 @@
 #ifndef __BARANIUM__LOGGING_H_
 #define __BARANIUM__LOGGING_H_ 1
 
+#include "defines.h"
+
 typedef unsigned char loglevel_t;
 
 #define LOGLEVEL_INFO       0
@@ -22,7 +24,7 @@ typedef unsigned char loglevel_t;
  * 
  * @returns the new formatted string
 */
-const char* stringf(const char* formatString, ...);
+BARANIUMAPI const char* stringf(const char* formatString, ...);
 
 /**
  * @brief Log a message onto the cmd line
@@ -30,6 +32,6 @@ const char* stringf(const char* formatString, ...);
  * @param lvl Logging level
  * @param msg Log message
  */
-void logr(loglevel_t lvl, const char* msg);
+BARANIUMAPI void logr(loglevel_t lvl, const char* msg);
 
 #endif

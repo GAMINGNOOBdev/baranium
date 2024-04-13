@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd Runtime
+cd RuntimeExecutable
 bash build_run.sh
 cd ..

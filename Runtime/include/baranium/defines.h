@@ -41,10 +41,14 @@
 #endif
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
-#   ifdef BARANIUM_BUILD
-#       define BARANIUMAPI __declspec(dllexport)
+#   ifdef BARANIUM_DYNAMIC
+#       ifdef BARANIUM_BUILD
+#           define BARANIUMAPI __declspec(dllexport)
+#       else
+#           define BARANIUMAPI __declspec(dllimport)
+#       endif
 #   else
-#       define BARANIUMAPI __declspec(dllimport)
+#       define BARANIUMAPI
 #   endif
 #else
 #   define BARANIUMAPI
@@ -71,7 +75,7 @@ typedef struct BaraniumRuntime
     BaraniumHandle* start;
     BaraniumHandle* end;
     uint64_t openHandles;
-    BCpu cpu;
+    bcpu cpu;
 } BaraniumRuntime;
 
 

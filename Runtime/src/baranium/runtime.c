@@ -10,8 +10,8 @@ BaraniumRuntime* baranium_init()
 {
     BaraniumRuntime* runtimeHandle = malloc(sizeof(BaraniumRuntime));
     memset(runtimeHandle, 0, sizeof(BaraniumRuntime));
-    BCpu_init(&runtimeHandle->cpu);
-    BCpu_reset(&runtimeHandle->cpu);
+    bcpu_init(&runtimeHandle->cpu);
+    bcpu_reset(&runtimeHandle->cpu);
     return runtimeHandle;
 }
 
@@ -25,7 +25,7 @@ void baranium_cleanup(BaraniumRuntime* runtime)
     if (runtime == NULL)
         return;
 
-    BCpu_reset(&runtime->cpu);
+    bcpu_reset(&runtime->cpu);
     BaraniumHandle* handle = runtime->start;
     BaraniumHandle* next = handle->next;
     while (handle != NULL)

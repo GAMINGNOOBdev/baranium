@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(bgs)
+project(baranium)
 
-include_directories(../include include)
 
-set(bgsSources
+include_directories(../BGE-File include)
+
+set(baraniumSources
     src/baranium/logging.c
     src/baranium/runtime.c
     src/baranium/script.c
@@ -12,15 +13,16 @@ set(bgsSources
     src/baranium/function.c
     src/baranium/variable.c
     src/baranium/field.c
-    src/test.c
     )
 
-add_executable(bgs ${bgsSources})
+add_library(baranium STATIC ${baraniumSources})
+add_library(baranium-dll SHARED ${baraniumSources})
+target_compile_definitions(baranium-dll PUBLIC BARANIUM_DYNAMIC)
 
 if( MSVC )
     if(${CMAKE_VERSION} VERSION_LESS "3.6.0")
-        message("\nYou are running a cmake version lower than 3.6.0, you have to set 'bgs' as the Startup project manually.\n")
+        message("\nYou are running a cmake version lower than 3.6.0, you have to set 'baranium' as the Startup project manually.\n")
     else()
-        set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT bgs )
+        set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT baranium )
     endif()
 endif()
