@@ -26,18 +26,22 @@ void baranium_cleanup(BaraniumRuntime* runtime)
         return;
 
     bcpu_reset(&runtime->cpu);
-    BaraniumHandle* handle = runtime->start;
-    BaraniumHandle* next = handle->next;
-    while (handle != NULL)
+    if (!(runtime->start == NULL && runtime->end == NULL))
     {
-        next = handle->next;
+        BaraniumHandle* handle = runtime->start;
+        BaraniumHandle* next = handle->next;
+        while (handle != NULL)
+        {
+            next = handle->next;
 
-        if (handle->file)
-            fclose(handle->file);
+            if (handle->file)
+                fclose(handle->file);
 
-        free(handle);
-        handle = next;
+            free(handle);
+            handle = next;
+        }
     }
+
     free(runtime);
 }
 
@@ -48,7 +52,10 @@ BaraniumHandle* baranium_open_handle(const char* source)
 
     FILE* file = fopen(source, "rb");
     if (file == NULL)
+    {
+        LOGERROR(stringf("File '%s' not found", source));
         return NULL;
+    }
 
     BaraniumHandle* handle = (BaraniumHandle*)malloc(sizeof(BaraniumHandle));
     memset(handle, 0, sizeof(BaraniumHandle));
@@ -58,7 +65,7 @@ BaraniumHandle* baranium_open_handle(const char* source)
     {
         current_active_runtime->start = current_active_runtime->end = handle;
         current_active_runtime->openHandles = 1;
-        return;
+        goto end;
     }
 
     if (current_active_runtime->start == current_active_runtime->end)
@@ -66,13 +73,16 @@ BaraniumHandle* baranium_open_handle(const char* source)
         handle->prev = current_active_runtime->start;
         current_active_runtime->start->next = current_active_runtime->end = handle;
         current_active_runtime->openHandles++;
-        return;
+        goto end;
     }
 
     handle->prev = current_active_runtime->end;
     current_active_runtime->end->next = handle;
     current_active_runtime->end = handle;
     current_active_runtime->openHandles++;
+
+end:
+    return handle;
 }
 
 void baranium_close_handle(BaraniumHandle* handle)
@@ -81,7 +91,7 @@ void baranium_close_handle(BaraniumHandle* handle)
         return;
 
     BaraniumHandle* currentHandle = current_active_runtime->start;
-    BaraniumHandle* next = handle->next;
+    BaraniumHandle* next = NULL;
     BaraniumHandle* prev = NULL;
     while (currentHandle != handle && currentHandle != NULL)
     {
@@ -93,6 +103,12 @@ void baranium_close_handle(BaraniumHandle* handle)
     {
         LOGWARNING("Handle not found in runtime, is the given pointer right?");
         return;
+    }
+
+    if (currentHandle == current_active_runtime->start && currentHandle == current_active_runtime->end)
+    {
+        current_active_runtime->start = current_active_runtime->end = NULL;
+        goto destroy;
     }
 
     if (currentHandle == current_active_runtime->start)
