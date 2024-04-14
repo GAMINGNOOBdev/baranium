@@ -63,6 +63,11 @@ struct SourceToken
     std::string Contents;
     int KeywordIndex;
     int LineNumber;
+
+    static SourceToken empty;
+
+    bool operator==(SourceToken& other);
+    bool operator!=(SourceToken& other);
 };
 
 /**

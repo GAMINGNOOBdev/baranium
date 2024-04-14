@@ -26,6 +26,8 @@ field float EnemySpawnRate;             # if no initialization is done when crea
 
 # examples for globally accessible variables
 string TestString = "this is some random string value";
+string alskndaslkdsa = "";
+string alskndaadasdsadasdslkdsa = "a";
 
 # quick note: variables and fields that are global cannot be initialized with function calls
 #             instead they have to either hold a specific value or stay uninitialized until

@@ -1,7 +1,11 @@
 ## this is also just another test file
 
++define TEST_DEFINE "dayum, this actually works"
++define BARANIUMAPI
+
 define myVeryFancyFunction(int var)
 {
     gameobject attachedObject = attached;
+    string name = TEST_DEFINE;
     return attachedObject;
 }

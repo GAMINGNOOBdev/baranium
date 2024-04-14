@@ -1,6 +1,18 @@
 #include "SourceToken.h"
 #include "StringUtil.h"
 
+SourceToken SourceToken::empty = SourceToken();
+
+bool SourceToken::operator==(SourceToken& other)
+{
+    return other.Contents == Contents && other.KeywordIndex == KeywordIndex && other.LineNumber == LineNumber && other.mType == mType;
+}
+
+bool SourceToken::operator!=(SourceToken& other)
+{
+    return !operator==(other);
+}
+
 const char* SourceTokenTypeToString(SourceToken::Type type)
 {
     switch (type)

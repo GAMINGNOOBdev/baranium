@@ -149,6 +149,8 @@ int main(const int argc, const char** argv)
         Preprocessor::PopLastInclude();
     }
 
+    combinedSource.WriteTokensToJson(std::string(output.Value).append(".tokens.json"));
+
     TokenParser tokenParser;
     tokenParser.ParseTokens(combinedSource.GetTokens());
 

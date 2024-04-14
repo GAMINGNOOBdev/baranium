@@ -72,6 +72,23 @@ namespace Language
      * @return `false` otherwise
      */
     bool IsInternalType(SourceToken& token);
+
+    /**
+     * @brief Checks if the given string is a keyword
+     * 
+     * @param string The string that will be checked if it is a keyword
+     * 
+     * @returns -1 if not a keyword, else it will return the index of it
+     */
+    int IsKeyword(std::string string);
+
+    /**
+     * @brief Checks if the given character `c` is a special character
+     * 
+     * @param c The character that will be checked
+     * @returns -1 if not a special character, else an index to the special character in the list
+     */
+    int IsSpecialChar(char c);
 }
 
 #endif

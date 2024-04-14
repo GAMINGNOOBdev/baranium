@@ -51,23 +51,11 @@ uint8_t StrContains(std::string str, char c)
 int8_t StrIndexOf(std::string str, char c)
 {
     return str.find_first_of(c);
-    /*for (size_t i = 0; i < str.size(); i++)
-    {
-        if (str.at(i) == c)
-            return i;
-    }
-    return -1;*/
 }
 
 int8_t StrLastIndexOf(std::string str, char c)
 {
     return str.find_last_of(c);
-    /*for (size_t i = str.size()-1; i >= 0; i--)
-    {
-        if (str.at(i) == c)
-            return i;
-    }
-    return -1;*/
 }
 
 std::string StrTrim(std::string str)
@@ -158,16 +146,6 @@ std::string StrUppercase(std::string str)
 
 bool StrIsNumber(std::string str)
 {
-    /*
-    // The old "quick and dirty" way
-    std::stringstream outputStream;
-    outputStream << str;
-
-    int tmpOutput;
-    outputStream >> std::noskipws >> tmpOutput;
-
-    return !outputStream.fail() || outputStream.eof();
-     */
     int index = 0;
     char chr = str.at(index);
     if (chr == '+' || chr == '-')
@@ -186,21 +164,6 @@ bool StrIsNumber(std::string str)
 
 bool StrIsFloat(std::string str)
 {
-    /*
-    // The old "quick and dirty" way
-
-    if (str.find('.') == std::string::npos)
-        return false;
-
-    std::stringstream outputStream;
-    outputStream << str;
-
-    double tmpOutput;
-    outputStream >> std::noskipws >> tmpOutput;
-
-    return !outputStream.fail() || outputStream.eof();
-
-     */
     int index = 0;
     char chr = str.at(index);
     if (chr == '+' || chr == '-')
@@ -262,14 +225,6 @@ std::vector<std::string> StrSplit(std::string str, char delim)
     return result;
 }
 
-/**
- * Splits a string using a delimiter WITHOUT removing the delimiters from the end result
- * 
- * @param[in] str input string
- * @param[in] delim delimiter
- * 
- * @returns list of each individual parts of the split string
-*/
 std::vector<std::string> StrSplitLess(std::string str, char delim)
 {
     std::vector<std::string> result;

@@ -37,6 +37,23 @@ struct Preprocessor
      */
     static void PopLastInclude();
 
+    /**
+     * @brief Add a define
+     * 
+     * @param defineName Define name
+     * @param replacement What the define replaces
+     */
+    static void AddDefine(std::string defineName, std::string replacement);
+
+    /**
+     * @brief Check if there are any defines in the currently available tokens and replace if necessary
+     * 
+     * @param lineTokens Line tokens
+     * 
+     * @returns A better version of the lines tokens
+     */
+    static std::vector<SourceToken> AssistInLine(std::vector<SourceToken>& lineTokens);
+
 private:
     /**
      * @brief Search for a file inside the currently given include paths
@@ -48,6 +65,8 @@ private:
     static std::string SearchIncludePath(std::string file);
 
 private:
+    static std::unordered_map<std::string, std::string> mDefines;
+    static std::vector<std::string> mDefinesEntries;
     static std::vector<std::string> mIncludePaths;
 };
 

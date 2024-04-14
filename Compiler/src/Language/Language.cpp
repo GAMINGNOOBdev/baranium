@@ -1,4 +1,5 @@
 #include "Language.h"
+#include <algorithm>
 
 using namespace Language;
 
@@ -78,14 +79,35 @@ std::vector<SpecialCharacter> Language::SpecialCharacters = {
     SpecialCharacter{';',   SourceToken::Type::Semicolon},
 };
 
-/**
- * @brief Checks if the given token is an internal type
- * 
- * @param token The token that will be checked
- * @return `true` if the token is an internal type
- * @return `false` otherwise
- */
 bool Language::IsInternalType(SourceToken& token)
 {
     return token.KeywordIndex >= KeywordIndex_gameobject && token.KeywordIndex <= KeywordIndex_uint;
+}
+
+int Language::IsKeyword(std::string string)
+{
+    auto iterator = std::find_if(Language::Keywords.begin(), Language::Keywords.end(),
+        [string](Language::Keyword& a)
+        {
+            return a.Name == string;
+        }
+    );
+    if (iterator == Language::Keywords.end())
+        return -1;
+
+    return iterator - Language::Keywords.begin();
+}
+
+int Language::IsSpecialChar(char c)
+{
+    auto iterator = std::find_if(Language::SpecialCharacters.begin(), Language::SpecialCharacters.end(),
+        [c](Language::SpecialCharacter& a)
+        {
+            return a.Character == c;
+        }
+    );
+    if (iterator == Language::SpecialCharacters.end())
+        return -1;
+
+    return iterator - Language::SpecialCharacters.begin();
 }

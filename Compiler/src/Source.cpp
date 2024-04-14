@@ -3,27 +3,6 @@
 #include <algorithm>
 #include "Source.h"
 
-/**
- * @brief Checks if the given string is a keyword
- * 
- * @param string The string that will be checked if it is a keyword
- * 
- * @returns -1 if not a keyword, else it will return the index of it
- */
-int IsKeyword(std::string string)
-{
-    auto iterator = std::find_if(Language::Keywords.begin(), Language::Keywords.end(),
-        [string](Language::Keyword& a)
-        {
-            return a.Name == string;
-        }
-    );
-    if (iterator == Language::Keywords.end())
-        return -1;
-
-    return iterator - Language::Keywords.begin();
-}
-
 Source::Source()
 {
 }
@@ -101,27 +80,39 @@ std::vector<SourceToken>& Source::GetTokens()
     return mTokens;
 }
 
+std::vector<SourceToken> Source::ParseLineToTokens(std::string line)
+{
+    Source src = Source();
+    src.ReadLine(line, -1);
+    return std::vector<SourceToken>(src.GetTokens());
+}
+
+///////////////////////
+/// Private methods ///
+///////////////////////
+
 void Source::ReadLine(std::string line, int lineNumber)
 {
+    int start = 0;
+    int end = 0;
+    char tmpStr[2] = {0, 0};
+    bool inString = false;
+    char lastStringChar = 0;
+    char chr = tmpStr[0];
+
     if (line.empty())
         return;
 
     if (line.length() < 2)
     {
         ReadLetter(line.at(0), lineNumber);
-        return;
+        goto validate;
     }
-
-    int start = 0;
-    int end = 0;
-    char tmpStr[2] = {0, 0};
-    bool inString = false;
-    char lastStringChar = 0;
 
     for (int index = 0; index < line.length(); index++)
     {
         tmpStr[0] = line.at(index);
-        char chr = tmpStr[0];
+        chr = tmpStr[0];
         if (isspace(chr) && !inString)
         {
             end++;
@@ -134,9 +125,9 @@ void Source::ReadLine(std::string line, int lineNumber)
             inString = false;
 
         if (!inString)
-        for (auto& specialCharacter : Language::SpecialCharacters)
         {
-            if (chr == specialCharacter.Character)
+            int specialCharIndex = Language::IsSpecialChar(chr);
+            if (specialCharIndex != -1)
             {
                 if (chr == '"' && lastStringChar == 0)
                 {
@@ -148,17 +139,16 @@ void Source::ReadLine(std::string line, int lineNumber)
                     lastStringChar = 0;
 
                 end++;
-                ReadBuffer(line.substr(start, end - start), lineNumber);
+                if (line.substr(start, end - start) != tmpStr)
+                    ReadBuffer(line.substr(start, end - start), lineNumber);
                 start = index+1;
 
                 SourceToken token = SourceToken();
                 token.Contents = std::string(tmpStr);
-                token.mType = specialCharacter.TokenType;
+                token.mType = Language::SpecialCharacters[specialCharIndex].TokenType;
                 token.KeywordIndex = -1;
                 token.LineNumber = lineNumber;
-                mTokens.push_back(token);
-
-                break;
+                mLineTokens.push_back(token);
             }
         }
 
@@ -167,10 +157,17 @@ void Source::ReadLine(std::string line, int lineNumber)
 
     if (start == 0 && end == line.size()-1)
         ReadBuffer(line, lineNumber);
+
+validate:
+    mLineTokens = Preprocessor::AssistInLine(mLineTokens);
+    mTokens.insert(mTokens.end(), mLineTokens.begin(), mLineTokens.end());
+    mLineTokens.clear();
 }
 
 void Source::ReadBuffer(std::string buffer, int lineNumber)
 {
+    buffer = StrTrimLeading(buffer);
+
     if (buffer.empty())
         return;
 
@@ -181,28 +178,26 @@ void Source::ReadBuffer(std::string buffer, int lineNumber)
         numberToken.Contents = buffer;
         numberToken.LineNumber = lineNumber;
         numberToken.mType = SourceToken::Type::Number;
-        mTokens.push_back(numberToken);
+        mLineTokens.push_back(numberToken);
         return;
     }
 
     SourceToken token = SourceToken();
 
-    int keywordIndex = IsKeyword(buffer);
+    int keywordIndex = Language::IsKeyword(buffer);
     token.KeywordIndex = keywordIndex;
     token.LineNumber = lineNumber;
     token.mType = SourceToken::Type::Text;
-    
+    token.Contents = std::string(buffer);
+
     if (keywordIndex != -1)
     {
         auto& keyword = Language::Keywords[keywordIndex];
         token.Contents = std::string(keyword.Name);
         token.mType = keyword.TokenType;
-        mTokens.push_back(token);
-        return;
     }
 
-    token.Contents = std::string(buffer);
-    mTokens.push_back(token);
+    mLineTokens.push_back(token);
 }
 
 void Source::ReadLetter(char chr, int lineNumber)
@@ -231,5 +226,5 @@ void Source::ReadLetter(char chr, int lineNumber)
 
 end:
 
-    mTokens.push_back(token);
+    mLineTokens.push_back(token);
 }

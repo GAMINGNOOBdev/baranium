@@ -1,3 +1,4 @@
+#include "Language/Language.h"
 #include "Preprocessor.h"
 #include "StringUtil.h"
 #include "FileUtil.h"
@@ -10,51 +11,68 @@
 #endif
 
 std::vector<std::string> Preprocessor::mIncludePaths;
+std::vector<std::string> Preprocessor::mDefinesEntries;
+std::unordered_map<std::string, std::string> Preprocessor::mDefines;
 
 void Preprocessor::Parse(std::string operation, Source* source)
 {
     if (operation.empty() || source == nullptr)
         return;
-    
-    // kinda a bruteforce method but i don't care, there probably isn't gonna be anything BUT including anyways
-    // well, probably for now until literally anyone cares and sees this project and people actually use this
-    // stuff
 
-    if (operation.length() < 7)
-        return;
-    
-    if (StrTrimLeading(operation) == "include")
+    std::string cleanBuffer = StrTrimLeading(operation);
+
+    if (cleanBuffer == "include")
     {
-        printf("haha, funni. including nothing, huh? well that's certainly strange but i know something stranger and it's the fact that there even is a message like this that catches that specific case of not having a single file that you want to include in a include statement. you really deserve a gold medal for finding this secret little easter egg my friend. have a good day.");
+        printf("haha, funni. including nothing, huh? well that's certainly strange but i know something stranger and it's the fact that there even is a message like this that catches that specific case of not having a single file that you want to include in a include statement. you really deserve a gold medal for finding this secret little easter egg my friend. have a good day.\n");
         return;
     }
 
-    // make sure this is actually an include
-    if (operation.substr(0,7) != "include")
+    std::string command = cleanBuffer.substr(0, cleanBuffer.find_first_of(' '));
+    // there are currently no preprocessor commands that are just standalone
+    if (command.empty())
         return;
 
-    std::string pathsString = operation.substr(7);
-    pathsString = StrTrimLeading(pathsString);
-    auto paths = StrSplit(pathsString, ',');
-    std::string includeFile;
-    std::string includePath;
-    for (auto& not_safe_for_work_path : paths)
+    // make sure this is actually an include
+    if (command == "include")
     {
-        includeFile = StrTrimLeading(not_safe_for_work_path);
-        includePath = SearchIncludePath(includeFile);
-        if (includePath.empty())
-            Logging::LogErrorExit(stringf("Including file '%s' failed", includeFile.c_str()), -includeFile.length());
+        std::string pathsString = cleanBuffer.substr(7);
+        pathsString = StrTrimLeading(pathsString);
+        auto paths = StrSplit(pathsString, ',');
+        std::string includeFile;
+        std::string includePath;
+        for (auto& not_safe_for_work_path : paths)
+        {
+            includeFile = StrTrimLeading(not_safe_for_work_path);
+            includePath = SearchIncludePath(includeFile);
+            if (includePath.empty())
+                Logging::LogErrorExit(stringf("Including file '%s' failed", includeFile.c_str()), -includeFile.length());
 
-        BgeFile file = BgeFile(includePath, false);
+            BgeFile file = BgeFile(includePath, false);
 
-        if (!file.Ready())
-            Logging::LogErrorExit(stringf("Including file '%s' failed", includeFile.c_str()), -includeFile.length());
+            if (!file.Ready())
+                Logging::LogErrorExit(stringf("Including file '%s' failed", includeFile.c_str()), -includeFile.length());
 
-        Source src = Source();
-        src.ReadSource(file);
-        source->AppendSource(src);
-        file.Close();
-        src.GetTokens().clear();
+            Source src = Source();
+            src.ReadSource(file);
+            source->AppendSource(src);
+            file.Close();
+            src.GetTokens().clear();
+        }
+    }
+    else if (command == "define")
+    {
+        std::string nameAndReplacement = StrTrimLeading(cleanBuffer.substr(6));
+        if (nameAndReplacement.empty())
+            return;
+
+        size_t nameSplitIndex = nameAndReplacement.find_first_of(' ');
+        if (nameSplitIndex == std::string::npos)
+        {
+            AddDefine(nameAndReplacement, "");
+            return;
+        }
+
+        AddDefine(StrTrimLeading(nameAndReplacement.substr(0,nameSplitIndex)), StrTrimLeading(nameAndReplacement.substr(nameSplitIndex)));
     }
 }
 
@@ -77,6 +95,76 @@ void Preprocessor::PopLastInclude()
 
     if (mIncludePaths.size() > 2)
         mIncludePaths.erase(mIncludePaths.end());
+}
+
+void Preprocessor::AddDefine(std::string defineName, std::string replacement)
+{
+    if (defineName.empty())
+        return;
+
+    if (std::find(mDefinesEntries.begin(), mDefinesEntries.end(), defineName) != mDefinesEntries.end())
+        return;
+
+    if (Language::IsKeyword(defineName) != -1 || StrIsNumber(defineName) ||
+        isdigit(defineName[0]) || Language::IsSpecialChar(defineName[0]) != -1)
+        return;
+
+    Logging::Log(stringf("define{'%s'} replacement{'%s'}", defineName.c_str(), replacement.c_str()));
+
+    mDefinesEntries.push_back(defineName);
+    mDefines.insert({defineName, replacement});
+}
+
+std::vector<SourceToken> Preprocessor::AssistInLine(std::vector<SourceToken>& lineTokens)
+{
+    std::vector<SourceToken> improvedTokens;
+
+    if (lineTokens.empty())
+        return lineTokens;
+    
+    bool anythingChanged = false;
+    for (auto iterator = lineTokens.begin(); iterator != lineTokens.end(); iterator++)
+    {
+        auto& token = *iterator;
+        bool defineFound = false;
+        for (auto& define : mDefines)
+        {
+            if (token.Contents != define.first)
+                break;
+            defineFound = true;
+            anythingChanged = true;
+            Logging::Log("FUCK YOU");
+            Logging::Log(define.first.c_str());
+
+
+            if (define.second.empty())
+                break;
+
+            token.Contents = define.second;
+            std::vector<SourceToken> replacementTokens = Source::ParseLineToTokens(define.second);
+            if (replacementTokens.empty())
+                break;
+
+            if (replacementTokens.size() == 1)
+            {
+                replacementTokens[0].LineNumber = token.LineNumber;
+                improvedTokens.push_back(replacementTokens[0]);
+                break;
+            }
+
+            for (auto& replacement : replacementTokens)
+                replacement.LineNumber = token.LineNumber;
+
+            improvedTokens.insert(improvedTokens.end(), replacementTokens.begin(), replacementTokens.end());
+        }
+
+        if (!defineFound)
+            improvedTokens.push_back(token);
+    }
+    if (!anythingChanged)
+        return lineTokens;
+
+    return improvedTokens;
 }
 
 std::string Preprocessor::SearchIncludePath(std::string file)

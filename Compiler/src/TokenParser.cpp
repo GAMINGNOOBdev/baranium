@@ -573,17 +573,17 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
         if (stringStart.mType == SourceToken::Type::Null)
             return "";
 
+        if (stringStart.mType != SourceToken::Type::DoubleQuote)
+            LogError(stringf("Line %d: Invalid string assignment", stringStart.LineNumber));
+
         tokenIndex++;
         auto& contentsToken = tokens.at(tokenIndex);
         tokenIndex++;
         auto& stringEnd = tokens.at(tokenIndex);
         tokenIndex++;
 
-        if (stringStart.mType != SourceToken::Type::DoubleQuote ||
-            stringEnd.mType != SourceToken::Type::DoubleQuote)
-        {
+        if (stringEnd.mType != SourceToken::Type::DoubleQuote)
             LogError(stringf("Line %d: Invalid string assignment", contentsToken.LineNumber));
-        }
 
         return std::string(contentsToken.Contents);
     }

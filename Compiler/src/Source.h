@@ -53,6 +53,16 @@ struct Source
      */
     std::vector<SourceToken>& GetTokens();
 
+public:
+    /**
+     * @brief Parse a single line to source tokens
+     * 
+     * @param str The string that will be parsed
+     * 
+     * @returns A list of source tokens
+     */
+    static std::vector<SourceToken> ParseLineToTokens(std::string str);
+
 private:
     /**
      * @brief Parse a single line and analyze for tokens
@@ -81,6 +91,7 @@ private:
     void ReadLetter(char chr, int lineNumber);
 
 private:
+    std::vector<SourceToken> mLineTokens;
     std::vector<SourceToken> mTokens;
 };
 
