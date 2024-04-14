@@ -578,6 +578,9 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
 
         tokenIndex++;
         auto& contentsToken = tokens.at(tokenIndex);
+        if (contentsToken.mType == SourceToken::Type::DoubleQuote && tokens.size() == 2)
+            return "";
+
         tokenIndex++;
         auto& stringEnd = tokens.at(tokenIndex);
         tokenIndex++;

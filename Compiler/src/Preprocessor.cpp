@@ -1,5 +1,6 @@
 #include "Language/Language.h"
 #include "Preprocessor.h"
+#include <unordered_map>
 #include "StringUtil.h"
 #include "FileUtil.h"
 #include "Logging.h"
@@ -10,9 +11,9 @@
 #   undef max
 #endif
 
-std::vector<std::string> Preprocessor::mIncludePaths;
-std::vector<std::string> Preprocessor::mDefinesEntries;
-std::unordered_map<std::string, std::string> Preprocessor::mDefines;
+std::vector<std::string> Preprocessor::mIncludePaths = std::vector<std::string>();
+std::vector<std::string> Preprocessor::mDefinesEntries = std::vector<std::string>();
+std::vector<std::string> Preprocessor::mDefines = std::vector<std::string>();
 
 void Preprocessor::Parse(std::string operation, Source* source)
 {
@@ -112,7 +113,7 @@ void Preprocessor::AddDefine(std::string defineName, std::string replacement)
     Logging::Log(stringf("define{'%s'} replacement{'%s'}", defineName.c_str(), replacement.c_str()));
 
     mDefinesEntries.push_back(defineName);
-    mDefines.insert({defineName, replacement});
+    mDefines.push_back(replacement);
 }
 
 std::vector<SourceToken> Preprocessor::AssistInLine(std::vector<SourceToken>& lineTokens)
@@ -127,21 +128,22 @@ std::vector<SourceToken> Preprocessor::AssistInLine(std::vector<SourceToken>& li
     {
         auto& token = *iterator;
         bool defineFound = false;
-        for (auto& define : mDefines)
+        int index = 0;
+        for (auto& define : mDefinesEntries)
         {
-            if (token.Contents != define.first)
+            if (token.Contents != define)
+            {
+                index++;
                 break;
+            }
             defineFound = true;
             anythingChanged = true;
-            Logging::Log("FUCK YOU");
-            Logging::Log(define.first.c_str());
 
-
-            if (define.second.empty())
+            if (mDefines[index].empty())
                 break;
 
-            token.Contents = define.second;
-            std::vector<SourceToken> replacementTokens = Source::ParseLineToTokens(define.second);
+            token.Contents = mDefines[index];
+            std::vector<SourceToken> replacementTokens = Source::ParseLineToTokens(mDefines[index]);
             if (replacementTokens.empty())
                 break;
 
@@ -156,6 +158,7 @@ std::vector<SourceToken> Preprocessor::AssistInLine(std::vector<SourceToken>& li
                 replacement.LineNumber = token.LineNumber;
 
             improvedTokens.insert(improvedTokens.end(), replacementTokens.begin(), replacementTokens.end());
+            break;
         }
 
         if (!defineFound)

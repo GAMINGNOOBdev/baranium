@@ -65,7 +65,7 @@ private:
     static std::string SearchIncludePath(std::string file);
 
 private:
-    static std::unordered_map<std::string, std::string> mDefines;
+    static std::vector<std::string> mDefines;
     static std::vector<std::string> mDefinesEntries;
     static std::vector<std::string> mIncludePaths;
 };
