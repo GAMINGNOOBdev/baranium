@@ -34,26 +34,6 @@ std::string to_hex_string(size_t num);
 uint8_t StrContains(std::string str, char c);
 
 /**
- * Finds the first appearance of `c` in `str`
- * 
- * @param[in] str input string
- * @param[in] c desired character
- * 
- * @returns index of `c`, -1 if not found
-*/
-int8_t StrIndexOf(std::string str, char c);
-
-/**
- * Finds the last appearance of `c` in `str`
- * 
- * @param[in] str input string
- * @param[in] c desired character
- * 
- * @returns index of `c`, -1 if not found
-*/
-int8_t StrLastIndexOf(std::string str, char c);
-
-/**
  * Removes all whitespaces from a string
  * 
  * @param[in] str input string

@@ -48,15 +48,6 @@ uint8_t StrContains(std::string str, char c)
     return count;
 }
 
-int8_t StrIndexOf(std::string str, char c)
-{
-    return str.find_first_of(c);
-}
-
-int8_t StrLastIndexOf(std::string str, char c)
-{
-    return str.find_last_of(c);
-}
 
 std::string StrTrim(std::string str)
 {
