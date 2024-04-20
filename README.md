@@ -12,7 +12,7 @@ THIS PROJECT IS STILL INCOMPLETE AT THE MOMENT!!! <br/>
 Expect somewhat regular updates but don't expect a fully finished
 release in a short time. <br/>
 To see more indepth stuff and ask questions, join the newly created discord server that
-will be as inactive as every other server you may know. https://discord.gg/Bp9emHJ6
+will be as inactive as every other server you may know. https://discord.gg/B5ffvY7q
 
 ## Language specifications
 baranium was originally designed to be used with a game engine and
@@ -41,8 +41,8 @@ cmake ..
 5. Open the generated visual studio solution and build the entire solution
 
 Note: The generated binaries are under the subfolders `Compiler`, `Runtime`
-      and `RuntimeExecutable` and under a folder with the same name as the
-      build configuration
+      and `RuntimeExecutable` and if using Windows under a folder with the
+      same name as the build configuration
 
 ## Using the compiler
 just let the compiler print out the help message, it'll tell you everything.
