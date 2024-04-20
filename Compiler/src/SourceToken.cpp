@@ -98,6 +98,48 @@ const char* SourceTokenTypeToString(SourceToken::Type type)
         case SourceToken::Type::EqualSign:
             return "EqualSign";
 
+        case SourceToken::Type::EqualTo:
+            return "EqualTo";
+
+        case SourceToken::Type::NotEqual:
+            return "NotEqual";
+
+        case SourceToken::Type::LessEqual:
+            return "LessEqual";
+
+        case SourceToken::Type::GreaterEqual:
+            return "GreaterEqual";
+
+        case SourceToken::Type::ModEqual:
+            return "ModEqual";
+
+        case SourceToken::Type::DivEqual:
+            return "DivEqual";
+
+        case SourceToken::Type::MulEqual:
+            return "MulEqual";
+
+        case SourceToken::Type::MinusEqual:
+            return "MinusEqual";
+
+        case SourceToken::Type::PlusEqual:
+            return "PlusEqual";
+
+        case SourceToken::Type::AndEqual:
+            return "AndEqual";
+
+        case SourceToken::Type::OrEqual:
+            return "OrEqual";
+
+        case SourceToken::Type::XorEqual:
+            return "XorEqual";
+
+        case SourceToken::Type::AndAnd:
+            return "AndAnd";
+
+        case SourceToken::Type::OrOr:
+            return "OrOr";
+
         case SourceToken::Type::Quote:
             return "Quote";
 

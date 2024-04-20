@@ -3,9 +3,6 @@
 
 using namespace Language;
 
-/**
- * @brief A vector containing all possible keywords
- */
 std::vector<Keyword> Language::Keywords = {
     // the "field", a custom type that can be set outside of this environment
     Keyword{"field",        SourceToken::Type::Field},
@@ -44,9 +41,23 @@ std::vector<Keyword> Language::Keywords = {
     Keyword{"while",        SourceToken::Type::Keyword},
 };
 
-/**
- * @brief A vector containing all special characters
- */
+std::vector<SpecialOperator> Language::SpecialOperators = {
+    SpecialOperator{"==",   SourceToken::Type::EqualTo},
+    SpecialOperator{"!=",   SourceToken::Type::NotEqual},
+    SpecialOperator{"<=",   SourceToken::Type::LessEqual},
+    SpecialOperator{">=",   SourceToken::Type::GreaterEqual},
+    SpecialOperator{"%=",   SourceToken::Type::ModEqual},
+    SpecialOperator{"/=",   SourceToken::Type::DivEqual},
+    SpecialOperator{"*=",   SourceToken::Type::MulEqual},
+    SpecialOperator{"-=",   SourceToken::Type::MinusEqual},
+    SpecialOperator{"+=",   SourceToken::Type::PlusEqual},
+    SpecialOperator{"&=",   SourceToken::Type::AndEqual},
+    SpecialOperator{"|=",   SourceToken::Type::OrEqual},
+    SpecialOperator{"^=",   SourceToken::Type::XorEqual},
+    SpecialOperator{"&&",   SourceToken::Type::AndAnd},
+    SpecialOperator{"||",   SourceToken::Type::OrOr},
+};
+
 std::vector<SpecialCharacter> Language::SpecialCharacters = {
     SpecialCharacter{'+',   SourceToken::Type::Plus},
     SpecialCharacter{'-',   SourceToken::Type::Minus},
@@ -96,6 +107,20 @@ int Language::IsKeyword(std::string string)
         return -1;
 
     return iterator - Language::Keywords.begin();
+}
+
+int Language::IsSpecialOperator(char a, char b)
+{
+    auto iterator = std::find_if(Language::SpecialOperators.begin(), Language::SpecialOperators.end(),
+        [a,b](Language::SpecialOperator& op)
+        {
+            return op.Operator == std::string({a,b});
+        }
+    );
+    if (iterator == Language::SpecialOperators.end())
+        return -1;
+
+    return iterator - Language::SpecialOperators.begin();
 }
 
 int Language::IsSpecialChar(char c)

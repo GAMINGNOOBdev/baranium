@@ -143,12 +143,27 @@ void Source::ReadLine(std::string line, int lineNumber)
                     ReadBuffer(line.substr(start, end - start), lineNumber);
                 start = index+1;
 
-                SourceToken token = SourceToken();
-                token.Contents = std::string(tmpStr);
-                token.mType = Language::SpecialCharacters[specialCharIndex].TokenType;
-                token.KeywordIndex = -1;
-                token.LineNumber = lineNumber;
-                mLineTokens.push_back(token);
+                auto lastToken = mLineTokens.back();
+                int specialOperatorIndex = Language::IsSpecialOperator(lastToken.Contents.at(0), chr);
+                if (Language::IsSpecialChar(lastToken.Contents.at(0)) && specialOperatorIndex != -1)
+                {
+                    mLineTokens.erase(mLineTokens.end());
+                    SourceToken token = SourceToken();
+                    token.Contents = Language::SpecialOperators[specialOperatorIndex].Operator;
+                    token.mType = Language::SpecialOperators[specialOperatorIndex].TokenType;
+                    token.KeywordIndex = -1;
+                    token.LineNumber = lineNumber;
+                    mLineTokens.push_back(token);
+                }
+                else
+                {
+                    SourceToken token = SourceToken();
+                    token.Contents = std::string(tmpStr);
+                    token.mType = Language::SpecialCharacters[specialCharIndex].TokenType;
+                    token.KeywordIndex = -1;
+                    token.LineNumber = lineNumber;
+                    mLineTokens.push_back(token);
+                }
             }
         }
 

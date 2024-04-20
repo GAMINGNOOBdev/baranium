@@ -44,6 +44,17 @@ namespace Language
     };
 
     /**
+     * @brief A container for special operators that store
+     *        the token type alongside the operator string itself
+     * 
+     */
+    struct SpecialOperator
+    {
+        std::string Operator;
+        SourceToken::Type TokenType;
+    };
+
+    /**
      * @brief A container for special characters that stores
      *        it's token type alongside the character itself
      * 
@@ -58,6 +69,11 @@ namespace Language
      * @brief A vector containing all possible keywords
      */
     extern std::vector<Keyword> Keywords;
+
+    /**
+     * @brief A vector containing all special operators
+     */
+    extern std::vector<SpecialOperator> SpecialOperators;
 
     /**
      * @brief A vector containing all special characters
@@ -83,9 +99,20 @@ namespace Language
     int IsKeyword(std::string string);
 
     /**
+     * @brief Checks if the given characters `a` and `b` make up a special operator
+     * 
+     * @param a The first character of the operator
+     * @param b The second character of the operator
+     * 
+     * @returns -1 if not a special operator, else an index to the special operator in the list
+     */
+    int IsSpecialOperator(char a, char b);
+
+    /**
      * @brief Checks if the given character `c` is a special character
      * 
      * @param c The character that will be checked
+     * 
      * @returns -1 if not a special character, else an index to the special character in the list
      */
     int IsSpecialChar(char c);

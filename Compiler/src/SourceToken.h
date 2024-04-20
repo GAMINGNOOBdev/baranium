@@ -44,9 +44,25 @@ struct SourceToken
         Tilde,
         Not, // "^"
         EqualSign,
-        
+
+        // Partially parsed operations
+        EqualTo,
+        NotEqual,
+        LessEqual,
+        GreaterEqual,
+        ModEqual,
+        DivEqual,
+        MulEqual,
+        MinusEqual,
+        PlusEqual,
+        AndEqual,
+        OrEqual,
+        XorEqual,
+        AndAnd,
+        OrOr,
+
         // strings
-        
+
         Quote,
         DoubleQuote,
 
