@@ -55,7 +55,7 @@ const char* stringf(const char* formatString, ...)
     return mFormattingBuffer;
 }
 
-void logr(loglevel_t lvl, const char* msg)
+void logStr(loglevel_t lvl, const char* msg)
 {
     if (lvl > LOG_COLOR_COUNT || msg == NULL)
         return;

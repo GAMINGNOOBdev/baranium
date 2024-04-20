@@ -32,6 +32,6 @@ BARANIUMAPI const char* stringf(const char* formatString, ...);
  * @param lvl Logging level
  * @param msg Log message
  */
-BARANIUMAPI void logr(loglevel_t lvl, const char* msg);
+BARANIUMAPI void logStr(loglevel_t lvl, const char* msg);
 
 #endif
