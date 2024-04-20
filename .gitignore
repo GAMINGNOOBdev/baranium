@@ -1,9 +1,3 @@
-bin
 build
-obj
 *.json
-no_src
-.vscode
-.vs
 *.bxs
-DevLogStuff
