@@ -2,6 +2,7 @@
 #define __SOURCETOKEN_H_ 1
 
 #include <string>
+#include <vector>
 
 struct SourceToken
 {
@@ -93,5 +94,8 @@ struct SourceToken
  * @return The string representation of a token type
  */
 const char* SourceTokenTypeToString(SourceToken::Type type);
+
+// shortcut for writing convenience
+using SourceTokenList = std::vector<SourceToken>;
 
 #endif

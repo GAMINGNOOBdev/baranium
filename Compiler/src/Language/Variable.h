@@ -5,8 +5,6 @@
 #include "Token.h"
 #include <string>
 
-using SourceTokenList = std::vector<SourceToken>;
-
 namespace Language
 {
 

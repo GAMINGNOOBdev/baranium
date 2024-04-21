@@ -93,6 +93,8 @@ namespace Language
         if (tokens.empty())
             return;
 
+        // AST.Parse(tokens);
+
         // if (CheckExpressionDividers(tokens))
         //     return;
 

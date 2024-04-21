@@ -5,8 +5,6 @@
 #include <stdint.h>
 #include <vector>
 
-using TokenList = std::vector<std::shared_ptr<Language::Token>>;
-
 namespace Binaries
 {
 

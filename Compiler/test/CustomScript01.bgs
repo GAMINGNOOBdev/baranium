@@ -45,6 +45,9 @@ define moveObject()
     # vec3 position3D = vec3(0,0,0);
     # vec4 color4D = vec4(0,0,0,1.0);
 
+    # expression ast test
+    variable1 = 10 + ((-variable2) * 6 - 1) / variable1;
+
     #
     # assignment of variables using functions
     #

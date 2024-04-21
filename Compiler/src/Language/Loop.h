@@ -9,9 +9,6 @@
 #include <vector>
 #include <string>
 
-using SourceTokenList = std::vector<SourceToken>;
-using TokenList = std::vector<std::shared_ptr<Language::Token>>;
-
 namespace Language
 {
 

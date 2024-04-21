@@ -19,8 +19,6 @@
 #define VERSION_FIRST VERSION_CREATE(2024, 2, 10)
 #define VERSION_CURRENT VERSION_FIRST
 
-using TokenList = std::vector<std::shared_ptr<Language::Token>>;
-
 typedef int64_t index_t;
 
 namespace Binaries

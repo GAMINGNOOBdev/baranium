@@ -1,15 +1,13 @@
 #ifndef __LANGUAGE__EXPRESSION_H_
 #define __LANGUAGE__EXPRESSION_H_ 1
 
+#include "AbstractSyntaxTree.h"
 #include "Language.h"
 #include "Variable.h"
 #include <stdint.h>
 #include "Token.h"
 #include <string>
 #include <memory>
-
-using SourceTokenList = std::vector<SourceToken>;
-using TokenList = std::vector<std::shared_ptr<Language::Token>>;
 
 namespace Language
 {
@@ -41,6 +39,8 @@ namespace Language
         VariableType ReturnType;
         std::string ReturnVariableName;
         SourceTokenList mInnerTokens;
+
+        AbstractSyntaxTree AST;
 
         // since cases like `myValue = getValue();` can exist
         // and they can split up into two expressions like in

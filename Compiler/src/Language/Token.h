@@ -55,4 +55,7 @@ namespace Language
 
 }
 
+// shortcut for writing convenience
+using TokenList = std::vector<std::shared_ptr<Language::Token>>;
+
 #endif

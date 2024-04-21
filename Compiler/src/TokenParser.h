@@ -6,9 +6,6 @@
 #include <vector>
 #include <memory>
 
-using SourceTokenList = std::vector<SourceToken>;
-using TokenList = std::vector<std::shared_ptr<Language::Token>>;
-
 /**
  * @brief An object that parses tokens from a source to then create a final binary
  */

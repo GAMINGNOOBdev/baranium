@@ -90,6 +90,24 @@ std::vector<SpecialCharacter> Language::SpecialCharacters = {
     SpecialCharacter{';',   SourceToken::Type::Semicolon},
 };
 
+std::vector<SpecialCharacter> Language::SpecialOperationCharacters = {
+    SpecialCharacter{'+',   SourceToken::Type::Plus},
+    SpecialCharacter{'-',   SourceToken::Type::Minus},
+    SpecialCharacter{'*',   SourceToken::Type::Times},
+    SpecialCharacter{'/',   SourceToken::Type::Divided},
+    SpecialCharacter{'%',   SourceToken::Type::Modulo},
+    SpecialCharacter{'&',   SourceToken::Type::And},
+    SpecialCharacter{'|',   SourceToken::Type::Or},
+    SpecialCharacter{'~',   SourceToken::Type::Tilde},
+    SpecialCharacter{'^',   SourceToken::Type::Not},
+    SpecialCharacter{'=',   SourceToken::Type::EqualSign},
+    SpecialCharacter{'<',   SourceToken::Type::LessThan},
+    SpecialCharacter{'>',   SourceToken::Type::GreaterThan},
+    SpecialCharacter{'!',   SourceToken::Type::ExclamationPoint},
+    SpecialCharacter{'(',   SourceToken::Type::ParenthesisOpen},
+    SpecialCharacter{')',   SourceToken::Type::ParenthesisClose},
+};
+
 bool Language::IsInternalType(SourceToken& token)
 {
     return token.KeywordIndex >= KeywordIndex_gameobject && token.KeywordIndex <= KeywordIndex_uint;

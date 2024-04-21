@@ -5,6 +5,7 @@ project(bgsc)
 include_directories(../BGE-File)
 
 set(bgscSources
+    src/Language/AbstractSyntaxTree.cpp
     src/Language/IfElseStatement.cpp
     src/Binaries/NameLookupTable.cpp
     src/Binaries/CompiledScript.cpp

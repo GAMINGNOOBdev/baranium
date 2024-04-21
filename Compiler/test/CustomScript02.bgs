@@ -5,6 +5,17 @@
 
 define myVeryFancyFunction(int var)
 {
+    # variables
+    float variable0 = 10.0;
+    int variable1 = -10;
+    uint variable2 = 10;
+    gameobject object = myObject;
+    bool isStupidCode = false;
+
+    # expression ast test
+    isStupidCode = 10 + ((-variable2) * 6 - 1) / variable1 == -1;
+
+
     gameobject attachedObject = attached;
     string name = TEST_DEFINE;
     return attachedObject;

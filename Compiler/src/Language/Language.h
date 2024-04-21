@@ -81,6 +81,11 @@ namespace Language
     extern std::vector<SpecialCharacter> SpecialCharacters;
 
     /**
+     * @brief A vector containing all special characters for operations
+     */
+    extern std::vector<SpecialCharacter> SpecialOperationCharacters;
+
+    /**
      * @brief Checks if the given token is an internal type
      * 
      * @param token The token that will be checked
