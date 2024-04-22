@@ -12,7 +12,7 @@ THIS PROJECT IS STILL INCOMPLETE AT THE MOMENT!!! <br/>
 Expect somewhat regular updates but don't expect a fully finished
 release in a short time. <br/>
 To see more indepth stuff and ask questions, join the newly created discord server that
-will be as inactive as every other server you may know. https://discord.gg/B5ffvY7q
+will be as inactive as every other server you may know. https://discord.gg/8R5YyM3MEn
 
 ## Language specifications
 baranium was originally designed to be used with a game engine and
