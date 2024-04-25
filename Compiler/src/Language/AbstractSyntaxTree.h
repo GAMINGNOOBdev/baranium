@@ -90,6 +90,11 @@ namespace Language
         bool specialChar;
 
         /**
+         * @brief The parent node
+         */
+        std::shared_ptr<TreeNode> parent;
+
+        /**
          * @brief The node to the left
          */
         std::shared_ptr<TreeNode> left;
@@ -108,11 +113,12 @@ namespace Language
         /**
          * @brief Construct a new `TreeNode` object
          * 
+         * @param parent Parent node
          * @param token The new contents of this token
          * @param opIdx Operation index
          * @param spChr Special char
          */
-        TreeNode(SourceToken& token, int opIdx, bool spChr);
+        TreeNode(std::shared_ptr<TreeNode> pParent, SourceToken& token, int opIdx, bool spChr);
 
         /**
          * @brief Check if this node is valid
@@ -123,6 +129,11 @@ namespace Language
          * @brief set the value of this object
          */
         void operator=(const Language::TreeNode& other);
+
+        /**
+         * @brief Yes this is honestly just a contructor but idc it looks better
+         */
+        static std::shared_ptr<TreeNode> Create(std::shared_ptr<TreeNode> parent, SourceToken& token, int opIdx = -1, bool spChr = false);
     };
 
     /**
@@ -144,8 +155,9 @@ namespace Language
 
     private:
         std::shared_ptr<TreeNode> ParseTokens(SourceTokenList& tokens, int& index, power_t minPower);
-
+        int64_t GetOperationIndex(SourceToken& token, SourceToken::Type& operationType, bool& wasSpecialChar);
         void PrintNode(std::shared_ptr<TreeNode> node, int depth);
+        void AddNode(SourceToken& token, int opIdx, bool spChr);
 
     private:
         std::shared_ptr<TreeNode> mRoot;

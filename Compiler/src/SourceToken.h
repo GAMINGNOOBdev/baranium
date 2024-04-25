@@ -61,6 +61,8 @@ struct SourceToken
         XorEqual,
         AndAnd,
         OrOr,
+        MinusMinus,
+        PlusPlus,
 
         // strings
 
