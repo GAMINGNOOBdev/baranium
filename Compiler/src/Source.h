@@ -51,7 +51,7 @@ struct Source
      * 
      * @return A vector of all tokens
      */
-    std::vector<SourceToken>& GetTokens();
+    SourceTokenIterator& GetTokens();
 
 public:
     /**
@@ -61,7 +61,7 @@ public:
      * 
      * @returns A list of source tokens
      */
-    static std::vector<SourceToken> ParseLineToTokens(std::string str);
+    static SourceTokenIterator ParseLineToTokens(std::string str);
 
 private:
     /**
@@ -91,8 +91,8 @@ private:
     void ReadLetter(char chr, int lineNumber);
 
 private:
-    std::vector<SourceToken> mLineTokens;
-    std::vector<SourceToken> mTokens;
+    SourceTokenList mLineTokens;
+    SourceTokenIterator mTokens;
 };
 
 #endif

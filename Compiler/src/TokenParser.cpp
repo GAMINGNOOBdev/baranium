@@ -4,32 +4,10 @@
 #include "Logging.h"
 #include <algorithm>
 
-/**
- * @brief Small utility function to log errors and instantly quit
- * 
- * @param message The error message
- */
-void LogError(const char* message)
-{
-    Logging::Log(message, Logging::Error);
-    Logging::Dispose();
-    exit(-1);
-}
-
-/**
- * @brief Construct a new `TokenParser`
- */
 TokenParser::TokenParser()
 {
 }
 
-/**
- * @brief Write the source code tokens into a single json file
- * 
- * @note Executed then the `-d` or `--debug` flag is passed to the main executable
- * 
- * @param name Filename of the json file where the token data will be written to
- */
 void TokenParser::WriteTokensToJson(std::string name)
 {
     BgeFile outputFile = BgeFile(name, true);
@@ -39,11 +17,11 @@ void TokenParser::WriteTokensToJson(std::string name)
     outputFile.Close();
 }
 
-/**
- * @brief Parse the incoming tokens
- * 
- * @param tokens Tokens that will be parsed
- */
+void TokenParser::ParseTokens(SourceTokenIterator& tokenIterator)
+{
+    ParseTokens(tokenIterator.GetTokens());
+}
+
 void TokenParser::ParseTokens(SourceTokenList& tokens)
 {
     int index = 0;
@@ -59,13 +37,13 @@ void TokenParser::ParseTokens(SourceTokenList& tokens)
         }
 
         if (token.KeywordIndex >= KeywordIndex_do && token.KeywordIndex <= KeywordIndex_while)
-            LogError(stringf("Line %d: cannot have loops in the global scope", token.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: cannot have loops in the global scope", token.LineNumber));
 
         if (token.KeywordIndex == KeywordIndex_if)
-            LogError(stringf("Line %d: cannot have `if` in the global scope", token.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: cannot have `if` in the global scope", token.LineNumber));
 
         if (token.KeywordIndex == KeywordIndex_else)
-            LogError(stringf("Line %d: cannot have `else` in the global scope", token.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: cannot have `else` in the global scope", token.LineNumber));
 
         if (token.mType == SourceToken::Type::Field)
         {
@@ -79,29 +57,15 @@ void TokenParser::ParseTokens(SourceTokenList& tokens)
             continue;
         }
 
-        LogError(stringf("Line %d: cannot have expressions in the global scope", token.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: cannot have expressions in the global scope", token.LineNumber));
     }
 }
 
-/**
- * @brief Get the parsed token objects
- * 
- * @return The list of parsed tokens
- */
 TokenList& TokenParser::GetTokens()
 {
     return mPublicTokens;
 }
 
-/**
- * @brief Read a variable
- * 
- * @param index Index of the current token
- * @param current The current token
- * @param tokens List of all tokens including the current one
- * @param output The output list where the read token will be saved
- * @param globalTokens A list where the tokens that are globally available are saved
- */
 void TokenParser::ReadVariable(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
     std::shared_ptr<Language::Variable> variable = std::make_shared<Language::Variable>();
@@ -109,12 +73,12 @@ void TokenParser::ReadVariable(int& index, SourceToken& current, SourceTokenList
     variable->Type = Language::Variable::TypeFromToken(current);
 
     if (variable->Type == Language::VariableType::Invalid)
-        LogError(stringf("Line %d: Inalid variable type '%s'", current.LineNumber, current.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: Inalid variable type '%s'", current.LineNumber, current.Contents.c_str()));
 
     index++;
     auto& nameToken = tokens.at(index);
     if (nameToken.mType != SourceToken::Type::Text)
-        LogError(stringf("Line %d: No valid name has been prodived for variable", nameToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: No valid name has been prodived for variable", nameToken.LineNumber));
 
     auto globalNameIterator = std::find_if(globalTokens.begin(), globalTokens.end(), [nameToken](std::shared_ptr<Language::Token>& token)
     {
@@ -125,7 +89,7 @@ void TokenParser::ReadVariable(int& index, SourceToken& current, SourceTokenList
         return token->mName == nameToken.Contents;
     });
     if (nameIterator != output.end() || globalNameIterator != globalTokens.end())
-        LogError(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     variable->mName = std::string(nameToken.Contents);
     
@@ -137,7 +101,7 @@ void TokenParser::ReadVariable(int& index, SourceToken& current, SourceTokenList
         goto end;
     }
     else if (nextToken.mType != SourceToken::Type::EqualSign)
-        LogError(stringf("Line %d: Invalid syntax for variable definition/assignment", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid syntax for variable definition/assignment", nextToken.LineNumber));
 
     while (nextToken.mType != SourceToken::Type::Semicolon && index+1 < tokens.size())
     {
@@ -156,15 +120,6 @@ end:
     output.push_back(variable);
 }
 
-/**
- * @brief Read a field
- * 
- * @param index Index of the current token
- * @param current The current token
- * @param tokens List of all tokens including the current one
- * @param output The output list where the read token will be saved
- * @param globalTokens A list where the tokens that are globally available are saved
- */
 void TokenParser::ReadField(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
     index++;
@@ -175,7 +130,7 @@ void TokenParser::ReadField(int& index, SourceToken& current, SourceTokenList to
     index++;
     auto& nameToken = tokens.at(index);
     if (nameToken.mType != SourceToken::Type::Text)
-        LogError(stringf("Line %d: No valid name has been prodived for field", nameToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: No valid name has been prodived for field", nameToken.LineNumber));
 
     auto globalNameIterator = std::find_if(globalTokens.begin(), globalTokens.end(), [nameToken](std::shared_ptr<Language::Token>& token)
     {
@@ -186,7 +141,7 @@ void TokenParser::ReadField(int& index, SourceToken& current, SourceTokenList to
         return token->mName == nameToken.Contents;
     });
     if (nameIterator != output.end() || globalNameIterator != globalTokens.end())
-        LogError(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     field->mName = std::string(nameToken.Contents);
     
@@ -198,7 +153,7 @@ void TokenParser::ReadField(int& index, SourceToken& current, SourceTokenList to
         goto end;
     }
     else if (nextToken.mType != SourceToken::Type::EqualSign)
-        LogError(stringf("Line %d: Invalid syntax for field definition/assignment", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid syntax for field definition/assignment", nextToken.LineNumber));
 
     while (nextToken.mType != SourceToken::Type::Semicolon && index+1 < tokens.size())
     {
@@ -217,17 +172,6 @@ end:
     output.push_back(field);
 }
 
-/**
- * @brief Read an expression
- * 
- * @param index Index of the current token
- * @param current The current token
- * @param tokens List of all tokens including the current one
- * @param output The output list where the read token will be saved
- * @param globalTokens A list where the tokens that are globally available are saved
- * 
- * @returns True if this expression is a return statement
- */
 bool TokenParser::ReadExpression(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
     std::shared_ptr<Language::Expression> expression = std::make_shared<Language::Expression>();
@@ -235,7 +179,7 @@ bool TokenParser::ReadExpression(int& index, SourceToken& current, SourceTokenLi
     auto& nextToken = tokens.at(index);
     expression->mInnerTokens.push_back(nextToken);
     if (!ReadContentUsingDepth(index, SourceToken::Type::Invalid, SourceToken::Type::Semicolon, tokens, expression->mInnerTokens))
-        LogError(stringf("Line %d: Expected a ';' at the end", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Expected a ';' at the end", nextToken.LineNumber));
 
     expression->Identify(output, globalTokens);
 
@@ -244,15 +188,6 @@ bool TokenParser::ReadExpression(int& index, SourceToken& current, SourceTokenLi
     return expression->Type == Language::ExpressionType::ReturnStatement;
 }
 
-/**
- * @brief Read a function
- * 
- * @param index Index of the current token
- * @param current The current token
- * @param tokens List of all tokens including the current one
- * @param output The output list where the read token will be saved
- * @param globalTokens A list where the tokens that are globally available are saved
- */
 void TokenParser::ReadFunction(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
     std::shared_ptr<Language::Function> function = std::make_shared<Language::Function>();
@@ -260,7 +195,7 @@ void TokenParser::ReadFunction(int& index, SourceToken& current, SourceTokenList
     index++;
     auto& nameToken = tokens.at(index);
     if (nameToken.mType != SourceToken::Type::Text)
-        LogError(stringf("Line %d: No valid name has been prodived for function", nameToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: No valid name has been prodived for function", nameToken.LineNumber));
 
     auto globalNameIterator = std::find_if(globalTokens.begin(), globalTokens.end(), [nameToken](std::shared_ptr<Language::Token>& token)
     {
@@ -271,14 +206,14 @@ void TokenParser::ReadFunction(int& index, SourceToken& current, SourceTokenList
         return token->mName == nameToken.Contents;
     });
     if (nameIterator != output.end() || globalNameIterator != globalTokens.end())
-        LogError(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     function->mName = std::string(nameToken.Contents);
 
     index++;
     auto& parametersStart = tokens.at(index);
     if (parametersStart.mType != SourceToken::Type::ParenthesisOpen)
-        LogError(stringf("Line %d: Invalid function syntax", parametersStart.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid function syntax", parametersStart.LineNumber));
 
     index++;
     auto& parameter = tokens.at(index);
@@ -287,7 +222,7 @@ void TokenParser::ReadFunction(int& index, SourceToken& current, SourceTokenList
         goto functionReadContents;
     }
     if (!Language::IsInternalType(parameter))
-        LogError(stringf("Line %d: Invalid function parameter type", parameter.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid function parameter type", parameter.LineNumber));
 
     while (parameter.mType != SourceToken::Type::ParenthesisClose && index+1 < tokens.size())
     {
@@ -299,31 +234,22 @@ functionReadContents:
     index++;
     auto& functionContents = tokens.at(index);
     if (functionContents.mType != SourceToken::Type::CurlyBracketOpen)
-        LogError(stringf("Line %d: Invalid function syntax", functionContents.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid function syntax", functionContents.LineNumber));
 
     if (!ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, function->mInnerTokens))
-        LogError(stringf("Line %d: Invalid contents for function contents, invalid content depth", functionContents.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid contents for function contents, invalid content depth", functionContents.LineNumber));
 
     function->ParseTokens(output);
 
     output.push_back(function);
 }
 
-/**
- * @brief Read an if-else-statement
- * 
- * @param index Index of the current token
- * @param current The current token
- * @param tokens List of all tokens including the current one
- * @param output The output list where the read token will be saved
- * @param globalTokens A list where the tokens that are globally available are saved
- */
 void TokenParser::ReadIfStatement(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
     index++;
     auto& conditionStart = tokens.at(index);
     if (conditionStart.mType != SourceToken::Type::ParenthesisOpen)
-        LogError(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart.LineNumber, conditionStart.Contents));
+        Logging::LogErrorExit(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart.LineNumber, conditionStart.Contents));
     std::shared_ptr<Language::IfElseStatement> ifElseStatement = std::make_shared<Language::IfElseStatement>();
     Language::IfElseStatement alternativeCondition = Language::IfElseStatement();
     Language::IfElseStatement elseStatement = Language::IfElseStatement();
@@ -332,7 +258,7 @@ void TokenParser::ReadIfStatement(int& index, SourceToken& current, SourceTokenL
     auto& nextToken = tokens.at(index);
     ifElseStatement->Condition.mInnerTokens.push_back(nextToken);
     if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, ifElseStatement->Condition.mInnerTokens))
-        LogError(stringf("Line %d: Invalid condition contents for if-statement", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid condition contents for if-statement", nextToken.LineNumber));
 
     ifElseStatement->Condition.Identify(output, globalTokens);
 
@@ -355,7 +281,7 @@ readStatementContents:
     if (!ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, ifElseStatement->mInnerTokens))
     {
         nextToken = tokens.at(index);
-        LogError(stringf("Line %d: Invalid contents for if-statement, invalid content depth", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid contents for if-statement, invalid content depth", nextToken.LineNumber));
     }
 
     goto readNextPart;
@@ -376,11 +302,11 @@ readAlternativeConditions:
     index++;
     nextToken = tokens.at(index);
     if (nextToken.mType != SourceToken::Type::ParenthesisOpen)
-        LogError(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart.LineNumber, conditionStart.Contents));
+        Logging::LogErrorExit(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart.LineNumber, conditionStart.Contents));
 
     alternativeCondition = Language::IfElseStatement();
     if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, alternativeCondition.Condition.mInnerTokens))
-        LogError(stringf("Line %d: Invalid condition contents for if-statement", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid condition contents for if-statement", nextToken.LineNumber));
 
     alternativeCondition.Condition.Identify(output, globalTokens);
 
@@ -403,7 +329,7 @@ readAlternaticeConditionContents:
     if (!ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, alternativeCondition.mInnerTokens))
     {
         nextToken = tokens.at(index);
-        LogError(stringf("Line %d: Invalid contents for else-if-statement, invalid content depth", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid contents for else-if-statement, invalid content depth", nextToken.LineNumber));
     }
     alternativeCondition.ParseTokens(output, globalTokens);
 
@@ -438,7 +364,7 @@ readElseContents:
     if (!ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, elseStatement.mInnerTokens))
     {
         nextToken = tokens.at(index);
-        LogError(stringf("Line %d: Invalid contents for else-statement, invalid content depth", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid contents for else-statement, invalid content depth", nextToken.LineNumber));
     }
 
     goto readElseEnd;
@@ -458,15 +384,6 @@ void ReadDoWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceTok
 void ReadForLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens);
 void ReadWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens);
 
-/**
- * @brief Read a loop
- * 
- * @param index Index of the current token
- * @param current The current token
- * @param tokens List of all tokens including the current one
- * @param output The output list where the read token will be saved
- * @param globalTokens A list where the tokens that are globally available are saved
- */
 void TokenParser::ReadLoop(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
     Language::TokenType type;
@@ -495,14 +412,6 @@ void TokenParser::ReadLoop(int& index, SourceToken& current, SourceTokenList tok
     output.push_back(loop);
 }
 
-/**
- * @brief Read a function parameter
- * 
- * @param index Index of the current token
- * @param function Parent function
- * @param current The current token
- * @param tokens List of all tokens including the current one
- */
 void TokenParser::ReadFunctionParameter(int& index, std::shared_ptr<Language::Function> function, SourceToken& current, SourceTokenList tokens)
 {
     std::shared_ptr<Language::Variable> parameter = std::make_shared<Language::Variable>();
@@ -510,7 +419,7 @@ void TokenParser::ReadFunctionParameter(int& index, std::shared_ptr<Language::Fu
     index++;
     auto& nameToken = tokens.at(index);
     if (nameToken.mType != SourceToken::Type::Text)
-        LogError(stringf("Line %d: No valid name ('%s') has been prodived for parameter in function definition", nameToken.LineNumber, nameToken.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: No valid name ('%s') has been prodived for parameter in function definition", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     parameter->mName = std::string(nameToken.Contents);
 
@@ -531,22 +440,14 @@ void TokenParser::ReadFunctionParameter(int& index, std::shared_ptr<Language::Fu
         return;
     }
 
-    LogError(stringf("Line %d: Invalid syntax for parameter definition in function definition", nextToken.LineNumber));
+    Logging::LogErrorExit(stringf("Line %d: Invalid syntax for parameter definition in function definition", nextToken.LineNumber));
 }
 
-/**
- * @brief Parse tokens and return the value of a variable depending on it's type
- * 
- * @param tokens List of tokens that will be parsed
- * @param varType The type of the variable
- * 
- * @return The value
- */
 std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::VariableType varType)
 {
     int tokenIndex = 0;
 
-    if (varType == Language::VariableType::Invalid)
+    if (varType == Language::VariableType::Invalid || tokens.empty())
         return "null";
 
     if (varType == Language::VariableType::GameObject)
@@ -563,7 +464,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
         if (dataToken.mType == SourceToken::Type::Null)
             return "null";
 
-        LogError(stringf("Line %d: Invalid gameobject assignment", dataToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid gameobject assignment", dataToken.LineNumber));
     }
 
     if (varType == Language::VariableType::String)
@@ -574,7 +475,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
             return "";
 
         if (stringStart.mType != SourceToken::Type::DoubleQuote)
-            LogError(stringf("Line %d: Invalid string assignment", stringStart.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: Invalid string assignment", stringStart.LineNumber));
 
         tokenIndex++;
         auto& contentsToken = tokens.at(tokenIndex);
@@ -586,7 +487,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
         tokenIndex++;
 
         if (stringEnd.mType != SourceToken::Type::DoubleQuote)
-            LogError(stringf("Line %d: Invalid string assignment", contentsToken.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: Invalid string assignment", contentsToken.LineNumber));
 
         return std::string(contentsToken.Contents);
     }
@@ -606,7 +507,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
             if (valueStart.mType == SourceToken::Type::Number)
                 return std::string(valueStart.Contents);
             
-            LogError(stringf("Line %d: Invalid float assignment: Not a number", valueStart.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: Invalid float assignment: Not a number", valueStart.LineNumber));
         }
 
         auto& dotPart = tokens.at(tokenIndex);
@@ -621,7 +522,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
             {
                 auto& decimalPart = tokens.at(tokenIndex);
                 if (decimalPart.mType != SourceToken::Type::Number)
-                    LogError(stringf("Line %d: Invalid float assignment: Invalid literal after dot", decimalPart.LineNumber));
+                    Logging::LogErrorExit(stringf("Line %d: Invalid float assignment: Invalid literal after dot", decimalPart.LineNumber));
                 value.append(decimalPart.Contents);
             }
             else
@@ -637,17 +538,17 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
             return std::string(value);
         }
 
-        LogError(stringf("Line %d: Invalid float assignment", valueStart.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid float assignment", valueStart.LineNumber));
     }
 
     if (varType == Language::VariableType::Bool)
     {
         if (tokens.size() > 1)
-            LogError(stringf("Line %d: Invalid bool assignment: Too many initializing values", tokens.at(0).LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: Invalid bool assignment: Too many initializing values", tokens.at(0).LineNumber));
 
         auto& value = tokens.at(0);
         if (value.KeywordIndex < KeywordIndex_true || value.KeywordIndex > KeywordIndex_false)
-            LogError(stringf("Line %d: Invalid bool assignment: Invalid assignment value", value.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: Invalid bool assignment: Invalid assignment value", value.LineNumber));
 
         return std::string(value.Contents);
     }
@@ -656,7 +557,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
         varType == Language::VariableType::Int)
     {
         if (tokens.size() > 2)
-            LogError(stringf("Line %d: Invalid Int assignment: Too many initializing values", tokens.at(0).LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: Invalid Int assignment: Too many initializing values", tokens.at(0).LineNumber));
 
         if (tokens.size() == 2)
         {
@@ -665,7 +566,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
 
             if ((signToken.mType != SourceToken::Type::Plus && signToken.mType != SourceToken::Type::Minus) ||
                 numberToken.mType != SourceToken::Type::Number)
-                LogError(stringf("Line %d: Invalid Int assignment: Invalid value", signToken.LineNumber));
+                Logging::LogErrorExit(stringf("Line %d: Invalid Int assignment: Invalid value", signToken.LineNumber));
 
             return std::string(signToken.Contents).append(numberToken.Contents);
         }
@@ -678,32 +579,12 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
         if (numberToken.mType == SourceToken::Type::Null)
             return "0";
 
-        LogError(stringf("Line %d: Invalid Int assignment: Not a number", numberToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid Int assignment: Not a number", numberToken.LineNumber));
     }
 
     return "null";
 }
 
-/**
- * @brief Read contents (i.e. if/else statements and loops, expressions) that
- *        start with a specific type of token and have a corresponding ending token
- * 
- * @note Will have to be called once it is identified that there are contents,
- *       meaning the next token will NOT be of type `startType`. The current
- *       `index` will be at the last instance of a token with the type `endType`,
- *       meaning to proceed with reading other tokens, first increase the
- *       value of `index`.
- * 
- * 
- * @param index Index of the current token
- * @param startType Token type of the start
- * @param endType Token type of the end
- * @param tokens List of all tokens including the start and end one
- * @param output The output list of all tokens that are considered as content
- * 
- * @returns `true` when the depth is the same as when it was in the beginning,
- *          otherwise `false`
- */
 bool TokenParser::ReadContentUsingDepth(int& index, SourceToken::Type startType, SourceToken::Type endType, SourceTokenList tokens, SourceTokenList& output)
 {
     auto nextToken = SourceToken();
@@ -725,6 +606,31 @@ bool TokenParser::ReadContentUsingDepth(int& index, SourceToken::Type startType,
     // to remove the last pushed closing type token
     if (nextToken.mType == endType)
         output.pop_back();
+    
+    return depth == 0;
+}
+
+bool TokenParser::ReadContentUsingDepth(int& index, SourceToken::Type startType, SourceToken::Type endType, SourceTokenList tokens, SourceTokenIterator& output)
+{
+    auto nextToken = SourceToken();
+    int depth = 1;
+    while (depth > 0 && index+1 < tokens.size())
+    {
+        index++;
+        nextToken = tokens.at(index);
+
+        if (nextToken.mType == startType)
+            depth++;
+
+        if (nextToken.mType == endType)
+            depth--;
+
+        output.Push(nextToken);
+    }
+
+    // to remove the last pushed closing type token
+    if (nextToken.mType == endType)
+        output.Pop();
     
     return depth == 0;
 }
@@ -856,57 +762,37 @@ void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::st
     }
 }
 
-/**
- * @brief Read a do-while loop
- * 
- * @param loop Loop object that will contain the loop information & instructions
- * @param index Index of the current token
- * @param current The current token
- * @param tokens List of all tokens including the current one
- * @param output The output list where the read token will be saved
- * @param globalTokens A list where the tokens that are globally available are saved
- */
 void ReadDoWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
     auto nextToken = tokens.at(index);
     if (nextToken.mType != SourceToken::Type::CurlyBracketOpen)
-        LogError(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected '{'", nextToken.LineNumber, nextToken.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected '{'", nextToken.LineNumber, nextToken.Contents.c_str()));
 
     if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, loop->mInnerTokens))
-        LogError(stringf("Line %d: Invalid contents for do-while loop contents, invalid content depth", current.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid contents for do-while loop contents, invalid content depth", current.LineNumber));
     index++;
 
     nextToken = tokens.at(index);
     if (nextToken.KeywordIndex != KeywordIndex_while)
-        LogError(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected 'while'", nextToken.LineNumber, nextToken.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected 'while'", nextToken.LineNumber, nextToken.Contents.c_str()));
     index++;
 
     nextToken = tokens.at(index);
     if (nextToken.mType != SourceToken::Type::ParenthesisOpen)
-        LogError(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()));
 
     if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, loop->Condition.mInnerTokens))
-        LogError(stringf("Line %d: Invalid do-while loop, invalid depth at condition declaration", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid do-while loop, invalid depth at condition declaration", nextToken.LineNumber));
     index++;
 
     nextToken = tokens.at(index);
     if (nextToken.mType != SourceToken::Type::Semicolon)
-        LogError(stringf("Line %d: Invalid do-while loop, expected ';'", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid do-while loop, expected ';'", nextToken.LineNumber));
 
     loop->Condition.Identify(output, globalTokens);
     loop->ParseTokens(output, globalTokens);
 }
 
-/**
- * @brief Read a for loop
- * 
- * @param loop Loop object that will contain the loop information & instructions
- * @param index Index of the current token
- * @param current The current token
- * @param tokens List of all tokens including the current one
- * @param output The output list where the read token will be saved
- * @param globalTokens A list where the tokens that are globally available are saved
- */
 void ReadForLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
     auto loopInitializerTokens = SourceTokenList();
@@ -914,17 +800,17 @@ void ReadForLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& 
 
     auto nextToken = tokens.at(index);
     if (nextToken.mType != SourceToken::Type::ParenthesisOpen)
-        LogError(stringf("Line %d: Invalid for loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: Invalid for loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()));
 
     if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, loopInitializerTokens))
-        LogError(stringf("Line %d: Invalid for loop, invalid depth at declaration", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid for loop, invalid depth at declaration", nextToken.LineNumber));
     index++;
 
     nextToken = tokens.at(index);
     if (nextToken.mType == SourceToken::Type::CurlyBracketOpen)
     {
         if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, loop->mInnerTokens))
-            LogError(stringf("Line %d: Invalid contents for for loop contents, invalid content depth", current.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: Invalid contents for for loop contents, invalid content depth", current.LineNumber));
 
         goto parseLoopInitializers;
     }
@@ -932,12 +818,12 @@ void ReadForLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& 
         goto parseLoopInitializers;
 
     if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::Invalid, SourceToken::Type::Semicolon, tokens, loop->mInnerTokens))
-        LogError(stringf("Line %d: Invalid for loop, unexpected depth", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid for loop, unexpected depth", nextToken.LineNumber));
 
 parseLoopInitializers:
 
     if (loopInitializerTokens.empty())
-        LogError(stringf("Line %d: Invalid for loop, unexpected depth", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid for loop, unexpected depth", nextToken.LineNumber));
 
     int subIndex = 0;
     if (loopInitializerTokens.at(subIndex).mType != SourceToken::Type::Semicolon)
@@ -992,31 +878,21 @@ parseLoopInitializers:
     loop->ParseTokens(output, globalTokens);
 }
 
-/**
- * @brief Read a while loop
- * 
- * @param loop Loop object that will contain the loop information & instructions
- * @param index Index of the current token
- * @param current The current token
- * @param tokens List of all tokens including the current one
- * @param output The output list where the read token will be saved
- * @param globalTokens A list where the tokens that are globally available are saved
- */
 void ReadWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
     auto nextToken = tokens.at(index);
     if (nextToken.mType != SourceToken::Type::ParenthesisOpen)
-        LogError(stringf("Line %d: Invalid while loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()));
+        Logging::LogErrorExit(stringf("Line %d: Invalid while loop, unexpected literal '%s' expected '('", nextToken.LineNumber, nextToken.Contents.c_str()));
 
     if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, loop->Condition.mInnerTokens))
-        LogError(stringf("Line %d: Invalid while loop, invalid depth at declaration", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid while loop, invalid depth at declaration", nextToken.LineNumber));
     index++;
 
     nextToken = tokens.at(index);
     if (nextToken.mType == SourceToken::Type::CurlyBracketOpen)
     {
         if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::CurlyBracketOpen, SourceToken::Type::CurlyBracketClose, tokens, loop->mInnerTokens))
-            LogError(stringf("Line %d: Invalid contents for while loop contents, invalid content depth", current.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: Invalid contents for while loop contents, invalid content depth", current.LineNumber));
 
         goto end;
     }
@@ -1024,7 +900,7 @@ void ReadWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken
         goto end;
 
     if (!TokenParser::ReadContentUsingDepth(index, SourceToken::Type::Invalid, SourceToken::Type::Semicolon, tokens, loop->mInnerTokens))
-        LogError(stringf("Line %d: Invalid while loop, unexpected depth", nextToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid while loop, unexpected depth", nextToken.LineNumber));
 
 end:
     loop->ParseTokens(output, globalTokens);

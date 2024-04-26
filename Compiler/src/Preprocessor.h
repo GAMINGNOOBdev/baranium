@@ -48,11 +48,11 @@ struct Preprocessor
     /**
      * @brief Check if there are any defines in the currently available tokens and replace if necessary
      * 
-     * @param lineTokens Line tokens
+     * @note This function will modify the given input parameter
      * 
-     * @returns A better version of the lines tokens
+     * @param lineTokens Line tokens
      */
-    static std::vector<SourceToken> AssistInLine(std::vector<SourceToken>& lineTokens);
+    static void AssistInLine(std::vector<SourceToken>& lineTokens);
 
 private:
     /**

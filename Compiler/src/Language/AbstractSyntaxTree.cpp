@@ -132,91 +132,39 @@ namespace Language
     {
     }
 
-    void AbstractSyntaxTree::Parse(SourceTokenList tokens)
+    void AbstractSyntaxTree::Parse(SourceTokenIterator& tokens)
     {
         int index = 0;
-        mRoot = ParseTokens(tokens, index, 0);
+        mRoot = ParseTokens(tokens, 0);
         PrintNode(mRoot, 0);
         nop;
     }
 
-    std::shared_ptr<TreeNode> AbstractSyntaxTree::ParseTokens(SourceTokenList& tokens, int& index, power_t minPower)
+    std::shared_ptr<TreeNode> AbstractSyntaxTree::ParseTokens(SourceTokenIterator& tokens, power_t minPower)
     {
-        if (index >= tokens.size())
+        if (tokens.EndOfList())
             Logging::LogErrorExit("invalid expression, quit before expression was finished");
 
-        auto lhs = std::make_shared<TreeNode>();
-        auto& token = tokens.at(index);
+        auto left = std::make_shared<TreeNode>();
+        auto& token = tokens.Next();
 
         bool wasSpecialChar = false;
         SourceToken::Type type = SourceToken::Type::Invalid;
         int64_t operationIndex = GetOperationIndex(token, type, wasSpecialChar);
 
         if (type == SourceToken::Type::Invalid)
-        {
-            lhs = TreeNode::Create(nullptr, token);
-            index++;
-        }
-        else
-        {
-            if (token.mType == SourceToken::Type::ParenthesisOpen)
-            {
-                int tmpIndex = 0;
-                SourceTokenList tmpTokens;
-                TokenParser::ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, tmpTokens) ? nop : Logging::LogErrorExit(stringf("Line %d: Invalid content depth, missing ')'", token.LineNumber));
-                lhs = ParseTokens(tmpTokens, tmpIndex, 0);
-                index += tmpTokens.size();
-                goto end;
-            }
-            else
-            {
-                BindingPower prefixPower = GetPrefixPower(token);
-                prefixPower.Valid() ? nop : Logging::LogErrorExit(stringf("Invalid prefix '%s'", token.Contents.c_str()));
+            return TreeNode::Create(nullptr, token);
+        
+        BindingPower prefixPower = GetPrefixPower(token);
+        prefixPower.Valid() ? nop : Logging::LogErrorExit(stringf("Invalid prefix '%s'", token.Contents.c_str()));
 
-                index++;
-                auto rhs = ParseTokens(tokens, index, prefixPower.right);
-                lhs->contents = token;
-                lhs->operation = operationIndex;
-                lhs->specialChar = wasSpecialChar;
-                lhs->right = rhs;
-            }
-        }
+        auto rhs = ParseTokens(tokens, prefixPower.right);
+        left->contents = token;
+        left->operation = operationIndex;
+        left->specialChar = wasSpecialChar;
+        left->right = rhs;
 
-        while (index < tokens.size())
-        {
-            token = tokens.at(index);
-
-            BindingPower power = GetPostfixPower(token);
-            if (power.Valid())
-            {
-                if (power.left < minPower)
-                    break;
-
-                index++;
-                index >= tokens.size() ? Logging::LogErrorExit(stringf("Line %d: Invalid expression", token.LineNumber)) : nop;
-                lhs->left = TreeNode::Create(nullptr, token, operationIndex, false);
-                continue;
-            }
-            power = GetInfixPower(token);
-            if (power.Valid())
-            {
-                if (power.left < minPower)
-                    break;
-
-                index++;
-                index >= tokens.size() ? Logging::LogErrorExit(stringf("Line %d: Invalid expression", token.LineNumber)) : nop;
-
-                lhs->left = TreeNode::Create(nullptr, token, operationIndex, false);
-                lhs->right = ParseTokens(tokens, index, power.right);
-                continue;
-            }
-
-            Logging::LogErrorExit(stringf("Line %d: Invalid operator token '%s'", token.LineNumber, token.Contents.c_str()));
-        }
-
-    end:
-
-        return lhs;
+        return left;
     }
 
     int64_t AbstractSyntaxTree::GetOperationIndex(SourceToken& token, SourceToken::Type& operationType, bool& wasSpecialChar)
@@ -253,11 +201,6 @@ namespace Language
         printf("%s%s\n", std::string((size_t)4*depth, ' ').c_str(), node->contents.Contents.c_str());
         node->left != nullptr ? PrintNode(node->left, depth+1) : nop;
         node->right != nullptr ? PrintNode(node->right, depth+1) : nop;
-    }
-
-    void AbstractSyntaxTree::AddNode(SourceToken& token, int opIdx, bool spChr)
-    {
-        //std::shared_ptr<TreeNode> mRoot;
     }
 
 }

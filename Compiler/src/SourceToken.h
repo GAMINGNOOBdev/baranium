@@ -100,4 +100,29 @@ const char* SourceTokenTypeToString(SourceToken::Type type);
 // shortcut for writing convenience
 using SourceTokenList = std::vector<SourceToken>;
 
+struct SourceTokenIterator
+{
+    SourceTokenIterator();
+    SourceTokenIterator(SourceTokenList& list);
+
+    void Clear();
+
+    SourceTokenList& GetTokens();
+    size_t GetIndex();
+
+    bool EndOfList();
+
+    void Push(SourceToken& token);
+    void Push(SourceTokenList& list);
+    void Push(SourceTokenIterator& iterator);
+    void Pop();
+
+    SourceToken& Next();
+    SourceToken& Peek();
+
+private:
+    SourceTokenList mTokens;
+    size_t mIndex;
+};
+
 #endif

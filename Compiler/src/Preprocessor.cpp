@@ -57,7 +57,7 @@ void Preprocessor::Parse(std::string operation, Source* source)
             src.ReadSource(file);
             source->AppendSource(src);
             file.Close();
-            src.GetTokens().clear();
+            src.GetTokens().Clear();
         }
     }
     else if (command == "define")
@@ -116,12 +116,12 @@ void Preprocessor::AddDefine(std::string defineName, std::string replacement)
     mDefines.push_back(replacement);
 }
 
-std::vector<SourceToken> Preprocessor::AssistInLine(std::vector<SourceToken>& lineTokens)
+void Preprocessor::AssistInLine(std::vector<SourceToken>& lineTokens)
 {
     std::vector<SourceToken> improvedTokens;
 
     if (lineTokens.empty())
-        return lineTokens;
+        return;
     
     bool anythingChanged = false;
     for (auto iterator = lineTokens.begin(); iterator != lineTokens.end(); iterator++)
@@ -142,8 +142,8 @@ std::vector<SourceToken> Preprocessor::AssistInLine(std::vector<SourceToken>& li
             if (mDefines[index].empty())
                 break;
 
-            token.Contents = mDefines[index];
-            std::vector<SourceToken> replacementTokens = Source::ParseLineToTokens(mDefines[index]);
+            auto& replacementTokensIterator = Source::ParseLineToTokens(mDefines[index]);
+            auto replacementTokens = replacementTokensIterator.GetTokens();
             if (replacementTokens.empty())
                 break;
 
@@ -165,9 +165,10 @@ std::vector<SourceToken> Preprocessor::AssistInLine(std::vector<SourceToken>& li
             improvedTokens.push_back(token);
     }
     if (!anythingChanged)
-        return lineTokens;
+        return;
 
-    return improvedTokens;
+    lineTokens.clear();
+    lineTokens.insert(lineTokens.end(), improvedTokens.begin(), improvedTokens.end());
 }
 
 std::string Preprocessor::SearchIncludePath(std::string file)

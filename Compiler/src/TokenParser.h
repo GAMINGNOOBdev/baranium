@@ -28,6 +28,13 @@ struct TokenParser
     /**
      * @brief Parse the incoming tokens
      * 
+     * @param tokenIterator Token iterator that contains the tokens that will be parsed
+     */
+    void ParseTokens(SourceTokenIterator& tokenIterator);
+
+    /**
+     * @brief Parse the incoming tokens
+     * 
      * @param tokens Tokens that will be parsed
      */
     void ParseTokens(SourceTokenList& tokens);
@@ -148,6 +155,28 @@ struct TokenParser
      *          otherwise `false`
      */
     static bool ReadContentUsingDepth(int& index, SourceToken::Type startType, SourceToken::Type endType, SourceTokenList tokens, SourceTokenList& output);
+
+    /**
+     * @brief Read contents (i.e. if/else statements and loops, expressions) that
+     *        start with a specific type of token and have a corresponding ending token
+     * 
+     * @note Will have to be called once it is identified that there are contents,
+     *       meaning the next token will NOT be of type `startType`. The current
+     *       `index` will be at the last instance of a token with the type `endType`,
+     *       meaning to proceed with reading other tokens, first increase the
+     *       value of `index`.
+     * 
+     * 
+     * @param index Index of the current token
+     * @param startType Token type of the start
+     * @param endType Token type of the end
+     * @param tokens List of all tokens including the start and end one
+     * @param output The output iterator of all tokens that are considered as content
+     * 
+     * @returns `true` when the depth is the same as when it was in the beginning,
+     *          otherwise `false`
+     */
+    static bool ReadContentUsingDepth(int& index, SourceToken::Type startType, SourceToken::Type endType, SourceTokenList tokens, SourceTokenIterator& output);
 
 private:
     static void WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::string indentation = std::string());

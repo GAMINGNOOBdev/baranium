@@ -15,7 +15,7 @@ Source::Source(BgeFile& file)
 void Source::AppendSource(Source& other)
 {
     auto& otherTokens = other.GetTokens();
-    mTokens.insert(mTokens.end(), otherTokens.begin(), otherTokens.end());
+    mTokens.Push(otherTokens);
 }
 
 void Source::WriteTokensToJson(std::string name)
@@ -23,8 +23,8 @@ void Source::WriteTokensToJson(std::string name)
     BgeFile outputFile = BgeFile(name, true);
     outputFile.WriteLine("[");
     int index = 0;
-    int tokenCount = mTokens.size();
-    for (auto& token : mTokens)
+    int tokenCount = mTokens.GetTokens().size();
+    for (auto& token : mTokens.GetTokens())
     {
         outputFile.WriteLine("\t{");
         outputFile.WriteLine(stringf("\t\t\"type\": \"%s\",", SourceTokenTypeToString(token.mType)));
@@ -75,16 +75,16 @@ void Source::ReadSource(BgeFile& file)
     }
 }
 
-std::vector<SourceToken>& Source::GetTokens()
+SourceTokenIterator& Source::GetTokens()
 {
     return mTokens;
 }
 
-std::vector<SourceToken> Source::ParseLineToTokens(std::string line)
+SourceTokenIterator Source::ParseLineToTokens(std::string line)
 {
     Source src = Source();
     src.ReadLine(line, -1);
-    return std::vector<SourceToken>(src.GetTokens());
+    return SourceTokenIterator(src.GetTokens());
 }
 
 ///////////////////////
@@ -178,8 +178,8 @@ void Source::ReadLine(std::string line, int lineNumber)
         ReadBuffer(line, lineNumber);
 
 validate:
-    mLineTokens = Preprocessor::AssistInLine(mLineTokens);
-    mTokens.insert(mTokens.end(), mLineTokens.begin(), mLineTokens.end());
+    Preprocessor::AssistInLine(mLineTokens);
+    mTokens.Push(mLineTokens);
     mLineTokens.clear();
 }
 

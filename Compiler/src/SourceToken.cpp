@@ -155,3 +155,73 @@ const char* SourceTokenTypeToString(SourceToken::Type type)
 
     return "none";
 }
+
+SourceTokenIterator::SourceTokenIterator()
+    : mTokens(), mIndex(0)
+{
+}
+
+SourceTokenIterator::SourceTokenIterator(SourceTokenList& list)
+    : mTokens(), mIndex(0)
+{
+    Push(list);
+}
+
+void SourceTokenIterator::Clear()
+{
+    mTokens.clear();
+    mIndex = 0;
+}
+
+SourceTokenList& SourceTokenIterator::GetTokens()
+{
+    return mTokens;
+}
+
+size_t SourceTokenIterator::GetIndex()
+{
+    return mIndex;
+}
+
+bool SourceTokenIterator::EndOfList()
+{
+    return mIndex >= mTokens.size();
+}
+
+void SourceTokenIterator::Push(SourceToken& token)
+{
+    mTokens.push_back(token);
+}
+
+void SourceTokenIterator::Push(SourceTokenList& list)
+{
+    mTokens.insert(mTokens.end(), list.begin(), list.end());
+}
+
+void SourceTokenIterator::Push(SourceTokenIterator& iterator)
+{
+    mTokens.insert(mTokens.end(), iterator.mTokens.begin(), iterator.mTokens.end());
+}
+
+void SourceTokenIterator::Pop()
+{
+    mTokens.pop_back();
+}
+
+SourceToken& SourceTokenIterator::Next()
+{
+    if (mIndex >= mTokens.size())
+        return SourceToken();
+    
+    SourceToken& result = mTokens.at(mIndex);
+    mIndex++;
+    return result;
+}
+
+SourceToken& SourceTokenIterator::Peek()
+{
+    if (mIndex >= mTokens.size())
+        return SourceToken();
+    
+    return mTokens.at(mIndex);
+}

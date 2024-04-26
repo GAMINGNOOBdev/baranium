@@ -151,13 +151,12 @@ namespace Language
          * 
          * @param tokens The tokens to parse
          */
-        void Parse(SourceTokenList tokens);
+        void Parse(SourceTokenIterator& tokens);
 
     private:
-        std::shared_ptr<TreeNode> ParseTokens(SourceTokenList& tokens, int& index, power_t minPower);
+        std::shared_ptr<TreeNode> ParseTokens(SourceTokenIterator& tokens, power_t minPower);
         int64_t GetOperationIndex(SourceToken& token, SourceToken::Type& operationType, bool& wasSpecialChar);
         void PrintNode(std::shared_ptr<TreeNode> node, int depth);
-        void AddNode(SourceToken& token, int opIdx, bool spChr);
 
     private:
         std::shared_ptr<TreeNode> mRoot;
