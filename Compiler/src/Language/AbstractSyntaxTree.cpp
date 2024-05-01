@@ -17,12 +17,12 @@ namespace Language
 {
 
     TreeNode::TreeNode()
-        : parent(nullptr), left(nullptr), right(nullptr), contents(), operation(-1), specialChar(false)
+        : left(nullptr), right(nullptr), contents(), operation(-1), specialChar(false)
     {
     }
 
-    TreeNode::TreeNode(TreeNodeObject pParent, SourceToken& token, int op, bool spChr)
-        : parent(pParent), left(nullptr), right(nullptr)
+    TreeNode::TreeNode(SourceToken& token, int op, bool spChr)
+        : left(nullptr), right(nullptr)
     {
         contents = token;
         operation = op;
@@ -39,7 +39,6 @@ namespace Language
         contents = other.contents;
         operation = other.operation;
         specialChar = other.specialChar;
-        parent = other.parent;
         left = other.left;
         right = other.right;
         subNodes = other.subNodes;
@@ -50,9 +49,9 @@ namespace Language
         return std::make_shared<TreeNode>();
     }
 
-    TreeNodeObject TreeNode::Create(TreeNodeObject parent, SourceToken& token, int opIdx, bool spChr)
+    TreeNodeObject TreeNode::Create(SourceToken& token, int opIdx, bool spChr)
     {
-        return std::make_shared<TreeNode>(parent, token, opIdx, spChr);
+        return std::make_shared<TreeNode>(token, opIdx, spChr);
     }
 
     PreInPostFixTokenParser::PreInPostFixTokenParser()

@@ -53,11 +53,6 @@ namespace Language
         bool specialChar;
 
         /**
-         * @brief The parent node
-         */
-        TreeNodeObject parent;
-
-        /**
          * @brief The node to the left
          */
         TreeNodeObject left;
@@ -81,12 +76,11 @@ namespace Language
         /**
          * @brief Construct a new `TreeNode` object
          *
-         * @param parent Parent node
          * @param token The new contents of this token
          * @param opIdx Operation index
          * @param spChr Special char
          */
-        TreeNode(TreeNodeObject pParent, SourceToken& token, int opIdx, bool spChr);
+        TreeNode(SourceToken& token, int opIdx, bool spChr);
 
         /**
          * @brief Check if this node is valid
@@ -106,7 +100,7 @@ namespace Language
         /**
          * @brief Yes this is honestly just a contructor but idc it looks better
          */
-        static TreeNodeObject Create(TreeNodeObject parent, SourceToken& token, int opIdx = -1, bool spChr = false);
+        static TreeNodeObject Create(SourceToken& token, int opIdx = -1, bool spChr = false);
     };
 
     using PreInPostFixHandle = std::function<TreeNodeObject(SourceTokenIterator&, TreeNodeObject)>;
