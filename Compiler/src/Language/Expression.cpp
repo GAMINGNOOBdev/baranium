@@ -9,9 +9,9 @@ namespace Language
 
     /**
      * @brief Get the string representation of an expression type
-     * 
+     *
      * @param type The expression type that will be "stringified"
-     * 
+     *
      * @return The string representation of `type`
      */
     const char* ExpressionTypeToString(ExpressionType type)
@@ -93,10 +93,10 @@ namespace Language
         if (tokens.empty())
             return;
 
-        // AST.Parse(tokens);
-
-        // if (CheckExpressionDividers(tokens))
-        //     return;
+        SourceTokenIterator it = SourceTokenIterator();
+        it.Push(tokens);
+        AST.Parse(it);
+        it.Clear();
 
         auto& firstToken = tokens.front();
 
@@ -105,10 +105,10 @@ namespace Language
             auto& nextToken = tokens.at(1);
             auto& nextNextToken = tokens.at(2);
 
-            if ((nextToken.mType == SourceToken::Type::EqualSign        && nextNextToken.mType == SourceToken::Type::EqualSign) || 
-                (nextToken.mType == SourceToken::Type::ExclamationPoint && nextNextToken.mType == SourceToken::Type::EqualSign) || 
-                (nextToken.mType == SourceToken::Type::LessThan         && nextNextToken.mType == SourceToken::Type::EqualSign) || 
-                (nextToken.mType == SourceToken::Type::GreaterThan      && nextNextToken.mType == SourceToken::Type::EqualSign) || 
+            if ((nextToken.mType == SourceToken::Type::EqualSign        && nextNextToken.mType == SourceToken::Type::EqualSign) ||
+                (nextToken.mType == SourceToken::Type::ExclamationPoint && nextNextToken.mType == SourceToken::Type::EqualSign) ||
+                (nextToken.mType == SourceToken::Type::LessThan         && nextNextToken.mType == SourceToken::Type::EqualSign) ||
+                (nextToken.mType == SourceToken::Type::GreaterThan      && nextNextToken.mType == SourceToken::Type::EqualSign) ||
                 (nextToken.mType == SourceToken::Type::LessThan         && nextNextToken.mType != SourceToken::Type::EqualSign) ||
                 (nextToken.mType == SourceToken::Type::GreaterThan      && nextNextToken.mType != SourceToken::Type::EqualSign))
             {
@@ -172,10 +172,10 @@ namespace Language
 
     /**
      * @brief Check if a token list contains a token with the specified type and return it's index
-     * 
+     *
      * @param tokens The list of tokens
      * @param tokenType The desired token type
-     * 
+     *
      * @returns The index of found token, -1 if not found
      */
     int SourceTokenListContains(SourceTokenList& tokens, SourceToken::Type tokenType)
@@ -189,7 +189,7 @@ namespace Language
 
         if (iterator == tokens.end())
             return -1;
-        
+
         return iterator - tokens.begin();
     }
 
@@ -197,10 +197,10 @@ namespace Language
 
     /**
      * @brief Check if a specific sequence of tokens are within a list of tokens and return it's starting index
-     * 
+     *
      * @param tokens The list of tokens
      * @param tokenSequence The desired sequence of tokens
-     * 
+     *
      * @returns The index of the start of found sequence, -1 if not found
      */
     int SourceTokenListContainsSequence(SourceTokenList& tokens, SourceTokenSequence tokenSequence)
@@ -209,7 +209,7 @@ namespace Language
             return -1;
 
         auto firstTokenType = tokenSequence.at(0);
-        
+
         if (tokenSequence.size() < 2)
             return SourceTokenListContains(tokens, firstTokenType);
 
@@ -218,20 +218,20 @@ namespace Language
             return a.mType == firstTokenType;
         })) != tokens.end())
         {
-            
+
         }
 
         if (iterator == tokens.end())
             return -1;
-        
+
         return iterator - tokens.begin();
     }
 
     /**
      * @brief Check if the provided list contains any tokens that split up expressions
-     * 
+     *
      * @param tokens The list of tokens
-     * 
+     *
      * @returns `true` if there are splitting tokens, `false` if there aren't
      */
     bool Expression::CheckExpressionDividers(SourceTokenList& tokens)

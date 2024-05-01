@@ -13,7 +13,8 @@ define myVeryFancyFunction(int var)
     bool isStupidCode = false;
 
     # expression ast test
-    isStupidCode = 10 + ((-variable2) * 6 - 1) / variable1 == -1;
+    call("myFunctionName", null);
+    isStupidCode = 10 + ((-variable2) * 6 - 1) / variable1 == getIsStupidCode(1,2,3,4);
 
 
     gameobject attachedObject = attached;

@@ -74,12 +74,12 @@ const char* SourceTokenTypeToString(SourceToken::Type type)
         case SourceToken::Type::Minus:
             return "Minus";
 
-        case SourceToken::Type::Times:
-            return "Times";
+        case SourceToken::Type::Asterisk:
+            return "Asterisk";
 
-        case SourceToken::Type::Divided:
-            return "Divided";
-        
+        case SourceToken::Type::Slash:
+            return "Slash";
+
         case SourceToken::Type::Modulo:
             return "Modulo";
 
@@ -91,9 +91,9 @@ const char* SourceTokenTypeToString(SourceToken::Type type)
 
         case SourceToken::Type::Tilde:
             return "Tilde";
-        
-        case SourceToken::Type::Not:
-            return "Not";
+
+        case SourceToken::Type::Caret:
+            return "Caret";
 
         case SourceToken::Type::EqualSign:
             return "EqualSign";
@@ -208,20 +208,41 @@ void SourceTokenIterator::Pop()
     mTokens.pop_back();
 }
 
+SourceToken& SourceTokenIterator::Current()
+{
+    if (mIndex-1 < 0)
+        return mTokens.at(mIndex);
+    
+    if (EndOfList())
+        return SourceToken();
+
+    return mTokens.at(mIndex-1);
+}
+
 SourceToken& SourceTokenIterator::Next()
 {
-    if (mIndex >= mTokens.size())
+    if (mIndex+1 >= mTokens.size())
         return SourceToken();
-    
-    SourceToken& result = mTokens.at(mIndex);
+
+    auto& token = mTokens.at(mIndex);
     mIndex++;
-    return result;
+    return token;
 }
 
 SourceToken& SourceTokenIterator::Peek()
 {
-    if (mIndex >= mTokens.size())
+    if (EndOfList())
         return SourceToken();
-    
+
     return mTokens.at(mIndex);
+}
+
+bool SourceTokenIterator::NextMatches(SourceToken::Type type)
+{
+    auto& token = Peek();
+    if (token.mType != type)
+        return false;
+    
+    Next();
+    return true;
 }

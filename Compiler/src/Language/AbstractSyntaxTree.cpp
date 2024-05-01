@@ -1,4 +1,5 @@
 #include "AbstractSyntaxTree.h"
+#include "AST_TokenParsers.h"
 #include "../TokenParser.h"
 #include "../StringUtil.h"
 #include "../Logging.h"
@@ -15,92 +16,12 @@
 namespace Language
 {
 
-    BindingPower::BindingPower()
-    {
-        left = -1;
-        right = -1;
-    }
-
-    BindingPower::BindingPower(power_t l, power_t r)
-    {
-        left = l;
-        right = r;
-    }
-
-    bool BindingPower::Valid()
-    {
-        return left != -1 && right != -1;
-    }
-
-    bool BindingPower::operator==(BindingPower& other)
-    {
-        return left == other.left && right == other.right;
-    }
-
-    bool BindingPower::operator!=(BindingPower& other)
-    {
-        return !operator==(other);
-    }
-
-    BindingPower& GetPrefixPower(SourceToken& token)
-    {
-        switch (token.mType)
-        {
-            case SourceToken::Type::Plus:
-            case SourceToken::Type::Minus:
-            case SourceToken::Type::Not:
-            case SourceToken::Type::Tilde:
-            case SourceToken::Type::ExclamationPoint:
-                return BindingPower(0, 9);
-        }
-
-        return BindingPower();
-    }
-
-    BindingPower& GetInfixPower(SourceToken& token)
-    {
-        switch (token.mType)
-        {
-            case SourceToken::Type::EqualSign:
-            case SourceToken::Type::AndEqual:
-            case SourceToken::Type::OrEqual:
-            case SourceToken::Type::XorEqual:
-                return BindingPower(2, 1);
-            
-            case SourceToken::Type::EqualTo:
-            case SourceToken::Type::NotEqual:
-            case SourceToken::Type::LessEqual:
-            case SourceToken::Type::GreaterEqual:
-                return BindingPower(4, 3);
-            
-            case SourceToken::Type::Plus:
-            case SourceToken::Type::Minus:
-                return BindingPower(5, 6);
-            
-            case SourceToken::Type::Times:
-            case SourceToken::Type::Divided:
-                return BindingPower(7, 8);
-            
-            case SourceToken::Type::AndAnd:
-            case SourceToken::Type::OrOr:
-                return BindingPower(10, 11);
-        }
-
-        return BindingPower();
-    }
-
-    BindingPower& GetPostfixPower(SourceToken& token)
-    {
-        ///NOTE: this function is currently of no use
-        return BindingPower();
-    }
-
     TreeNode::TreeNode()
         : parent(nullptr), left(nullptr), right(nullptr), contents(), operation(-1), specialChar(false)
     {
     }
 
-    TreeNode::TreeNode(std::shared_ptr<TreeNode> pParent, SourceToken& token, int op, bool spChr)
+    TreeNode::TreeNode(TreeNodeObject pParent, SourceToken& token, int op, bool spChr)
         : parent(pParent), left(nullptr), right(nullptr)
     {
         contents = token;
@@ -118,18 +39,52 @@ namespace Language
         contents = other.contents;
         operation = other.operation;
         specialChar = other.specialChar;
+        parent = other.parent;
         left = other.left;
         right = other.right;
+        subNodes = other.subNodes;
     }
 
-    std::shared_ptr<TreeNode> TreeNode::Create(std::shared_ptr<TreeNode> parent, SourceToken& token, int opIdx, bool spChr)
+    TreeNodeObject TreeNode::Create()
+    {
+        return std::make_shared<TreeNode>();
+    }
+
+    TreeNodeObject TreeNode::Create(TreeNodeObject parent, SourceToken& token, int opIdx, bool spChr)
     {
         return std::make_shared<TreeNode>(parent, token, opIdx, spChr);
+    }
+
+    PreInPostFixTokenParser::PreInPostFixTokenParser()
+    {
+        Handle = nullptr;
+        Power = -1;
+    }
+
+    PreInPostFixTokenParser::PreInPostFixTokenParser(power_t power, PreInPostFixHandle handle)
+    {
+        Handle = handle;
+        Power = power;
+    }
+
+    PreInPostFixTokenParser::PreInPostFixTokenParser(BindingPower power, PreInPostFixHandle handle)
+    {
+        Handle = handle;
+        Power = (power_t)power;
+    }
+
+    void PrintNode(TreeNodeObject node, int depth, int side = 0)
+    {
+        printf("%s%s%s\n", std::string((size_t)4*depth, ' ').c_str(), side < 0 ? "left: " : ( side > 0 ? "right: " : "" ), node->contents.Contents.c_str());
+        node->subNodes.size() > 0 ? printf("%shas sub-nodes!\n", std::string((size_t)4*depth, ' ').c_str()) : nop;
+        node->left != nullptr ? PrintNode(node->left, depth+1, -1) : nop;
+        node->right != nullptr ? PrintNode(node->right, depth+1, 1) : nop;
     }
 
     AbstractSyntaxTree::AbstractSyntaxTree()
         : mRoot(nullptr)
     {
+        SetupParserHandles(*this);
     }
 
     void AbstractSyntaxTree::Parse(SourceTokenIterator& tokens)
@@ -140,31 +95,49 @@ namespace Language
         nop;
     }
 
-    std::shared_ptr<TreeNode> AbstractSyntaxTree::ParseTokens(SourceTokenIterator& tokens, power_t minPower)
+    TreeNodeObject AbstractSyntaxTree::ParseTokens(SourceTokenIterator& tokens, BindingPower minPower)
+    {
+        return ParseTokens(tokens, (power_t)minPower);
+    }
+
+    TreeNodeObject AbstractSyntaxTree::ParseTokens(SourceTokenIterator& tokens, power_t minPower)
     {
         if (tokens.EndOfList())
             Logging::LogErrorExit("invalid expression, quit before expression was finished");
 
-        auto left = std::make_shared<TreeNode>();
+        auto left = TreeNode::Create();
         auto& token = tokens.Next();
 
-        bool wasSpecialChar = false;
-        SourceToken::Type type = SourceToken::Type::Invalid;
-        int64_t operationIndex = GetOperationIndex(token, type, wasSpecialChar);
+        auto prefixIterator = mPrefixLookup.find(token.mType);
+        prefixIterator == mPrefixLookup.end() ? Logging::LogErrorExit(stringf("Invalid prefix '%s'", token.Contents.c_str())) : nop;
 
-        if (type == SourceToken::Type::Invalid)
-            return TreeNode::Create(nullptr, token);
-        
-        BindingPower prefixPower = GetPrefixPower(token);
-        prefixPower.Valid() ? nop : Logging::LogErrorExit(stringf("Invalid prefix '%s'", token.Contents.c_str()));
+        auto tokenParser = prefixIterator->second;
+        left = tokenParser.Handle(tokens, left);
 
-        auto rhs = ParseTokens(tokens, prefixPower.right);
-        left->contents = token;
-        left->operation = operationIndex;
-        left->specialChar = wasSpecialChar;
-        left->right = rhs;
+        while (minPower < GetNextPrecedence(tokens))
+        {
+            token = tokens.Next();
+
+            tokenParser = mInfixLookup[token.mType];
+            left = tokenParser.Handle(tokens, left);
+        }
 
         return left;
+    }
+
+    void AbstractSyntaxTree::RegisterPrefix(SourceToken::Type tokenType, PreInPostFixHandle handle)
+    {
+        mPrefixLookup[tokenType] = PreInPostFixTokenParser(BindingPower::None, handle);
+    }
+
+    void AbstractSyntaxTree::RegisterInfix(SourceToken::Type tokenType, BindingPower power, PreInPostFixHandle handle)
+    {
+        mInfixLookup[tokenType] = PreInPostFixTokenParser(power, handle);
+    }
+
+    void AbstractSyntaxTree::RegisterPostfix(SourceToken::Type tokenType, BindingPower power, PreInPostFixHandle handle)
+    {
+        RegisterInfix(tokenType, power, handle);
     }
 
     int64_t AbstractSyntaxTree::GetOperationIndex(SourceToken& token, SourceToken::Type& operationType, bool& wasSpecialChar)
@@ -196,11 +169,17 @@ namespace Language
         return std::max(operationIndex, specialCharIndex);
     }
 
-    void AbstractSyntaxTree::PrintNode(std::shared_ptr<TreeNode> node, int depth)
+    power_t AbstractSyntaxTree::GetNextPrecedence(SourceTokenIterator& tokens)
     {
-        printf("%s%s\n", std::string((size_t)4*depth, ' ').c_str(), node->contents.Contents.c_str());
-        node->left != nullptr ? PrintNode(node->left, depth+1) : nop;
-        node->right != nullptr ? PrintNode(node->right, depth+1) : nop;
+        auto& token = tokens.Peek();
+        if (token == SourceToken::empty)
+            return 0;
+
+        auto infixIterator = mInfixLookup.find(token.mType);
+        if (infixIterator == mInfixLookup.end())
+            return 0;
+
+        return infixIterator->second.Power;
     }
 
 }
