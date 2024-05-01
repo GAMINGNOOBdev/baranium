@@ -25,9 +25,9 @@ namespace Language
 
     /**
      * @brief Get the string representation of an expression type
-     * 
+     *
      * @param type The expression type that will be "stringified"
-     * 
+     *
      * @return The string representation of `type`
      */
     const char* ExpressionTypeToString(ExpressionType type);
@@ -61,24 +61,7 @@ namespace Language
 
     private:
         void ParseTokens(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
-
-    private:
-        /**
-         * @brief Check if the provided list contains any tokens that split up expressions
-         * 
-         * @param tokens The list of tokens
-         * 
-         * @returns `true` if there are splitting tokens, `false` if there aren't
-         */
-        bool CheckExpressionDividers(SourceTokenList& tokens);
-
-    private:
-        void ParseCondition(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
-        void ParseAssignment(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
-        void ParseFunctionCall(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
         void ParseReturnStatement(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
-        void ParseKeywordExpression(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
-        void ParseArithmeticOperation(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens);
     };
 
 }

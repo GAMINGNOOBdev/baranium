@@ -8,7 +8,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     /// Generic item parser ///
     ///////////////////////////
 
-    auto genericParser = [](SourceTokenIterator& tokens, TreeNodeObject parentNode){
+    auto genericParser = [](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power){
         auto result = TreeNode::Create();
         result->contents = tokens.Current();
         return result;
@@ -23,7 +23,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     /// String parser ///
     /////////////////////
 
-    auto stringParser = [](SourceTokenIterator& tokens, TreeNodeObject parentNode)
+    auto stringParser = [](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
     {
         auto result = TreeNode::Create();
         tokens.Next();
@@ -39,7 +39,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     /// Prefix operators ///
     ////////////////////////
 
-    auto prefixOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode)
+    auto prefixOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
     {
         auto result = TreeNode::Create();
         result->contents = tokens.Current();
@@ -59,8 +59,9 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
 
     /////////////////////////////////
     /// In-/De-crement operations ///
+    /////////////////////////////////
 
-    auto indecrementOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode)
+    auto indecrementOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
     {
         if (parentNode == nullptr)
             Logging::LogErrorExit("whar");
@@ -91,7 +92,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     /// Parenthesis order reading ///
     /////////////////////////////////
 
-    ast.RegisterPrefix(SourceToken::Type::ParenthesisOpen, [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode){
+    ast.RegisterPrefix(SourceToken::Type::ParenthesisOpen, [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power){
         auto result = ast.ParseTokens(tokens, BindingPower::None);
 
         tokens.Next();
@@ -106,7 +107,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     /// Function call reading ///
     /////////////////////////////
 
-    ast.RegisterInfix(SourceToken::Type::ParenthesisOpen, BindingPower::FunctionCall, [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode){
+    ast.RegisterInfix(SourceToken::Type::ParenthesisOpen, BindingPower::FunctionCall, [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power){
         auto result = TreeNode::Create();
         result->operator=(*parentNode); // copy the parent node, which will probably be the function name, well hopefully
         SourceToken::Type type;
@@ -129,11 +130,11 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
         return result;
     });
 
-    ///////////////////////
-    /// Infix operators ///
-    ///////////////////////
+    ////////////////////////////
+    /// Comparison operators ///
+    ////////////////////////////
 
-    auto infixOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode)
+    auto comparisonOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
     {
         auto result = TreeNode::Create();
         result->contents = tokens.Current();
@@ -142,7 +143,34 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
         int64_t operationIndex = AbstractSyntaxTree::GetOperationIndex(tokens.Current(), type, wasSpecialOperation);
         result->operation = operationIndex;
         result->specialChar = wasSpecialOperation;
-        result->right = ast.ParseTokens(tokens, BindingPower::Prefix);
+        result->right = ast.ParseTokens(tokens, BindingPower::None);
+        result->left = std::make_shared<TreeNode>(*parentNode);
+        return result;
+    };
+
+    ast.RegisterInfix(SourceToken::Type::EqualTo, BindingPower::Comparison, comparisonOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::NotEqual, BindingPower::Comparison, comparisonOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::LessEqual, BindingPower::Comparison, comparisonOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::GreaterEqual, BindingPower::Comparison, comparisonOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::LessThan, BindingPower::Comparison, comparisonOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::GreaterThan, BindingPower::Comparison, comparisonOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::AndAnd, BindingPower::Comparison, comparisonOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::OrOr, BindingPower::Comparison, comparisonOperatorParser);
+
+    ///////////////////////
+    /// Infix operators ///
+    ///////////////////////
+
+    auto infixOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
+    {
+        auto result = TreeNode::Create();
+        result->contents = tokens.Current();
+        SourceToken::Type type;
+        bool wasSpecialOperation = false;
+        int64_t operationIndex = AbstractSyntaxTree::GetOperationIndex(tokens.Current(), type, wasSpecialOperation);
+        result->operation = operationIndex;
+        result->specialChar = wasSpecialOperation;
+        result->right = ast.ParseTokens(tokens, power);
         result->left = std::make_shared<TreeNode>(*parentNode);
         return result;
     };
@@ -159,7 +187,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     /// Assignment operation ///
     ////////////////////////////
 
-    auto assignmentOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode)
+    auto assignmentOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
     {
         if (parentNode == nullptr)
             Logging::LogErrorExit("whar");
@@ -193,7 +221,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     /// Postfix operators ///
     /////////////////////////
 
-    auto postfixOperatorParser = [](SourceTokenIterator& tokens, TreeNodeObject parentNode)
+    auto postfixOperatorParser = [](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
     {
         if (parentNode == nullptr)
             Logging::LogErrorExit("whar");

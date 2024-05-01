@@ -212,8 +212,8 @@ SourceToken& SourceTokenIterator::Current()
 {
     if (mIndex-1 < 0)
         return mTokens.at(mIndex);
-    
-    if (EndOfList())
+
+    if (mIndex > mTokens.size())
         return SourceToken();
 
     return mTokens.at(mIndex-1);
@@ -221,7 +221,7 @@ SourceToken& SourceTokenIterator::Current()
 
 SourceToken& SourceTokenIterator::Next()
 {
-    if (mIndex+1 >= mTokens.size())
+    if (mIndex+1 > mTokens.size())
         return SourceToken();
 
     auto& token = mTokens.at(mIndex);
@@ -242,7 +242,7 @@ bool SourceTokenIterator::NextMatches(SourceToken::Type type)
     auto& token = Peek();
     if (token.mType != type)
         return false;
-    
+
     Next();
     return true;
 }

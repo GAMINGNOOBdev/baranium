@@ -23,7 +23,7 @@ namespace Language
         Invalid = -1,
         None,
         Assignment,         // variable assignment
-        Conditional,        // comparisons and such
+        Comparison,         // comparisons like "==", "!=", "<=" or ">="
         PrimaryOperation,   // primary as in very simple operations like + or -
         SecondaryOperation, // secondary as in more advanced/complex operations that should be calculated before the primary ones like * or /
         BitwiseOperation,   // bitwise operations almost always go first, stuff like "|", "^", "&", "~"
@@ -103,7 +103,7 @@ namespace Language
         static TreeNodeObject Create(SourceToken& token, int opIdx = -1, bool spChr = false);
     };
 
-    using PreInPostFixHandle = std::function<TreeNodeObject(SourceTokenIterator&, TreeNodeObject)>;
+    using PreInPostFixHandle = std::function<TreeNodeObject(SourceTokenIterator&, TreeNodeObject, power_t power)>;
 
     /**
      * @brief Small utility class for storing pre-/in-/postfix token parsers

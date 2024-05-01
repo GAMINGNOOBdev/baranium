@@ -24,6 +24,8 @@
 extern void PrintUsage();
 extern void CreatePathDirectory(std::string path);
 
+bool g_DebugMode = false;
+
 int main(const int argc, const char** argv)
 {
     ////////////////////////
@@ -43,8 +45,8 @@ int main(const int argc, const char** argv)
     Argument userIncludes = parser.GetArgument("-I");
 
     bool helpRequested = parser.HasArgument("-h");
-    bool debugMode = parser.HasArgument("-d");
-    Logging::DebugMessages = debugMode;
+    g_DebugMode = parser.HasArgument("-d");
+    Logging::DebugMessages = g_DebugMode;
 
     // read include paths
     std::string executableFilePath = FileUtil::GetExecutableWorkingDirectory();
@@ -141,7 +143,7 @@ int main(const int argc, const char** argv)
         source.ReadSource(inputFile);
         inputFile.Close();
 
-        if (debugMode)
+        if (g_DebugMode)
             source.WriteTokensToJson(std::string(file.Value).append(".tokens.json"));
 
         combinedSource.AppendSource(source);
@@ -154,7 +156,7 @@ int main(const int argc, const char** argv)
     TokenParser tokenParser;
     tokenParser.ParseTokens(combinedSource.GetTokens());
 
-    if (debugMode)
+    if (g_DebugMode)
         tokenParser.WriteTokensToJson(std::string(output.Value).append(".tokens.parsed.json"));
 
     ////////////////////////////////////////

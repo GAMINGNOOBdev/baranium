@@ -60,32 +60,6 @@ namespace Language
     void Expression::Identify(TokenList& localTokens, TokenList& globalTokens)
     {
         ParseTokens(mInnerTokens, localTokens, globalTokens);
-        switch (Type)
-        {
-            case ExpressionType::Assignment:
-            {
-                break;
-            }
-
-            case ExpressionType::FunctionCall:
-            {
-                break;
-            }
-
-            case ExpressionType::Invalid:
-            case ExpressionType::ReturnStatement:
-                return;
-
-            case ExpressionType::KeywordExpression:
-            {
-                break;
-            }
-
-            case ExpressionType::ArithmeticOperation:
-            {
-                break;
-            }
-        }
     }
 
     void Expression::ParseTokens(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens)
@@ -113,14 +87,14 @@ namespace Language
                 (nextToken.mType == SourceToken::Type::GreaterThan      && nextNextToken.mType != SourceToken::Type::EqualSign))
             {
                 Type = ExpressionType::Condition;
-                ParseCondition(tokens, localTokens, globalTokens);
+                // ParseCondition(tokens, localTokens, globalTokens);
                 return;
             }
 
             if (nextToken.mType == SourceToken::Type::ParenthesisOpen)
             {
                 Type = ExpressionType::FunctionCall;
-                ParseFunctionCall(tokens, localTokens, globalTokens);
+                // ParseFunctionCall(tokens, localTokens, globalTokens);
                 return;
             }
 
@@ -128,7 +102,7 @@ namespace Language
                 return;
 
             Type = ExpressionType::Assignment;
-            ParseAssignment(tokens, localTokens, globalTokens);
+            // ParseAssignment(tokens, localTokens, globalTokens);
             return;
         }
 
@@ -168,101 +142,6 @@ namespace Language
                 }
             }
         }
-    }
-
-    /**
-     * @brief Check if a token list contains a token with the specified type and return it's index
-     *
-     * @param tokens The list of tokens
-     * @param tokenType The desired token type
-     *
-     * @returns The index of found token, -1 if not found
-     */
-    int SourceTokenListContains(SourceTokenList& tokens, SourceToken::Type tokenType)
-    {
-        if (tokens.empty())
-            return -1;
-
-        auto iterator = std::find_if(tokens.begin(), tokens.end(), [tokenType](SourceToken& a){
-            return a.mType == tokenType;
-        });
-
-        if (iterator == tokens.end())
-            return -1;
-
-        return iterator - tokens.begin();
-    }
-
-    using SourceTokenSequence = std::vector<SourceToken::Type>;
-
-    /**
-     * @brief Check if a specific sequence of tokens are within a list of tokens and return it's starting index
-     *
-     * @param tokens The list of tokens
-     * @param tokenSequence The desired sequence of tokens
-     *
-     * @returns The index of the start of found sequence, -1 if not found
-     */
-    int SourceTokenListContainsSequence(SourceTokenList& tokens, SourceTokenSequence tokenSequence)
-    {
-        if (tokens.empty() || tokenSequence.empty())
-            return -1;
-
-        auto firstTokenType = tokenSequence.at(0);
-
-        if (tokenSequence.size() < 2)
-            return SourceTokenListContains(tokens, firstTokenType);
-
-        auto iterator = tokens.begin();
-        while ((iterator = std::find_if(tokens.begin(), tokens.end(), [firstTokenType](SourceToken& a){
-            return a.mType == firstTokenType;
-        })) != tokens.end())
-        {
-
-        }
-
-        if (iterator == tokens.end())
-            return -1;
-
-        return iterator - tokens.begin();
-    }
-
-    /**
-     * @brief Check if the provided list contains any tokens that split up expressions
-     *
-     * @param tokens The list of tokens
-     *
-     * @returns `true` if there are splitting tokens, `false` if there aren't
-     */
-    bool Expression::CheckExpressionDividers(SourceTokenList& tokens)
-    {
-        int orIndex = SourceTokenListContains(tokens, SourceToken::Type::Or);
-        int andIndex = SourceTokenListContains(tokens, SourceToken::Type::And);
-
-        if (orIndex != -1 && orIndex + 1 < tokens.size())
-            orIndex = tokens.at(orIndex+1).mType == SourceToken::Type::Or ? orIndex : -1;
-
-        if (andIndex != -1 && andIndex + 1 < tokens.size())
-            andIndex = tokens.at(andIndex+1).mType == SourceToken::Type::Or ? andIndex : -1;
-
-        ///
-        /// TODO: implement more, including dividing and parsing each part of the expression
-        ///       combining them according to the divider type
-        ///
-
-        return orIndex == -1 && andIndex == -1;
-    }
-
-    void Expression::ParseCondition(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens)
-    {
-    }
-
-    void Expression::ParseAssignment(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens)
-    {
-    }
-
-    void Expression::ParseFunctionCall(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens)
-    {
     }
 
     void Expression::ParseReturnStatement(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens)
@@ -333,14 +212,6 @@ namespace Language
         }
 
         Logging::LogErrorExit(stringf("Line %d: Invalid return value \"%s\"", valueToken.LineNumber, valueToken.Contents.c_str()),  -1);
-    }
-
-    void Expression::ParseKeywordExpression(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens)
-    {
-    }
-
-    void Expression::ParseArithmeticOperation(SourceTokenList& tokens, TokenList& localTokens, TokenList& globalTokens)
-    {
     }
 
 }

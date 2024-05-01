@@ -13,6 +13,8 @@
 
 #define nop (void)0
 
+extern bool g_DebugMode;
+
 namespace Language
 {
 
@@ -90,8 +92,7 @@ namespace Language
     {
         int index = 0;
         mRoot = ParseTokens(tokens, 0);
-        PrintNode(mRoot, 0);
-        nop;
+        g_DebugMode ? PrintNode(mRoot, 0) : nop;
     }
 
     TreeNodeObject AbstractSyntaxTree::ParseTokens(SourceTokenIterator& tokens, BindingPower minPower)
@@ -102,7 +103,7 @@ namespace Language
     TreeNodeObject AbstractSyntaxTree::ParseTokens(SourceTokenIterator& tokens, power_t minPower)
     {
         if (tokens.EndOfList())
-            Logging::LogErrorExit("invalid expression, quit before expression was finished");
+            Logging::LogErrorExit("Invalid expression, quit before expression was finished");
 
         auto left = TreeNode::Create();
         auto& token = tokens.Next();
@@ -111,14 +112,14 @@ namespace Language
         prefixIterator == mPrefixLookup.end() ? Logging::LogErrorExit(stringf("Invalid prefix '%s'", token.Contents.c_str())) : nop;
 
         auto tokenParser = prefixIterator->second;
-        left = tokenParser.Handle(tokens, left);
+        left = tokenParser.Handle(tokens, left, tokenParser.Power);
 
         while (minPower < GetNextPrecedence(tokens))
         {
             token = tokens.Next();
 
             tokenParser = mInfixLookup[token.mType];
-            left = tokenParser.Handle(tokens, left);
+            left = tokenParser.Handle(tokens, left, tokenParser.Power);
         }
 
         return left;
