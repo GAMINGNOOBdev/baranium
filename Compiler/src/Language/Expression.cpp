@@ -146,15 +146,7 @@ namespace Language
 
                     objectToken = tokens.at(1);
 
-                    auto globalNameIterator = std::find_if(globalTokens.begin(), globalTokens.end(), [objectToken](std::shared_ptr<Token>& token)
-                    {
-                        return token->mName == objectToken.Contents;
-                    });
-                    auto nameIterator = std::find_if(localTokens.begin(), localTokens.end(), [objectToken](std::shared_ptr<Token>& token)
-                    {
-                        return token->mName == objectToken.Contents;
-                    });
-                    if (nameIterator == localTokens.end() && globalNameIterator == globalTokens.end() && (objectToken.Contents == "null" || objectToken.Contents == "ATTACHED"))
+                    if (TokensListContains(objectToken.Contents, localTokens, globalTokens) != nullptr && (objectToken.Contents == "null" || objectToken.Contents == "ATTACHED"))
                     {
                         Logging::Log(stringf("Line %d: Cannot parse keyword expression: Cannot find variable named '%s'", firstToken.LineNumber, objectToken.Contents), Logging::Level::Error);
                         Logging::Dispose();
@@ -203,22 +195,9 @@ namespace Language
             return;
         }
 
-        auto globalNameIterator = std::find_if(globalTokens.begin(), globalTokens.end(), [valueToken](std::shared_ptr<Token>& token)
-        {
-            return token->mName == valueToken.Contents;
-        });
-        auto nameIterator = std::find_if(localTokens.begin(), localTokens.end(), [valueToken](std::shared_ptr<Token>& token)
-        {
-            return token->mName == valueToken.Contents;
-        });
-        if (nameIterator == localTokens.end() && globalNameIterator == globalTokens.end())
-            Logging::LogErrorExit(stringf("Line %d: Invalid return value \"%s\"", valueToken.LineNumber, valueToken.Contents.c_str()), -1);
-
-        std::shared_ptr<Token> token;
-        if (globalNameIterator != globalTokens.end())
-            token = *globalNameIterator;
-        else
-            token = *nameIterator;
+        auto token = TokensListContains(valueToken.Contents, localTokens, globalTokens);
+        if (token == nullptr)
+            Logging::LogErrorExit(stringf("Line %d: Invalid return value \"%s\"", valueToken.LineNumber, valueToken.Contents.c_str()));
 
         ReturnVariableName = std::string(token->mName);
 

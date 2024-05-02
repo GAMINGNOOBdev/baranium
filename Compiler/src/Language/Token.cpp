@@ -66,3 +66,22 @@ namespace Language
     }
 
 }
+
+std::shared_ptr<Language::Token> TokensListContains(std::string name, TokenList& localTokens, TokenList& globalTokens)
+{
+    auto globalNameIterator = std::find_if(globalTokens.begin(), globalTokens.end(), [name](std::shared_ptr<Language::Token>& token)
+    {
+        return token->mName == name;
+    });
+    auto nameIterator = std::find_if(localTokens.begin(), localTokens.end(), [name](std::shared_ptr<Language::Token>& token)
+    {
+        return token->mName == name;
+    });
+    if (nameIterator == localTokens.end() && globalNameIterator == globalTokens.end())
+        return nullptr;
+    
+    if (globalNameIterator != globalTokens.end())
+        return *globalNameIterator;
+
+    return *nameIterator;
+}

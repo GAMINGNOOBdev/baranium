@@ -58,4 +58,13 @@ namespace Language
 // shortcut for writing convenience
 using TokenList = std::vector<std::shared_ptr<Language::Token>>;
 
+/**
+ * @brief Check if a token list contains a token with given name
+ * 
+ * @param name Name of the token
+ * @param localTokens Local tokens list
+ * @param globalTokens Global tokens list
+ */
+std::shared_ptr<Language::Token> TokensListContains(std::string name, TokenList& localTokens, TokenList& globalTokens = Language::EmptyTokenList);
+
 #endif

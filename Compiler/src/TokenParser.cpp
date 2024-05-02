@@ -80,15 +80,7 @@ void TokenParser::ReadVariable(int& index, SourceToken& current, SourceTokenList
     if (nameToken.mType != SourceToken::Type::Text)
         Logging::LogErrorExit(stringf("Line %d: No valid name has been prodived for variable", nameToken.LineNumber));
 
-    auto globalNameIterator = std::find_if(globalTokens.begin(), globalTokens.end(), [nameToken](std::shared_ptr<Language::Token>& token)
-    {
-        return token->mName == nameToken.Contents;
-    });
-    auto nameIterator = std::find_if(output.begin(), output.end(), [nameToken](std::shared_ptr<Language::Token>& token)
-    {
-        return token->mName == nameToken.Contents;
-    });
-    if (nameIterator != output.end() || globalNameIterator != globalTokens.end())
+    if (TokensListContains(nameToken.Contents, output, globalTokens) != nullptr)
         Logging::LogErrorExit(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     variable->mName = std::string(nameToken.Contents);
@@ -132,15 +124,7 @@ void TokenParser::ReadField(int& index, SourceToken& current, SourceTokenList to
     if (nameToken.mType != SourceToken::Type::Text)
         Logging::LogErrorExit(stringf("Line %d: No valid name has been prodived for field", nameToken.LineNumber));
 
-    auto globalNameIterator = std::find_if(globalTokens.begin(), globalTokens.end(), [nameToken](std::shared_ptr<Language::Token>& token)
-    {
-        return token->mName == nameToken.Contents;
-    });
-    auto nameIterator = std::find_if(output.begin(), output.end(), [nameToken](std::shared_ptr<Language::Token>& token)
-    {
-        return token->mName == nameToken.Contents;
-    });
-    if (nameIterator != output.end() || globalNameIterator != globalTokens.end())
+    if (TokensListContains(nameToken.Contents, output, globalTokens) != nullptr)
         Logging::LogErrorExit(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     field->mName = std::string(nameToken.Contents);
@@ -197,15 +181,7 @@ void TokenParser::ReadFunction(int& index, SourceToken& current, SourceTokenList
     if (nameToken.mType != SourceToken::Type::Text)
         Logging::LogErrorExit(stringf("Line %d: No valid name has been prodived for function", nameToken.LineNumber));
 
-    auto globalNameIterator = std::find_if(globalTokens.begin(), globalTokens.end(), [nameToken](std::shared_ptr<Language::Token>& token)
-    {
-        return token->mName == nameToken.Contents;
-    });
-    auto nameIterator = std::find_if(output.begin(), output.end(), [nameToken](std::shared_ptr<Language::Token>& token)
-    {
-        return token->mName == nameToken.Contents;
-    });
-    if (nameIterator != output.end() || globalNameIterator != globalTokens.end())
+    if (TokensListContains(nameToken.Contents, output, globalTokens) != nullptr)
         Logging::LogErrorExit(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     function->mName = std::string(nameToken.Contents);
