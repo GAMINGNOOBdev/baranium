@@ -26,8 +26,10 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     auto stringParser = [](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
     {
         auto result = TreeNode::Create();
-        tokens.Next();
         result->contents = tokens.Current();
+        tokens.Next();
+        result->left = TreeNode::Create();
+        result->left->contents = tokens.Current();
         if (!tokens.NextMatches(SourceToken::Type::DoubleQuote))
             Logging::LogErrorExit(stringf("Line %d: missing \" at the end of string", tokens.Current().LineNumber));
         return result;

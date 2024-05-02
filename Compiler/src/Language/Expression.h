@@ -15,6 +15,7 @@ namespace Language
     enum class ExpressionType
     {
         Invalid = -1,
+        None,
         Condition,
         Assignment,
         FunctionCall,
@@ -40,7 +41,7 @@ namespace Language
         std::string ReturnVariableName;
         SourceTokenList mInnerTokens;
 
-        AbstractSyntaxTree AST;
+        AbstractSyntaxTree mAST;
 
         // since cases like `myValue = getValue();` can exist
         // and they can split up into two expressions like in

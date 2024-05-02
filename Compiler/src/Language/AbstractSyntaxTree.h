@@ -149,6 +149,11 @@ namespace Language
         AbstractSyntaxTree();
 
         /**
+         * @brief Get the root node of the syntax tree
+         */
+        TreeNodeObject GetRoot();
+
+        /**
          * @brief Parse tokens into this tree
          *
          * @param tokens The tokens to parse

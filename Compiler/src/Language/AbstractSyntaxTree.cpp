@@ -88,6 +88,11 @@ namespace Language
         SetupParserHandles(*this);
     }
 
+    TreeNodeObject AbstractSyntaxTree::GetRoot()
+    {
+        return mRoot;
+    }
+
     void AbstractSyntaxTree::Parse(SourceTokenIterator& tokens)
     {
         int index = 0;

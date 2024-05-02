@@ -21,6 +21,9 @@ namespace Language
             default:
             case ExpressionType::Invalid:
                 return "Invalid";
+            
+            case ExpressionType::None:
+                return "None";
 
             case ExpressionType::Condition:
                 return "Condition";
@@ -69,55 +72,75 @@ namespace Language
 
         SourceTokenIterator it = SourceTokenIterator();
         it.Push(tokens);
-        AST.Parse(it);
+        mAST.Parse(it);
         it.Clear();
 
-        auto& firstToken = tokens.front();
+        TreeNodeObject rootNode = mAST.GetRoot();
+        auto firstToken = rootNode->contents;
 
-        if (firstToken.mType == SourceToken::Type::Text)
+        switch (firstToken.mType)
         {
-            auto& nextToken = tokens.at(1);
-            auto& nextNextToken = tokens.at(2);
-
-            if ((nextToken.mType == SourceToken::Type::EqualSign        && nextNextToken.mType == SourceToken::Type::EqualSign) ||
-                (nextToken.mType == SourceToken::Type::ExclamationPoint && nextNextToken.mType == SourceToken::Type::EqualSign) ||
-                (nextToken.mType == SourceToken::Type::LessThan         && nextNextToken.mType == SourceToken::Type::EqualSign) ||
-                (nextToken.mType == SourceToken::Type::GreaterThan      && nextNextToken.mType == SourceToken::Type::EqualSign) ||
-                (nextToken.mType == SourceToken::Type::LessThan         && nextNextToken.mType != SourceToken::Type::EqualSign) ||
-                (nextToken.mType == SourceToken::Type::GreaterThan      && nextNextToken.mType != SourceToken::Type::EqualSign))
+            default:
+            case SourceToken::Type::Null:
+            case SourceToken::Type::Number:
+            case SourceToken::Type::EqualTo:
+            case SourceToken::Type::NotEqual:
+            case SourceToken::Type::LessEqual:
+            case SourceToken::Type::GreaterEqual:
             {
                 Type = ExpressionType::Condition;
-                // ParseCondition(tokens, localTokens, globalTokens);
-                return;
             }
 
-            if (nextToken.mType == SourceToken::Type::ParenthesisOpen)
+            case SourceToken::Type::EqualSign:
+            case SourceToken::Type::AndEqual:
+            case SourceToken::Type::OrEqual:
+            case SourceToken::Type::DivEqual:
+            case SourceToken::Type::ModEqual:
+            case SourceToken::Type::MulEqual:
+            case SourceToken::Type::XorEqual:
+            case SourceToken::Type::PlusEqual:
+            case SourceToken::Type::MinusEqual:
             {
-                Type = ExpressionType::FunctionCall;
-                // ParseFunctionCall(tokens, localTokens, globalTokens);
-                return;
+                // check if variable exists
+                Type = ExpressionType::Assignment;
+                break;
             }
 
-            if (nextToken.mType != SourceToken::Type::EqualSign)
-                return;
-
-            Type = ExpressionType::Assignment;
-            // ParseAssignment(tokens, localTokens, globalTokens);
-            return;
-        }
-
-        if (firstToken.mType == SourceToken::Type::Keyword)
-        {
-            if (firstToken.KeywordIndex == KeywordIndex_return)
+            case SourceToken::Type::Plus:
+            case SourceToken::Type::PlusPlus:
+            case SourceToken::Type::Minus:
+            case SourceToken::Type::MinusMinus:
+            case SourceToken::Type::Modulo:
+            case SourceToken::Type::Asterisk:
+            case SourceToken::Type::Slash:
+            case SourceToken::Type::And:
+            case SourceToken::Type::Or:
+            case SourceToken::Type::Caret:
             {
-                Type = ExpressionType::ReturnStatement;
-                ParseReturnStatement(tokens, localTokens, globalTokens);
-                return;
+                Type = ExpressionType::ArithmeticOperation;
+                break;
             }
 
-            if (tokens.size() < 3)
+            case SourceToken::Type::Text:
             {
-                if (firstToken.KeywordIndex >= KeywordIndex_instantiate && firstToken.KeywordIndex <= KeywordIndex_detach)
+                Type = ExpressionType::Condition;
+
+                if (!rootNode->subNodes.empty())
+                    Type = ExpressionType::FunctionCall;
+
+                break;
+            }
+
+            case SourceToken::Type::Keyword:
+            {
+                if (firstToken.KeywordIndex == KeywordIndex_return)
+                {
+                    Type = ExpressionType::ReturnStatement;
+                    ParseReturnStatement(tokens, localTokens, globalTokens);
+                    break;
+                }
+
+                if (tokens.size() < 3 && firstToken.KeywordIndex >= KeywordIndex_instantiate && firstToken.KeywordIndex <= KeywordIndex_detach)
                 {
                     SourceToken objectToken;
 
@@ -140,6 +163,8 @@ namespace Language
 
                     Type = ExpressionType::KeywordExpression;
                 }
+
+                break;
             }
         }
     }

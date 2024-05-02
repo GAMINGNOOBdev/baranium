@@ -743,7 +743,11 @@ void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::st
             {
                 auto tokenObject = std::static_pointer_cast<Language::IfElseStatement>(token);
                 outputFile.WriteLine(stringf("%s\t\t\"hasElseStatement\": \"%s\",", indentation.c_str(), tokenObject->HasElseStatement ? "true" : "false"));
-                outputFile.WriteLine(stringf("%s\t\t\"chainedStatementCount\": %d", indentation.c_str(), tokenObject->ChainedStatements.size()));
+                outputFile.WriteLine(stringf("%s\t\t\"chainedStatementCount\": %d,", indentation.c_str(), tokenObject->ChainedStatements.size()));
+                outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
+                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
+                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
+                outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
                 break;
             }
 
