@@ -101,7 +101,13 @@ int main(const int argc, const char** argv)
     /// Error handling ///
     //////////////////////
 
-    if (argc < 2 || helpRequested || output == Argument::empty)
+    if (output == Argument::empty)
+    {
+        output = Argument();
+        output.Value = "output.bin";
+    }
+
+    if (argc < 2 || helpRequested)
     {
         PrintUsage();
         return 0;

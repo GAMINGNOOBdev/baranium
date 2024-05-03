@@ -4,8 +4,8 @@ baranium
 baranium is an open-source programming language originally designed
 for use with a personal game engine project, however later repurposed
 and redesigned for use as an actual programming language.<br/>
-It's design allows easy expansion of it's runtime and easy embedding
-into other C(++) projects for various purposes.
+It's design allows easy expansion of the available functions in the runtime
+and easy embedding into other C(++) projects for various purposes.
 
 ## Info
 THIS PROJECT IS STILL INCOMPLETE AT THE MOMENT!!! <br/>
@@ -45,7 +45,14 @@ Note: The generated binaries are under the subfolders `Compiler`, `Runtime`
       same name as the build configuration
 
 ## Using the compiler
-just let the compiler print out the help message, it'll tell you everything.
+Compiler flags/options:<br/>
+-o `path`:  Specify output file<br/>
+-h:         Show the help message<br/>
+-I `file`:  Specify file containing all custom user include directories<br/>
+-d:         Print debug messages<br/>
+
+As for source files, just add the paths to the source files to the command,
+like every other compiler on this planet.
 
 ## Using the provided runtime executable
 The provided runtime executable doesn't put a focus on advanced
@@ -59,5 +66,12 @@ should run, hopefully.
 
 ## Embedding the runtime
 don't, it no work rn <br/>
-Only thing rn is if you want to link against the shared object/dll you'll
-have to define `BARANIUM_DYNAMIC` before including any files.
+After building (or downloading the releases) you will find the library files
+for the runtime in the `Runtime` directory. Just copy the library files to
+somewhere you use as a library directory and link against the selected/desired
+library version, either the normal one (filename without the `-dll`) or the
+dynamic library (filename with the `-dll`).<br/>
+Note that you have to define `BARANIUM_DYNAMIC` before including any files if
+using the dynamic library.<br/>
+On Windows it is advised to copy the .dll file to the final executable while on
+linux you should copy the .so file.
