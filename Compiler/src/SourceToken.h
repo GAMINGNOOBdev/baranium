@@ -79,6 +79,9 @@ struct SourceToken
         EndOfInstruction = Semicolon,
     } mType;
 
+    SourceToken();
+    SourceToken(const SourceToken& other);
+
     std::string Contents;
     int KeywordIndex;
     int LineNumber;

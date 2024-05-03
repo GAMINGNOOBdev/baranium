@@ -3,6 +3,22 @@
 
 SourceToken SourceToken::empty = SourceToken();
 
+SourceToken::SourceToken()
+{
+    mType = Type::Invalid;
+    KeywordIndex = -1;
+    LineNumber = -1;
+    Contents = "";
+}
+
+SourceToken::SourceToken(const SourceToken& other)
+{
+    mType = other.mType;
+    KeywordIndex = other.KeywordIndex;
+    LineNumber = other.LineNumber;
+    Contents = other.Contents;
+}
+
 bool SourceToken::operator==(SourceToken& other)
 {
     return other.Contents == Contents && other.KeywordIndex == KeywordIndex && other.LineNumber == LineNumber && other.mType == mType;
@@ -214,7 +230,7 @@ const SourceToken& SourceTokenIterator::Current()
         return mTokens.at(mIndex);
 
     if (mIndex > mTokens.size())
-        return SourceToken();
+        return SourceToken::empty;
 
     return mTokens.at(mIndex-1);
 }
@@ -222,7 +238,7 @@ const SourceToken& SourceTokenIterator::Current()
 const SourceToken& SourceTokenIterator::Next()
 {
     if (mIndex+1 > mTokens.size())
-        return SourceToken();
+        return SourceToken::empty;
 
     auto& token = mTokens.at(mIndex);
     mIndex++;
@@ -232,7 +248,7 @@ const SourceToken& SourceTokenIterator::Next()
 const SourceToken& SourceTokenIterator::Peek()
 {
     if (EndOfList())
-        return SourceToken();
+        return SourceToken::empty;
 
     return mTokens.at(mIndex);
 }
