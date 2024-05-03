@@ -77,7 +77,9 @@ namespace Language
     void PrintNode(TreeNodeObject node, int depth, int side = 0)
     {
         printf("%s%s%s\n", std::string((size_t)4*depth, ' ').c_str(), side < 0 ? "left: " : ( side > 0 ? "right: " : "" ), node->contents.Contents.c_str());
-        node->subNodes.size() > 0 ? printf("%shas sub-nodes!\n", std::string((size_t)4*depth, ' ').c_str()) : nop;
+        if (node->subNodes.size() > 0)
+            printf("%shas sub-nodes!\n", std::string((size_t)4*depth, ' ').c_str());
+
         node->left != nullptr ? PrintNode(node->left, depth+1, -1) : nop;
         node->right != nullptr ? PrintNode(node->right, depth+1, 1) : nop;
     }
@@ -111,7 +113,7 @@ namespace Language
             Logging::LogErrorExit("Invalid expression, quit before expression was finished");
 
         auto left = TreeNode::Create();
-        auto& token = tokens.Next();
+        auto token = tokens.Next();
 
         auto prefixIterator = mPrefixLookup.find(token.mType);
         prefixIterator == mPrefixLookup.end() ? Logging::LogErrorExit(stringf("Invalid prefix '%s'", token.Contents.c_str())) : nop;
@@ -145,13 +147,17 @@ namespace Language
         RegisterInfix(tokenType, power, handle);
     }
 
+    int64_t AbstractSyntaxTree::GetOperationIndex(const SourceToken& token, SourceToken::Type& operationType, bool& wasSpecialChar)
+    {
+        return GetOperationIndex((SourceToken&)token, operationType, wasSpecialChar);
+    }
     int64_t AbstractSyntaxTree::GetOperationIndex(SourceToken& token, SourceToken::Type& operationType, bool& wasSpecialChar)
     {
-        auto& operationIterator = std::find_if(Language::SpecialOperators.begin(), Language::SpecialOperators.end(), [token](Language::SpecialOperator& a)
+        auto operationIterator = std::find_if(Language::SpecialOperators.begin(), Language::SpecialOperators.end(), [token](Language::SpecialOperator& a)
         {
             return a.TokenType == token.mType;
         });
-        auto& specialCharIterator = std::find_if(Language::SpecialOperationCharacters.begin(), Language::SpecialOperationCharacters.end(), [token](Language::SpecialCharacter& a)
+        auto specialCharIterator = std::find_if(Language::SpecialOperationCharacters.begin(), Language::SpecialOperationCharacters.end(), [token](Language::SpecialCharacter& a)
         {
             return a.TokenType == token.mType;
         });
@@ -176,7 +182,7 @@ namespace Language
 
     power_t AbstractSyntaxTree::GetNextPrecedence(SourceTokenIterator& tokens)
     {
-        auto& token = tokens.Peek();
+        auto token = tokens.Peek();
         if (token == SourceToken::empty)
             return 0;
 

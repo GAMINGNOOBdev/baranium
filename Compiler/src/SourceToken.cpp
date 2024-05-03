@@ -208,7 +208,7 @@ void SourceTokenIterator::Pop()
     mTokens.pop_back();
 }
 
-SourceToken& SourceTokenIterator::Current()
+const SourceToken& SourceTokenIterator::Current()
 {
     if (mIndex-1 < 0)
         return mTokens.at(mIndex);
@@ -219,7 +219,7 @@ SourceToken& SourceTokenIterator::Current()
     return mTokens.at(mIndex-1);
 }
 
-SourceToken& SourceTokenIterator::Next()
+const SourceToken& SourceTokenIterator::Next()
 {
     if (mIndex+1 > mTokens.size())
         return SourceToken();
@@ -229,7 +229,7 @@ SourceToken& SourceTokenIterator::Next()
     return token;
 }
 
-SourceToken& SourceTokenIterator::Peek()
+const SourceToken& SourceTokenIterator::Peek()
 {
     if (EndOfList())
         return SourceToken();

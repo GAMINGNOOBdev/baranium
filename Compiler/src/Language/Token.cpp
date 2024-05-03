@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Token.h"
 
 namespace Language

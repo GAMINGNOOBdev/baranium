@@ -36,19 +36,12 @@ namespace Language
     struct Expression : public Token
     {
         ExpressionType Type;
+        AbstractSyntaxTree mAST;
         std::string ReturnValue;
         VariableType ReturnType;
-        std::string ReturnVariableName;
         SourceTokenList mInnerTokens;
-
-        AbstractSyntaxTree mAST;
-
-        // since cases like `myValue = getValue();` can exist
-        // and they can split up into two expressions like in
-        // this case a function call and a value assignment
-        // every expression will have a "list" of expressions
-        // that need to be done before this one
-        std::vector<Expression> mInnerExpressions;
+        std::string ReturnVariableName;
+        std::shared_ptr<Expression> ReturnExpression;
 
         /**
          * @brief Construct a new `Expression` object

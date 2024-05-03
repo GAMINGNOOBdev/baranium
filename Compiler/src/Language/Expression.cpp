@@ -188,10 +188,9 @@ namespace Language
 
         if (returnValueList.size() > 1)
         {
-            Expression returnValueExpression = Expression();
-            returnValueExpression.mInnerTokens = SourceTokenList(returnValueList.begin(), returnValueList.end());
-            returnValueExpression.Identify(localTokens, globalTokens);
-            mInnerExpressions.push_back(returnValueExpression);
+            ReturnExpression = std::make_shared<Expression>();
+            ReturnExpression->mInnerTokens = SourceTokenList(returnValueList.begin(), returnValueList.end());
+            ReturnExpression->Identify(localTokens, globalTokens);
             return;
         }
 

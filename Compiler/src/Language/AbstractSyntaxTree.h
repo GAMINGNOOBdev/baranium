@@ -214,6 +214,16 @@ namespace Language
          */
         static int64_t GetOperationIndex(SourceToken& token, SourceToken::Type& operationType, bool& wasSpecialChar);
 
+        /**
+         * @brief Get the operation index of a token
+         *
+         * @param token The token that will be analyzed
+         * @param operationType Output of the operation type
+         * @param wasSpecialChar Output of the special type
+         * @returns The operation index
+         */
+        static int64_t GetOperationIndex(const SourceToken& token, SourceToken::Type& operationType, bool& wasSpecialChar);
+
     private:
         power_t GetNextPrecedence(SourceTokenIterator& tokens);
 

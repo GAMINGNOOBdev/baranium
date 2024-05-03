@@ -142,7 +142,7 @@ void Preprocessor::AssistInLine(std::vector<SourceToken>& lineTokens)
             if (mDefines[index].empty())
                 break;
 
-            auto& replacementTokensIterator = Source::ParseLineToTokens(mDefines[index]);
+            auto replacementTokensIterator = Source::ParseLineToTokens(mDefines[index]);
             auto replacementTokens = replacementTokensIterator.GetTokens();
             if (replacementTokens.empty())
                 break;

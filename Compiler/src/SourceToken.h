@@ -166,17 +166,17 @@ struct SourceTokenIterator
     /**
      * @brief Get the current token
      */
-    SourceToken& Current();
+    const SourceToken& Current();
 
     /**
      * @brief Go to the next token and consume the last one
      */
-    SourceToken& Next();
+    const SourceToken& Next();
 
     /**
      * @brief Get the next token without consuming the current one
      */
-    SourceToken& Peek();
+    const SourceToken& Peek();
 
     /**
      * @brief Check if the next tokens type matches the desired type
