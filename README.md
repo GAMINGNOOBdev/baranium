@@ -23,6 +23,9 @@ However the current runtime executable may not support this at the
 moment because of this feature being oriented towards integration of
 the language in other projects.
 
+## Examples
+Under `Compiler/test` there are test scripts that demonstrate the language.
+
 ## Building
 1. Open a command line at the root of the reporitory, create a `build` directory and change into that directory using
 ```bash

@@ -1,22 +1,15 @@
+#include "../Logging.h"
 #include "Compiler.h"
 #include <memory.h>
 
 namespace Binaries
 {
 
-    /**
-     * @brief Construct a new `Compiler`
-     */
     Compiler::Compiler()
         : mCode(nullptr), mCodeLength(0), mCodeBuilder()
     {
     }
 
-    /**
-     * @brief Clear the currently compiled code
-     * 
-     * @note This should be called after compiling a function and moving onto the next
-     */
     void Compiler::ClearCompiledCode()
     {
         if (mCode != nullptr)
@@ -27,33 +20,16 @@ namespace Binaries
         mCodeBuilder.clear();
     }
 
-    /**
-     * @brief Get the compiled code
-     * 
-     * @returns A pointer to the compiled code data
-     */
     uint8_t* Compiler::GetCompiledCode()
     {
         return mCode;
     }
 
-    /**
-     * @brief Get the size in bytes of the compiled code
-     * 
-     * @returns The size of the compiled code
-     */
     size_t Compiler::GetCompiledCodeSize()
     {
         return mCodeLength;
     }
 
-    /**
-     * @brief Small utility function of a compiler that copies the value of a variable into a destination buffer
-     * 
-     * @param __dst The destination buffer that will hold the data
-     * @param __src The string representation of the data
-     * @param varType The variable type
-     */
     void Compiler::CopyVariableData(void* __dst, std::string __src, Language::VariableType varType)
     {
         (*(uint8_t*)__dst) = (uint8_t)varType;
@@ -126,20 +102,38 @@ namespace Binaries
         }
     }
 
-    /**
-     * @brief Compile the given tokens into binary
-     * 
-     * @param tokens The tokens that will be compiled
-     */
     void Compiler::Compile(TokenList& tokens)
     {
         for (size_t i = 0; i < tokens.size(); i++)
-            mCodeBuilder.push_back(tokens.size()-i);
+        {
+            auto& token = tokens.at(i);
+
+            if (token->mTokenType == Language::TokenType::Function)
+                Logging::LogErrorExit("Trying to compile function inside function, bruh");
+
+            if (token->mTokenType == Language::TokenType::Field)
+                Logging::LogErrorExit("Fields should not be inside functions my man");
+
+            if (token->mTokenType == Language::TokenType::Variable)
+                CompileVariable(std::static_pointer_cast<Language::Variable>(token));
+
+            if (token->mTokenType == Language::TokenType::Expression)
+                CompileExpression(std::static_pointer_cast<Language::Expression>(token));
+
+            if (token->mTokenType == Language::TokenType::IfElseStatement)
+                CompileIfElseStatement(std::static_pointer_cast<Language::IfElseStatement>(token));
+
+            if (token->mTokenType == Language::TokenType::DoWhileLoop)
+                CompileDoWhileLoop(std::static_pointer_cast<Language::Loop>(token));
+
+            if (token->mTokenType == Language::TokenType::WhileLoop)
+                CompileWhileLoop(std::static_pointer_cast<Language::Loop>(token));
+
+            if (token->mTokenType == Language::TokenType::ForLoop)
+                CompileForLoop(std::static_pointer_cast<Language::Loop>(token));
+        }
     }
 
-    /**
-     * @brief Finalize the compilation of tokens
-     */
     void Compiler::FinalizeCompilation()
     {
         if (mCode != nullptr)
@@ -149,5 +143,36 @@ namespace Binaries
         mCode = (uint8_t*)malloc(sizeof(uint8_t)*mCodeLength);
         memcpy(mCode, mCodeBuilder.data(), mCodeLength);
     }
+
+    void Compiler::CompileVariable(std::shared_ptr<Language::Variable> token)
+    {
+        /// TODO: --- implement ---
+    }
+
+    void Compiler::CompileExpression(std::shared_ptr<Language::Expression> token)
+    {
+        /// TODO: --- implement ---
+    }
+
+    void Compiler::CompileIfElseStatement(std::shared_ptr<Language::IfElseStatement> token)
+    {
+        /// TODO: --- implement ---
+    }
+
+    void Compiler::CompileDoWhileLoop(std::shared_ptr<Language::Loop> token)
+    {
+        /// TODO: --- implement ---
+    }
+
+    void Compiler::CompileWhileLoop(std::shared_ptr<Language::Loop> token)
+    {
+        /// TODO: --- implement ---
+    }
+
+    void Compiler::CompileForLoop(std::shared_ptr<Language::Loop> token)
+    {
+        /// TODO: --- implement ---
+    }
+
 
 }
