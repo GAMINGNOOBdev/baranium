@@ -58,6 +58,8 @@ std::vector<SpecialOperator> Language::SpecialOperators = {
     SpecialOperator{"||",   SourceToken::Type::OrOr},
     SpecialOperator{"--",   SourceToken::Type::MinusMinus},
     SpecialOperator{"++",   SourceToken::Type::PlusPlus},
+    SpecialOperator{"<<",   SourceToken::Type::BitshiftLeft},
+    SpecialOperator{">>",   SourceToken::Type::BitshiftRight},
 };
 
 std::vector<SpecialCharacter> Language::SpecialCharacters = {

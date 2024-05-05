@@ -184,6 +184,8 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     ast.RegisterInfix(SourceToken::Type::Or, BindingPower::BitwiseOperation, infixOperatorParser);
     ast.RegisterInfix(SourceToken::Type::And, BindingPower::BitwiseOperation, infixOperatorParser);
     ast.RegisterInfix(SourceToken::Type::Caret, BindingPower::BitwiseOperation, infixOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::BitshiftLeft, BindingPower::BitwiseOperation, infixOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::BitshiftRight, BindingPower::BitwiseOperation, infixOperatorParser);
 
     ////////////////////////////
     /// Assignment operation ///

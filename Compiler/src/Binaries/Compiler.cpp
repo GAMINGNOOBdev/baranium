@@ -2,6 +2,8 @@
 #include "Compiler.h"
 #include <memory.h>
 
+#define nop (void)0
+
 namespace Binaries
 {
 
@@ -17,7 +19,7 @@ namespace Binaries
         
         mCode = nullptr;
         mCodeLength = 0;
-        mCodeBuilder.clear();
+        mCodeBuilder.Clear();
     }
 
     uint8_t* Compiler::GetCompiledCode()
@@ -139,38 +141,77 @@ namespace Binaries
         if (mCode != nullptr)
             free(mCode);
 
-        mCodeLength = mCodeBuilder.size();
+        mCodeLength = mCodeBuilder.Size();
         mCode = (uint8_t*)malloc(sizeof(uint8_t)*mCodeLength);
-        memcpy(mCode, mCodeBuilder.data(), mCodeLength);
+        memcpy(mCode, mCodeBuilder.Data(), mCodeLength);
     }
 
     void Compiler::CompileVariable(std::shared_ptr<Language::Variable> token)
-    {
-        /// TODO: --- implement ---
-    }
+    {token != nullptr ? CompileVariable(*token) : nop;}
 
-    void Compiler::CompileExpression(std::shared_ptr<Language::Expression> token)
+    void Compiler::CompileVariable(Language::Variable& token)
     {
+        mCodeBuilder.NOP();
+
         /// TODO: --- implement ---
     }
 
     void Compiler::CompileIfElseStatement(std::shared_ptr<Language::IfElseStatement> token)
+    {token != nullptr ? CompileIfElseStatement(*token) : nop;}
+
+    void Compiler::CompileIfElseStatement(Language::IfElseStatement& token)
     {
-        /// TODO: --- implement ---
+        CompileExpression(token.Condition);
+        Compile(token.mTokens);
+
+        for (auto& otherStatement : token.ChainedStatements)
+            CompileIfElseStatement(otherStatement);
     }
 
     void Compiler::CompileDoWhileLoop(std::shared_ptr<Language::Loop> token)
+    {token != nullptr ? CompileDoWhileLoop(*token) : nop;}
+
+    void Compiler::CompileDoWhileLoop(Language::Loop& token)
     {
-        /// TODO: --- implement ---
+        uint16_t pointer = mCodeBuilder.Size() + 1;
+        Compile(token.mTokens);
+        CompileExpression(token.Condition);
+        mCodeBuilder.JMP(pointer);
     }
 
     void Compiler::CompileWhileLoop(std::shared_ptr<Language::Loop> token)
+    {token != nullptr ? CompileWhileLoop(*token) : nop;}
+
+    void Compiler::CompileWhileLoop(Language::Loop& token)
     {
-        /// TODO: --- implement ---
+        /// TODO: --- implement better ---
+
+        uint16_t pointer = mCodeBuilder.Size() + 1;
+        CompileExpression(token.Condition);
+        Compile(token.mTokens);
+        mCodeBuilder.JMP(pointer);
     }
 
     void Compiler::CompileForLoop(std::shared_ptr<Language::Loop> token)
+    {token != nullptr ? CompileForLoop(*token) : nop;}
+
+    void Compiler::CompileForLoop(Language::Loop& token)
     {
+        CompileVariable(token.StartVariable);
+        uint16_t pointer = mCodeBuilder.Size() + 1;
+        CompileExpression(token.Condition);
+        Compile(token.mTokens);
+        CompileExpression(token.Iteration);
+        mCodeBuilder.JEQ(pointer);
+    }
+
+    void Compiler::CompileExpression(std::shared_ptr<Language::Expression> token)
+    {token != nullptr ? CompileExpression(*token) : nop;}
+
+    void Compiler::CompileExpression(Language::Expression& token)
+    {
+        mCodeBuilder.NOP();
+
         /// TODO: --- implement ---
     }
 

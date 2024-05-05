@@ -13,6 +13,7 @@ namespace Language
         : HasElseStatement(false)
     {
         mTokenType = TokenType::IfElseStatement;
+        Condition = std::make_shared<Expression>();
         mName = "";
     }
 

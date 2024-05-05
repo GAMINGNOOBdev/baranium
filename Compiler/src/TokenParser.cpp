@@ -232,11 +232,11 @@ void TokenParser::ReadIfStatement(int& index, SourceToken& current, SourceTokenL
 
     index++;
     auto& nextToken = tokens.at(index);
-    ifElseStatement->Condition.mInnerTokens.push_back(nextToken);
-    if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, ifElseStatement->Condition.mInnerTokens))
+    ifElseStatement->Condition->mInnerTokens.push_back(nextToken);
+    if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, ifElseStatement->Condition->mInnerTokens))
         Logging::LogErrorExit(stringf("Line %d: Invalid condition contents for if-statement", nextToken.LineNumber));
 
-    ifElseStatement->Condition.Identify(output, globalTokens);
+    ifElseStatement->Condition->Identify(output, globalTokens);
 
     index++;
     nextToken = tokens.at(index);
@@ -281,10 +281,10 @@ readAlternativeConditions:
         Logging::LogErrorExit(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart.LineNumber, conditionStart.Contents));
 
     alternativeCondition = Language::IfElseStatement();
-    if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, alternativeCondition.Condition.mInnerTokens))
+    if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, alternativeCondition.Condition->mInnerTokens))
         Logging::LogErrorExit(stringf("Line %d: Invalid condition contents for if-statement", nextToken.LineNumber));
 
-    alternativeCondition.Condition.Identify(output, globalTokens);
+    alternativeCondition.Condition->Identify(output, globalTokens);
 
     index++;
     nextToken = tokens.at(index);
@@ -346,7 +346,7 @@ readElseContents:
     goto readElseEnd;
 
 readElseEnd:
-
+    elseStatement.Condition = nullptr;
     elseStatement.ParseTokens(output, globalTokens);
     ifElseStatement->ChainedStatements.push_back(elseStatement);
 

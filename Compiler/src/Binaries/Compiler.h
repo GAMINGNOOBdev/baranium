@@ -2,6 +2,7 @@
 #define __BINARIES__COMPILER_H_ 1
 
 #include "../Language/Types.h"
+#include "CodeBuilder.h"
 #include <stdint.h>
 #include <vector>
 
@@ -62,16 +63,22 @@ namespace Binaries
 
     private:
         void CompileVariable(std::shared_ptr<Language::Variable> token);
+        void CompileVariable(Language::Variable& token);
         void CompileExpression(std::shared_ptr<Language::Expression> token);
+        void CompileExpression(Language::Expression& token);
         void CompileIfElseStatement(std::shared_ptr<Language::IfElseStatement> token);
+        void CompileIfElseStatement(Language::IfElseStatement& token);
         void CompileDoWhileLoop(std::shared_ptr<Language::Loop> token);
+        void CompileDoWhileLoop(Language::Loop& token);
         void CompileWhileLoop(std::shared_ptr<Language::Loop> token);
+        void CompileWhileLoop(Language::Loop& token);
         void CompileForLoop(std::shared_ptr<Language::Loop> token);
+        void CompileForLoop(Language::Loop& token);
 
     private:
         uint8_t* mCode;
         size_t mCodeLength;
-        std::vector<uint8_t> mCodeBuilder;
+        CodeBuilder mCodeBuilder;
     };
 
 }

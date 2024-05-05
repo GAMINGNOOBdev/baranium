@@ -63,6 +63,8 @@ struct SourceToken
         OrOr,
         MinusMinus,
         PlusPlus,
+        BitshiftLeft,
+        BitshiftRight,
 
         // strings
 

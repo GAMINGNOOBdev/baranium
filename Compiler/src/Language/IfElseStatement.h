@@ -15,7 +15,7 @@ namespace Language
 
     struct IfElseStatement : public Token
     {
-        Expression Condition;
+        std::shared_ptr<Expression> Condition;
         SourceTokenList mInnerTokens;
         TokenList mTokens;
         std::list<IfElseStatement> ChainedStatements;
