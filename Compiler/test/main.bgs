@@ -1,0 +1,24 @@
+#
+# @author GAMINGNOOBdev
+# @brief This is an actual test for the language and the compiler+runtime
+#
+
++define EXIT_SUCCESS 0
+
+define f(float x)
+{
+    float result;
+    result = x * x;
+    return result;
+}
+
+define main()
+{
+    float testFunctionResult;
+    testFunctionResult = f(500);
+
+    # should be an internal function at this point hopefully
+    print(testFunctionResult);
+
+    return EXIT_SUCCESS;
+}

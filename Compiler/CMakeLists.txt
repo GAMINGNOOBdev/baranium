@@ -10,6 +10,7 @@ set(bgscSources
     src/Language/IfElseStatement.cpp
     src/Binaries/NameLookupTable.cpp
     src/Binaries/CompiledScript.cpp
+    src/Binaries/VariableTable.cpp
     src/Binaries/CodeBuilder.cpp
     src/Language/Expression.cpp
     src/Binaries/Compiler.cpp

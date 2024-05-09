@@ -7,8 +7,8 @@
 namespace Binaries
 {
 
-    Compiler::Compiler()
-        : mCode(nullptr), mCodeLength(0), mCodeBuilder()
+    Compiler::Compiler(CompiledScript& script)
+        : mCode(nullptr), mCodeLength(0), mCodeBuilder(), mScript(script), mVarTable()
     {
     }
 
@@ -19,6 +19,7 @@ namespace Binaries
         
         mCode = nullptr;
         mCodeLength = 0;
+        mVarTable.Clear();
         mCodeBuilder.Clear();
     }
 
@@ -146,14 +147,56 @@ namespace Binaries
         memcpy(mCode, mCodeBuilder.Data(), mCodeLength);
     }
 
+
+    uint64_t Compiler::PredictCodeSize(TokenList& tokens)
+    {
+        Compiler c = Compiler(mScript);
+        c.Compile(tokens);
+        c.FinalizeCompilation();
+        size_t size = c.GetCompiledCodeSize();
+        c.ClearCompiledCode();
+        return size;
+    }
+
+    uint64_t Compiler::PredictCodeSize(std::shared_ptr<Language::Expression> token)
+    {
+        if (token != nullptr)
+            return PredictCodeSize(*token);
+        return 0;
+    }
+
+    uint64_t Compiler::PredictCodeSize(Language::Expression& token)
+    {
+        Compiler c = Compiler(mScript);
+        c.CompileExpression(token);
+        c.FinalizeCompilation();
+        size_t size = c.GetCompiledCodeSize();
+        c.ClearCompiledCode();
+        return size;
+    }
+
+    uint64_t Compiler::GetIP()
+    {
+        return mCodeBuilder.Size() + 1;
+    }
+
     void Compiler::CompileVariable(std::shared_ptr<Language::Variable> token)
     {token != nullptr ? CompileVariable(*token) : nop;}
 
+    uint8_t* GetVariableValueAsData(std::string value, Language::VariableType type);
+
     void Compiler::CompileVariable(Language::Variable& token)
     {
-        mCodeBuilder.NOP();
+        size_t size = Language::VariableTypeBytes(token.Type);
+        if (token.Type == Language::VariableType::String)
+            size = token.Value.length() + 1; // plus the nullchar at the end
 
-        /// TODO: --- implement ---
+        mCodeBuilder.MEM(size, token.ID);
+        uint8_t* data = GetVariableValueAsData(token.Value, token.Type);
+        mCodeBuilder.SET(token.ID, size, data);
+        free(data);
+
+        mVarTable.Add(token);
     }
 
     void Compiler::CompileIfElseStatement(std::shared_ptr<Language::IfElseStatement> token)
@@ -161,8 +204,15 @@ namespace Binaries
 
     void Compiler::CompileIfElseStatement(Language::IfElseStatement& token)
     {
-        CompileExpression(token.Condition);
+        int codeSize = GetIP() + PredictCodeSize(token.mTokens);
+        int ptr = GetIP();
+        mCodeBuilder.JMPOFF(codeSize);
         Compile(token.mTokens);
+        int nextPtr = PredictCodeSize(token.Condition) + 1;
+        mCodeBuilder.CCF();
+        mCodeBuilder.JMPOFF(nextPtr);
+        CompileExpression(token.Condition);
+        mCodeBuilder.JEQ(ptr);
 
         for (auto& otherStatement : token.ChainedStatements)
             CompileIfElseStatement(otherStatement);
@@ -173,10 +223,10 @@ namespace Binaries
 
     void Compiler::CompileDoWhileLoop(Language::Loop& token)
     {
-        uint16_t pointer = mCodeBuilder.Size() + 1;
+        uint16_t pointer = GetIP();
         Compile(token.mTokens);
         CompileExpression(token.Condition);
-        mCodeBuilder.JMP(pointer);
+        mCodeBuilder.JEQ(pointer);
     }
 
     void Compiler::CompileWhileLoop(std::shared_ptr<Language::Loop> token)
@@ -184,12 +234,12 @@ namespace Binaries
 
     void Compiler::CompileWhileLoop(Language::Loop& token)
     {
-        /// TODO: --- implement better ---
-
-        uint16_t pointer = mCodeBuilder.Size() + 1;
-        CompileExpression(token.Condition);
+        int offset = PredictCodeSize(token.mTokens) + 1;
+        mCodeBuilder.JMPOFF(offset);
+        uint16_t pointer = GetIP();
         Compile(token.mTokens);
-        mCodeBuilder.JMP(pointer);
+        CompileExpression(token.Condition);
+        mCodeBuilder.JEQ(pointer);
     }
 
     void Compiler::CompileForLoop(std::shared_ptr<Language::Loop> token)
@@ -198,11 +248,18 @@ namespace Binaries
     void Compiler::CompileForLoop(Language::Loop& token)
     {
         CompileVariable(token.StartVariable);
-        uint16_t pointer = mCodeBuilder.Size() + 1;
-        CompileExpression(token.Condition);
+        int offset = PredictCodeSize(token.mTokens) + 1;
+        mCodeBuilder.JMPOFF(offset);
+        uint16_t pointer = GetIP();
         Compile(token.mTokens);
+        CompileExpression(token.Condition);
+        mCodeBuilder.PUSHCV();
         CompileExpression(token.Iteration);
+        mCodeBuilder.POPCV();
         mCodeBuilder.JEQ(pointer);
+
+        if (token.StartVariable)
+            mVarTable.Remove(*token.StartVariable);
     }
 
     void Compiler::CompileExpression(std::shared_ptr<Language::Expression> token)
@@ -215,5 +272,54 @@ namespace Binaries
         /// TODO: --- implement ---
     }
 
+    uint8_t* GetVariableValueAsData(std::string value, Language::VariableType type)
+    {
+        uint8_t* data = nullptr;
+
+        if (type == Language::VariableType::Bool)
+        {
+            data = (uint8_t*)malloc(1);
+            *data = value == "true";
+        }
+
+        if (type == Language::VariableType::Float)
+        {
+            double dataValue = std::stod(value);
+            data = (uint8_t*)malloc(sizeof(double));
+            memcpy(data, &dataValue, sizeof(double));
+        }
+
+        if (type == Language::VariableType::GameObject)
+        {
+            int64_t dataValue = 0;
+            if (value == Language::Keywords[KeywordIndex_attached].Name)
+                dataValue = -1;
+            else if (value == Language::Keywords[KeywordIndex_null].Name)
+                dataValue = 0;
+            else
+            {
+                ///TODO: --- implement getting id of gameobjects ---
+            }
+
+            data = (uint8_t*)malloc(sizeof(int64_t));
+            memcpy(data, &dataValue, sizeof(int64_t));
+        }
+
+        if (type == Language::VariableType::Int || type == Language::VariableType::Uint)
+        {
+            int64_t dataValue = std::stoll(value);
+            data = (uint8_t*)malloc(sizeof(int64_t));
+            memcpy(data, &dataValue, sizeof(int64_t));
+        }
+
+        if (type == Language::VariableType::String)
+        {
+            data = (uint8_t*)malloc(value.length() + 1);
+            memset(data, 0, value.length() + 1);
+            memcpy(data, value.data(), value.length());
+        }
+
+        return data;
+    }
 
 }

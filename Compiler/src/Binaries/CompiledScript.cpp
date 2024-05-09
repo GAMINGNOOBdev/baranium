@@ -4,11 +4,8 @@
 namespace Binaries
 {
 
-    /**
-     * @brief Construct a new `CompiledScript` object
-     */
     CompiledScript::CompiledScript()
-        : mHeader(), mSections(), mCompiler()
+        : mHeader(), mSections(), mCompiler(*this)
     {
         mHeader.MagicNumber[0] = MAGIC_NUM_0;
         mHeader.MagicNumber[1] = MAGIC_NUM_1;
@@ -17,11 +14,6 @@ namespace Binaries
         mHeader.Version = VERSION_CURRENT;
     }
 
-    /**
-     * @brief Parse a list of tokens into sections
-     * 
-     * @param tokens The source code tokens
-     */
     void CompiledScript::ParseTokens(TokenList& tokens)
     {
         mSections.clear();
@@ -63,11 +55,6 @@ namespace Binaries
         }
     }
 
-    /**
-     * @brief Write a compiled script
-     * 
-     * @param file The destination path to the compiled file
-     */
     void CompiledScript::Save(BgeFile& file)
     {
         if (!file.Ready())

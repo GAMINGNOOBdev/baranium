@@ -52,7 +52,7 @@ Compiler flags/options:<br/>
 -o `path`:  Specify output file<br/>
 -h:         Show the help message<br/>
 -I `file`:  Specify file containing all custom user include directories<br/>
--d:         Print debug messages<br/>
+-d:         Print debug messages (only useful for debugging the compiler itself!)<br/>
 
 As for source files, just add the paths to the source files to the command,
 like every other compiler on this planet.

@@ -177,7 +177,7 @@ std::string Preprocessor::SearchIncludePath(std::string file)
     {
         for (auto& fileName : FileUtil::GetDirectoryContents(includePath, FileUtil::FilterMask::Files))
         {
-            if (fileName == file)
+            if (fileName == file || fileName == std::string(file).append(".bgs"))
                 return stringf("%s/%s", includePath.c_str(), file.c_str());
         }
     }

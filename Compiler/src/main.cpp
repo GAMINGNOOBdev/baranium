@@ -191,7 +191,7 @@ void PrintUsage()
     printf("\t-o <path>\tSpecify output file\n");
     printf("\t-h\t\tShow this help message\n");
     printf("\t-I <file>\tSpecify file containing all custom user include directories\n");
-    printf("\t-d\t\tPrint debug messages\n\n");
+    printf("\t-d\t\tPrint debug messages (only useful for debugging the compiler itself!)\n\n");
 }
 
 void CreatePathDirectory(std::string path)

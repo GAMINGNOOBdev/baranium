@@ -146,7 +146,7 @@ namespace Language
 
                     objectToken = tokens.at(1);
 
-                    if (TokensListContains(objectToken.Contents, localTokens, globalTokens) != nullptr && (objectToken.Contents == "null" || objectToken.Contents == "ATTACHED"))
+                    if (TokensListContains(objectToken.Contents, localTokens, globalTokens) != nullptr && (objectToken.Contents == "null" || objectToken.Contents == Keywords[KeywordIndex_attached].Name))
                     {
                         Logging::Log(stringf("Line %d: Cannot parse keyword expression: Cannot find variable named '%s'", firstToken.LineNumber, objectToken.Contents), Logging::Level::Error);
                         Logging::Dispose();

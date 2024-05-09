@@ -2,12 +2,15 @@
 #define __BINARIES__COMPILER_H_ 1
 
 #include "../Language/Types.h"
+#include "VariableTable.h"
 #include "CodeBuilder.h"
 #include <stdint.h>
 #include <vector>
 
 namespace Binaries
 {
+
+    struct CompiledScript;
 
     /**
      * @brief A class that compiles tokens into executable binary code
@@ -16,8 +19,10 @@ namespace Binaries
     {
         /**
          * @brief Construct a new `Compiler`
+         * 
+         * @param script The script that will be compiled
          */
-        Compiler();
+        Compiler(CompiledScript& script);
 
         /**
          * @brief Clear the currently compiled code
@@ -75,9 +80,22 @@ namespace Binaries
         void CompileForLoop(std::shared_ptr<Language::Loop> token);
         void CompileForLoop(Language::Loop& token);
 
+        Language::Variable& HasVariable(std::string name);
+        Language::Variable& HasVariable(uint64_t id);
+        Language::Function& HasFunction(std::string name);
+        Language::Function& HasFunction(uint64_t id);
+
+        uint64_t PredictCodeSize(TokenList& tokens);
+        uint64_t PredictCodeSize(Language::Expression& token);
+        uint64_t PredictCodeSize(std::shared_ptr<Language::Expression> token);
+
+        uint64_t GetIP();
+
     private:
         uint8_t* mCode;
         size_t mCodeLength;
+        VariableTable mVarTable;
+        CompiledScript& mScript;
         CodeBuilder mCodeBuilder;
     };
 
