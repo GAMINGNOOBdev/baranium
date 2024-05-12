@@ -1,63 +1,63 @@
+/**
+ * @file bcpu.h
+ * @author GAMINGNOOBdev ()
+ * @brief Baranium runtime cpu
+ * @version 0.1
+ * @date 2024-05-09
+ * 
+ * @note THIS IS NOT INTENDED FOR USE BY THE USER OF THE RUNTIME!
+ *       This header is intended to be used internally by the runtime
+ *       and therefore, functions defined in this header cannot be used
+ *       by the user.
+ * 
+ * @copyright Copyright (c) GAMINGNOOB 2024
+ * 
+ */
+
 #ifndef __BARANIUM__BCPU_H_
 #define __BARANIUM__BCPU_H_ 1
 
+#include "cpu/bstack.h"
+#include "cpu/bbus.h"
 #include <stdint.h>
 
 typedef struct{
-    uint8_t C: 1;       // carry bit
-    uint8_t Z: 1;       // zero bit
-    uint8_t I: 1;       // interrupt disable
-    uint8_t D: 1;       // decimal mode
-    uint8_t B: 1;       // break
-    uint8_t OV: 1;      // overlow bit
-    uint8_t N: 1;       // negative bit
-    uint8_t UNKNOWN: 1; // unknown/reserved
+    uint8_t CMP: 1;           // comparisons enable
+    uint8_t RESERVED: 7;    // interrupt disable
 } bcpu_flags;
 
 struct bcpu;
-typedef void(*BCPUFETCH)(struct bcpu* _this);
+typedef uint64_t(*BCPUFETCH)(struct bcpu* obj, int bits);
 
 typedef struct bcpu
 {
-    uint16_t IP;        // Instruction Pointer (Program Counter)
-    
-    uint16_t stack;      // stack for the cpu to store stuff to
+    uint64_t IP;            // Instruction Pointer (Program Counter)
+    bstack stack;           // Stack for the cpu to store data temporarily
+    bstack ip_stack;        // Instruction pointer stack for the cpu to store data temporarily
+    bstack cv_stack;        // Compare value stack for the cpu to store data temporarily
+    bcpu_flags flags;       // Flags
+    uint8_t opcode;         // operation code/instruction
+    uint64_t ticks;         // total number of ticks the cpu has executed
+    uint8_t killTriggered;  // Only set if execution has ended
+                            // has been triggered and the application should quit
+    int64_t cv;             // compare value
+    bbus bus;               // the bus to read data from
 
-    uint8_t A, X, Y;    // Accumulator, X and Y registers
-
-    bcpu_flags flags;  // Flags
-
-    uint8_t opcode;     // operation code/instruction
-
-    uint8_t ticks;     // ticks needed for the operations to be completed
-
-    #ifdef _DEBUG
-    uint64_t totalTicks; // total amount of ticks
-    #endif
-
-    uint8_t killTriggered; // Whether the kill instruction has been triggered and the application should quit
-
-    uint16_t ADDR_ABS;  // Absolute address of the next instruction or something
-    uint16_t ADDR_REL;  // Relative address added to some absolute value to get the full address
-
-    uint8_t fetched;
+    uint64_t fetched;
     BCPUFETCH fetch;
 } bcpu;
 
 // initialize the cpu
-void bcpu_init(bcpu* _this);
+void bcpu_init(bcpu* obj);
+
+// clean any used memory
+void bcpu_cleanup(bcpu* obj);
 
 // this is the method which executes the instructions from the IP value forward
 // some instructions can take multiple calls to this function to execute properly
-void bcpu_tick(bcpu* _this);
+void bcpu_tick(bcpu* obj);
 
 // resets the cpu
-void bcpu_reset(bcpu* _this);
-
-// non-maskable interrupt
-void bcpu_nmi(bcpu* _this);
-
-// interrupt request
-void bcpu_irq(bcpu* _this);
+void bcpu_reset(bcpu* obj);
 
 #endif

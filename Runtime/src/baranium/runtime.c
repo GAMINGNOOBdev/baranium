@@ -1,5 +1,8 @@
+#include <baranium/cpu/bcpu_opcodes.h>
+#include <baranium/cpu/bstack.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
+#include <baranium/bcpu.h>
 #include <memory.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,10 +11,17 @@ static BaraniumRuntime* current_active_runtime = NULL;
 
 BaraniumRuntime* baranium_init()
 {
+    bcpu_opcodes_init();
+
     BaraniumRuntime* runtimeHandle = malloc(sizeof(BaraniumRuntime));
     memset(runtimeHandle, 0, sizeof(BaraniumRuntime));
-    bcpu_init(&runtimeHandle->cpu);
-    bcpu_reset(&runtimeHandle->cpu);
+
+    runtimeHandle->cpu = malloc(sizeof(bcpu));
+    runtimeHandle->functionStack = malloc(sizeof(bstack));
+
+    bstack_init(runtimeHandle->functionStack);
+    bcpu_init(runtimeHandle->cpu);
+    bcpu_reset(runtimeHandle->cpu);
     return runtimeHandle;
 }
 
@@ -25,7 +35,9 @@ void baranium_cleanup(BaraniumRuntime* runtime)
     if (runtime == NULL)
         return;
 
-    bcpu_reset(&runtime->cpu);
+    bcpu_cleanup(runtime->cpu);
+    bcpu_reset(runtime->cpu);
+    runtime->functionStack->clear(runtime->functionStack);
     if (!(runtime->start == NULL && runtime->end == NULL))
     {
         BaraniumHandle* handle = runtime->start;
@@ -41,6 +53,9 @@ void baranium_cleanup(BaraniumRuntime* runtime)
             handle = next;
         }
     }
+
+    free(runtime->functionStack);
+    free(runtime->cpu);
 
     free(runtime);
 }

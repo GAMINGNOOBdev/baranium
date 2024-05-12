@@ -213,6 +213,8 @@ namespace Binaries
         mCodeBuilder.JMPOFF(nextPtr);
         CompileExpression(token.Condition);
         mCodeBuilder.JEQ(ptr);
+        mCodeBuilder.SCF();
+        mCodeBuilder.CCV();
 
         for (auto& otherStatement : token.ChainedStatements)
             CompileIfElseStatement(otherStatement);
@@ -227,6 +229,7 @@ namespace Binaries
         Compile(token.mTokens);
         CompileExpression(token.Condition);
         mCodeBuilder.JEQ(pointer);
+        mCodeBuilder.CCV();
     }
 
     void Compiler::CompileWhileLoop(std::shared_ptr<Language::Loop> token)
@@ -240,6 +243,7 @@ namespace Binaries
         Compile(token.mTokens);
         CompileExpression(token.Condition);
         mCodeBuilder.JEQ(pointer);
+        mCodeBuilder.CCV();
     }
 
     void Compiler::CompileForLoop(std::shared_ptr<Language::Loop> token)
@@ -257,6 +261,7 @@ namespace Binaries
         CompileExpression(token.Iteration);
         mCodeBuilder.POPCV();
         mCodeBuilder.JEQ(pointer);
+        mCodeBuilder.CCV();
 
         if (token.StartVariable)
             mVarTable.Remove(*token.StartVariable);
@@ -284,7 +289,11 @@ namespace Binaries
 
         if (type == Language::VariableType::Float)
         {
-            double dataValue = std::stod(value);
+            double dataValue = 0;
+
+            if (!value.empty())
+                dataValue = std::stod(value);
+
             data = (uint8_t*)malloc(sizeof(double));
             memcpy(data, &dataValue, sizeof(double));
         }
@@ -307,7 +316,11 @@ namespace Binaries
 
         if (type == Language::VariableType::Int || type == Language::VariableType::Uint)
         {
-            int64_t dataValue = std::stoll(value);
+            int64_t dataValue = 0;
+
+            if (!value.empty())
+                dataValue = std::stoll(value);
+
             data = (uint8_t*)malloc(sizeof(int64_t));
             memcpy(data, &dataValue, sizeof(int64_t));
         }

@@ -10,6 +10,9 @@ set(baraniumSources
     src/baranium/runtime.c
     src/baranium/script.c
     src/baranium/bcpu.c
+    src/baranium/cpu/bcpu_opcodes.c
+    src/baranium/cpu/bstack.c
+    src/baranium/cpu/bbus.c
     src/baranium/function.c
     src/baranium/variable.c
     src/baranium/field.c

@@ -2,8 +2,8 @@
 #define __BARANIUM__DEFINES_H_ 1
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdio.h>
-#include "bcpu.h"
 
 #define BARANIUM_PLATFORM_UNDEFINED  0
 #define BARANIUM_PLATFORM_WINDOWS    1
@@ -70,12 +70,17 @@ typedef struct BaraniumHandle
     struct BaraniumHandle* next;
 } BaraniumHandle;
 
+// forward declarations because we need them
+struct bstack;
+struct bcpu;
+
 typedef struct BaraniumRuntime
 {
     BaraniumHandle* start;
     BaraniumHandle* end;
     uint64_t openHandles;
-    bcpu cpu;
+    struct bstack* functionStack;
+    struct bcpu* cpu;
 } BaraniumRuntime;
 
 

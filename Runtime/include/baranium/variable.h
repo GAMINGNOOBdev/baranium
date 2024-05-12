@@ -2,6 +2,7 @@
 #define __BARANIUM__VARIABLE_H_ 1
 
 #include "defines.h"
+#include <stddef.h>
 
 enum BaraniumVariableType
 {

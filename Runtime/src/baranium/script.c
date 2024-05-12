@@ -264,8 +264,8 @@ BaraniumFunction* baranium_script_get_function_by_id(BaraniumScript* script, ind
         return NULL;
 
     result = malloc(sizeof(BaraniumFunction));
-    result->InstructionCount = foundSection->DataSize;
-    result->Instructions = foundSection->Data;
+    result->DataSize = foundSection->DataSize;
+    result->Data = foundSection->Data;
     result->ID = functionID;
 
     return result;

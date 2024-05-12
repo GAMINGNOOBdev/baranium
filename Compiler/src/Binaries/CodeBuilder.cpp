@@ -21,53 +21,70 @@ uint64_t CodeBuilder::Size()
 }
 
 void CodeBuilder::NOP() { push(0x00); }
-
 void CodeBuilder::CCF() { push(0x01); }
-
-void CodeBuilder::JEQ(uint64_t addr)
-{
-    push(0x15);
-    push64(addr);
-}
-
-void CodeBuilder::JEQOFF(uint16_t addr)
-{
-    push(0x16);
-    push16(addr);
-}
-
-void CodeBuilder::JNQ(uint64_t addr)
-{
-    push(0x17);
-    push64(addr);
-}
-
-void CodeBuilder::JNQOFF(uint16_t addr)
-{
-    push(0x18);
-    push16(addr);
-}
+void CodeBuilder::SCF() { push(0x02); }
+void CodeBuilder::CCV() { push(0x03); }
+void CodeBuilder::PUSHCV() { push(0x04); }
+void CodeBuilder::POPCV() { push(0x05); }
 
 void CodeBuilder::JMP(uint64_t addr)
 {
-    push(0x13);
+    push(0x10);
     push64(addr);
 }
 
 void CodeBuilder::JMPOFF(int16_t offset)
 {
-    push(0x14);
+    push(0x11);
     push16(offset);
 }
 
-void CodeBuilder::PUSHCV()
+void CodeBuilder::JEQ(uint64_t addr)
 {
-    push(0x08);
+    push(0x12);
+    push64(addr);
 }
 
-void CodeBuilder::POPCV()
+void CodeBuilder::JEQOFF(uint16_t addr)
 {
-    push(0x09);
+    push(0x13);
+    push16(addr);
+}
+
+void CodeBuilder::JNQ(uint64_t addr)
+{
+    push(0x14);
+    push64(addr);
+}
+
+void CodeBuilder::JNQOFF(uint16_t addr)
+{
+    push(0x15);
+    push16(addr);
+}
+
+void CodeBuilder::JLZ(uint64_t addr)
+{
+    push(0x16);
+    push64(addr);
+}
+
+void CodeBuilder::JLZOFF(uint16_t addr)
+{
+    push(0x17);
+    push16(addr);
+}
+
+void CodeBuilder::JGZ(uint64_t addr)
+{
+    push(0x18);
+    push64(addr);
+}
+
+void CodeBuilder::JGZOFF(uint16_t addr)
+{
+    push(0x19);
+    push16(addr);
 }
 
 void CodeBuilder::MEM(size_t size, uint64_t id)

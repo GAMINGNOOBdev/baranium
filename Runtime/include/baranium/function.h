@@ -6,7 +6,7 @@
 
 typedef struct BaraniumFunction
 {
-    size_t InstructionCount;
+    size_t DataSize;
     size_t ParameterCount;
 
     index_t ID;
@@ -14,7 +14,7 @@ typedef struct BaraniumFunction
     enum BaraniumVariableType ReturnType;
     void* ReturnValue;
 
-    void* Instructions;
+    void* Data;
     BaraniumVariable* Parameters;
 } BaraniumFunction;
 

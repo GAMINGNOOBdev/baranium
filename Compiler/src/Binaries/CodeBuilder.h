@@ -36,20 +36,20 @@ namespace Binaries
         // no operation
         void NOP();
 
-        // clear comparison flag
+        // clear compare flag
         void CCF();
 
-        // jump if equal to
-        void JEQ(uint64_t addr);
+        // set compare flag
+        void SCF();
 
-        // jump offset-ed from the current position of equal to
-        void JEQOFF(uint16_t addr);
+        // clear compare value
+        void CCV();
 
-        // jump if not equal to
-        void JNQ(uint64_t addr);
+        // push the compare value to the stack
+        void PUSHCV();
 
-        // jump offset-ed from the current position of not equal to
-        void JNQOFF(uint16_t addr);
+        // pop the compare value from the stack
+        void POPCV();
 
         // jump to
         void JMP(uint64_t addr);
@@ -57,11 +57,29 @@ namespace Binaries
         // jump offset-ed from the current position to
         void JMPOFF(int16_t offset);
 
-        // push the compare value to the stack
-        void PUSHCV();
+        // jump if equal to
+        void JEQ(uint64_t addr);
 
-        // pop the compare value from the stack
-        void POPCV();
+        // jump offset-ed from the current position
+        void JEQOFF(uint16_t addr);
+
+        // jump if not equal to
+        void JNQ(uint64_t addr);
+
+        // jump offset-ed from the current position to
+        void JNQOFF(uint16_t addr);
+
+        // jump if less than zero to
+        void JLZ(uint64_t addr);
+
+        // jump offset-ed from the current position to
+        void JLZOFF(uint16_t addr);
+
+        // jump if greater than zero to
+        void JGZ(uint64_t addr);
+
+        // jump offset-ed from the current position to
+        void JGZOFF(uint16_t addr);
 
         // allocate memory
         void MEM(size_t size, uint64_t id);
