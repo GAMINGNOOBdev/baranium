@@ -145,4 +145,10 @@ void CodeBuilder::push(uint8_t data)
     mData.push_back(data);
 }
 
+void CodeBuilder::KILL(int64_t code)
+{
+    push(0xFF);
+    push64(code);
+}
+
 }

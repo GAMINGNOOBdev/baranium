@@ -8,7 +8,7 @@
 #include <memory>
 
 // quick and dirty name shortcut
-#define TreeNodeObject std::shared_ptr<TreeNode>
+#define TreeNodeObject std::shared_ptr<Language::TreeNode>
 
 namespace Language
 {

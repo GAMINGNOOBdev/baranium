@@ -15,6 +15,30 @@ namespace Binaries
         mEntryCount = 0;
     }
 
+    index_t VariableTable::Lookup(std::string name)
+    {
+        auto iterator = std::find_if(mEntries.begin(), mEntries.end(), [name](VariableTableEntry& entry){
+            return entry.Name == name;
+        });
+
+        if (iterator == mEntries.end())
+            return -1;
+        
+        return (*iterator).ID;
+    }
+
+    std::string VariableTable::Lookup(index_t id)
+    {
+        auto iterator = std::find_if(mEntries.begin(), mEntries.end(), [id](VariableTableEntry& entry){
+            return entry.ID == id;
+        });
+
+        if (iterator == mEntries.end())
+            return "";
+
+        return (*iterator).Name;
+    }
+
     void VariableTable::Add(Language::Variable& var)
     {
         auto iterator = std::find_if(mEntries.begin(), mEntries.end(), [var](VariableTableEntry& entry){

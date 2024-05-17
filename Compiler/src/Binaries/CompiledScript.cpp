@@ -1,5 +1,6 @@
 #include "CompiledScript.h"
 #include "../Logging.h"
+#include <algorithm>
 
 namespace Binaries
 {
@@ -82,6 +83,31 @@ namespace Binaries
 
         // clear up memory
         mCompiler.ClearCompiledCode();
+    }
+
+    const NameLookupTable* CompiledScript::GetNameLookupTable()
+    {
+        return &mLookupTable;
+    }
+
+    const Section* CompiledScript::GetSection(index_t id, SectionType type)
+    {
+        if (id == -1)
+            return nullptr;
+
+        auto iterator = std::find_if(mSections.begin(), mSections.end(), [id,type](Section& section){
+            return section.ID == id && section.Type == type;
+        });
+
+        if (iterator == mSections.end())
+            return nullptr;
+
+        return &(mSections.data()[iterator - mSections.begin()]);
+    }
+
+    const Section* CompiledScript::GetSection(std::string name, SectionType type)
+    {
+        return GetSection(mLookupTable.Lookup(name), type);
     }
 
     void CompiledScript::CreateFieldSection(std::shared_ptr<Language::Field> field)

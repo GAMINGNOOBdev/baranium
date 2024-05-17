@@ -330,6 +330,6 @@ void bcpu_opcodes_init()
         opcodes[0xFC] = bcpu_opcode_create("???", INVALID_OPCODE);
         opcodes[0xFD] = bcpu_opcode_create("???", INVALID_OPCODE);
         opcodes[0xFE] = bcpu_opcode_create("???", INVALID_OPCODE);
-        opcodes[0xFF] = bcpu_opcode_create("???", INVALID_OPCODE);
+        opcodes[0xFF] = bcpu_opcode_create("KILL", KILL);
     }
 }

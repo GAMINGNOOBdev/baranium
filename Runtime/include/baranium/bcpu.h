@@ -22,8 +22,9 @@
 #include <stdint.h>
 
 typedef struct{
-    uint8_t CMP: 1;           // comparisons enable
-    uint8_t RESERVED: 7;    // interrupt disable
+    uint8_t CMP: 1;             // comparisons enable
+    uint8_t FORCED_KILL : 1;    // cpu termination has been forced and an error code pushed to the stack
+    uint8_t RESERVED: 6;        // reserved
 } bcpu_flags;
 
 struct bcpu;

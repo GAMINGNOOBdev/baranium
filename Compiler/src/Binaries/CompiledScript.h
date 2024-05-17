@@ -52,6 +52,21 @@ namespace Binaries
          */
         void Save(BgeFile& file);
 
+        /**
+         * @brief Get the name lookup table
+         */
+        const NameLookupTable* GetNameLookupTable();
+
+        /**
+         * @brief Get a  section by id
+         */
+        const Section* GetSection(index_t id, SectionType type);
+
+        /**
+         * @brief Get a  section by name
+         */
+        const Section* GetSection(std::string name, SectionType type);
+
     private:
         CompiledScriptHeader mHeader;
         std::vector<Section> mSections;

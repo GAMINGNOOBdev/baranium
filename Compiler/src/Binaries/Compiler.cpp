@@ -1,3 +1,5 @@
+#include "CompiledScript.h"
+#include "../StringUtil.h"
 #include "../Logging.h"
 #include "Compiler.h"
 #include <memory.h>
@@ -16,7 +18,7 @@ namespace Binaries
     {
         if (mCode != nullptr)
             free(mCode);
-        
+
         mCode = nullptr;
         mCodeLength = 0;
         mVarTable.Clear();
@@ -270,11 +272,125 @@ namespace Binaries
     void Compiler::CompileExpression(std::shared_ptr<Language::Expression> token)
     {token != nullptr ? CompileExpression(*token) : nop;}
 
+    index_t Compiler::Has(Language::TokenType type, std::string name)
+    {
+        Section* section;
+
+        if (type == Language::TokenType::Variable)
+            section = (Section*)mScript.GetSection(name, SectionType::Variable);
+        else if (type == Language::TokenType::Field)
+            section = (Section*)mScript.GetSection(name, SectionType::Field);
+        else if (type == Language::TokenType::Function)
+            section = (Section*)mScript.GetSection(name, SectionType::Function);
+        else
+            return -1;
+
+        if (section == nullptr)
+            return -1;
+
+        return section->ID;
+    }
+
+    index_t Compiler::Has(Language::TokenType type, uint64_t id)
+    {
+        Section* section;
+
+        if (type == Language::TokenType::Variable)
+            section = (Section*)mScript.GetSection(id, SectionType::Variable);
+        else if (type == Language::TokenType::Field)
+            section = (Section*)mScript.GetSection(id, SectionType::Field);
+        else if (type == Language::TokenType::Function)
+            section = (Section*)mScript.GetSection(id, SectionType::Function);
+        else
+            return -1;
+
+        if (section == nullptr)
+            return -1;
+
+        return section->ID;
+    }
+
     void Compiler::CompileExpression(Language::Expression& token)
     {
-        mCodeBuilder.NOP();
+        auto astRoot = token.mAST.GetRoot();
 
+        if (token.Type == Language::ExpressionType::Invalid || token.Type == Language::ExpressionType::None);
+        {
+            mCodeBuilder.NOP();
+            mCodeBuilder.KILL(-69420);
+            return;
+        }
+
+        if (token.Type == Language::ExpressionType::Condition)
+        {
+            /// TODO: --- implement ---
+
+            CompileAstNode(astRoot, true);
+            return;
+        }
+
+        if (token.Type == Language::ExpressionType::Assignment)
+        {
+            CompileAssignment(astRoot);
+            return;
+        }
+
+        if (token.Type == Language::ExpressionType::FunctionCall)
+        {
+            /// TODO: --- implement ---
+
+            CompileAstNode(astRoot, true);
+            return;
+        }
+
+        if (token.Type == Language::ExpressionType::ReturnStatement)
+        {
+            /// TODO: --- implement ---
+
+            CompileAstNode(astRoot, true);
+            return;
+        }
+
+        if (token.Type == Language::ExpressionType::KeywordExpression)
+        {
+            /// TODO: --- implement ---
+
+            CompileAstNode(astRoot, true);
+            return;
+        }
+
+        if (token.Type == Language::ExpressionType::ArithmeticOperation)
+        {
+            /// TODO: --- implement ---
+
+            CompileAstNode(astRoot, true);
+            return;
+        }
+    }
+
+    void Compiler::CompileAstNode(TreeNodeObject node, bool isRoot = false)
+    {
         /// TODO: --- implement ---
+
+        mCodeBuilder.NOP();
+    }
+
+    void Compiler::CompileAssignment(TreeNodeObject root)
+    {
+        auto leftToken = root->left->contents;
+        if (leftToken.mType != SourceToken::Type::Text)
+            Logging::LogErrorExit(stringf("Line %d: Invalid assignment, no variable name given, instead found '%s'", leftToken.LineNumber, leftToken.Contents.c_str()));
+
+        NameLookupTable* lookupTable = (NameLookupTable*)mScript.GetNameLookupTable();
+        std::string varName = leftToken.Contents;
+        auto varID = lookupTable->Lookup(varName);
+        if (varID == -1) // maybe a local variable?
+            mVarTable.Lookup(varName);
+
+        if (varID == -1) // ok nah, wtf is the script writer doing
+            Logging::LogErrorExit(stringf("Line %d: No variable with name '%s' found", leftToken.LineNumber, leftToken.Contents.c_str()));
+
+        //
     }
 
     uint8_t* GetVariableValueAsData(std::string value, Language::VariableType type)

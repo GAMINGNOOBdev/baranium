@@ -90,6 +90,9 @@ namespace Binaries
         // set var data
         void SET(uint64_t id, size_t size, void* data);
 
+        // stop execution with return code
+        void KILL(int64_t code);
+
     private:
         void push64(uint64_t data);
         void push32(uint32_t data);

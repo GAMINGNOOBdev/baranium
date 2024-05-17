@@ -40,6 +40,22 @@ namespace Binaries
         void Clear();
 
         /**
+         * @brief Look for a specific entry
+         * 
+         * @param name Name of the entry
+         * @returns The id of the entry
+         */
+        index_t Lookup(std::string name);
+
+        /**
+         * @brief Look for a specific entry
+         * 
+         * @param id ID of the entry
+         * @returns The name of the entry
+         */
+        std::string Lookup(index_t id);
+
+        /**
          * @brief Add a variable entry
          * 
          * @param var The variable for which the entry will be created
