@@ -6,9 +6,6 @@
 namespace Language
 {
 
-    /**
-     * @brief Construct a new `Loop` object
-     */
     Loop::Loop()
         : Token()
     {
@@ -18,11 +15,6 @@ namespace Language
         mName = "";
     }
 
-    /**
-     * @brief Construct a new `Loop` object
-     * 
-     * @param loopType Token type for the type of this loop
-     */
     Loop::Loop(TokenType loopType)
         : Token()
     {
@@ -32,9 +24,6 @@ namespace Language
         mName = "";
     }
 
-    /**
-     * @brief Identify and parse inner tokens
-     */
     void Loop::ParseTokens(TokenList& localTokens, TokenList& globalTokens)
     {
         int index = 0;
@@ -98,12 +87,6 @@ namespace Language
             mTokens.erase(mTokens.begin(), mTokens.begin()+1);
     }
 
-    /**
-     * @brief Set the type of a loop by identifying it from a token
-     * 
-     * @param loopIdentifier The token that will be used to identify the loop type
-     * @param loop The loop object that will get the identified type
-     */
     void LoopTypeFromToken(SourceToken& loopIdentifier, std::shared_ptr<Loop> loop)
     {
         loop->DoWhile = (loopIdentifier.KeywordIndex == KeywordIndex_do);

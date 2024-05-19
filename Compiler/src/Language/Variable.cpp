@@ -4,13 +4,6 @@
 namespace Language
 {
 
-    /**
-     * @brief Get the string representation of a variable type
-     * 
-     * @param type The variable type that will be "stringified"
-     * 
-     * @return The string representation of `type`
-     */
     const char* VariableTypeToString(VariableType type)
     {
         switch (type)
@@ -42,13 +35,6 @@ namespace Language
         }
     }
 
-    /**
-     * @brief Get the amount of bytes a specific variable type takes up
-     * 
-     * @param type The variable type
-     * 
-     * @return The number of bytes the variable type takes up
-     */
     int8_t VariableTypeBytes(VariableType type)
     {
         switch (type)
@@ -76,12 +62,6 @@ namespace Language
         }
     }
 
-    /**
-     * @brief Get the variable type from a single token
-     * 
-     * @param token The token that will be converted into the variable type
-     * @return The variable type
-     */
     VariableType Variable::TypeFromToken(SourceToken& token)
     {
         if (!IsInternalType(token))
@@ -92,12 +72,6 @@ namespace Language
         return (VariableType)( (int)VariableType::GameObject + token.KeywordIndex - (KEYWORDS_TYPES_START) );
     }
 
-    /**
-     * @brief Predict the variable type from a list of tokens
-     * 
-     * @param tokens The list of tokens that represent the variable type
-     * @return The predicted variable type 
-     */
     VariableType Variable::PredictType(SourceTokenList& tokens)
     {
         int tokenIndex = 0;
@@ -144,9 +118,6 @@ namespace Language
         return VariableType::Invalid;
     }
 
-    /**
-     * @brief Construct a new `Variable` object
-     */
     Variable::Variable()
         : Token()
     {
@@ -154,11 +125,6 @@ namespace Language
         AssignID();
     }
 
-    /**
-     * @brief Construct a new `Variable` object based on another object
-     * 
-     * @param object The object whose contents will be copied
-     */
     Variable::Variable(std::shared_ptr<Variable> object)
         : Token()
     {

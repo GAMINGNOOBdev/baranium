@@ -4,13 +4,6 @@
 namespace Language
 {
 
-    /**
-     * @brief Get the string representation of a token type
-     * 
-     * @param type The token type that will be "stringified"
-     * 
-     * @return The string representation of `type`
-     */
     const char* TokenTypeToString(TokenType type)
     {
         switch (type)
@@ -47,9 +40,6 @@ namespace Language
 
     index_t Token::TokenID = 0;
 
-    /**
-     * @brief Construct a new `Token` object
-     */
     Token::Token()
     {
         ID = -1;
@@ -57,9 +47,6 @@ namespace Language
         mTokenType = TokenType::Invalid;
     }
 
-    /**
-     * @brief small function that assigns an internal ID
-     */
     void Token::AssignID()
     {
         ID = TokenID;

@@ -6,9 +6,6 @@
 namespace Language
 {
 
-    /**
-     * @brief Construct a new `IfElseStatement` object
-     */
     IfElseStatement::IfElseStatement()
         : HasElseStatement(false)
     {
@@ -17,9 +14,6 @@ namespace Language
         mName = "";
     }
 
-    /**
-     * @brief Identify the type of this expression
-     */
     void IfElseStatement::ParseTokens(TokenList& localTokens, TokenList& globalTokens)
     {
         int index = 0;

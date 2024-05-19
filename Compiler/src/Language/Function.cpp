@@ -6,9 +6,6 @@
 namespace Language
 {
 
-    /**
-     * @brief Construct a new `Function` object
-     */
     Function::Function()
         : Token()
     {
@@ -19,9 +16,6 @@ namespace Language
         AssignID();
     }
 
-    /**
-     * @brief Parse the current inner tokens
-     */
     void Function::ParseTokens(TokenList& globalTokens)
     {
         int index = 0;

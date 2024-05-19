@@ -1,7 +1,7 @@
 /**
  * @file Logging.cpp
  * @author GAMINGNOOBdev (https://github.com/GAMINGNOOBdev)
- * @brief A small utility class for logging
+ * @brief A small utility namespace for logging
  * @version 1.0
  * @date 2024-01-21
  * 
@@ -18,24 +18,12 @@
 namespace Logging
 {
 
-    /**
-     * Gets the current system time
-     * 
-     * @returns current system time
-    */
     std::tm* GetCurrentTime()
     {
         std::time_t t = std::time(0);
         return std::localtime(&t);
     }
 
-    /**
-     * Converts a `Level` to it's string counterpart
-     * 
-     * @param[in] level log level/severity
-     * 
-     * @returns log level/severity as a string
-    */
     const char* GetLogLevelAsString(Level level)
     {
         switch (level)
@@ -58,12 +46,6 @@ namespace Logging
     }
 
     #ifndef _WIN32
-    /**
-     * @brief Get the color string by logging level
-     * 
-     * @param level The level of logging
-     * @return The color modifier string
-     */
     const char* GetColorByLevel(Level level)
     {
         switch (level)
@@ -86,32 +68,11 @@ namespace Logging
     }
     #endif
 
-    /**
-     * @brief DO NOT TOUCH THIS! DO NOT EDIT THIS MANUALLY!
-     * @note DO NOT TOUCH THIS! DO NOT EDIT THIS MANUALLY!
-     */
     FILE* LogFile = nullptr;
-
-    /**
-     * @brief If this variable is set to `false` all messages with a level of `Debug` will be discarded
-     */
     bool DebugMessages = true;
-
-    /**
-     * @brief If this variable is set to `false` output will only be written to a file
-     */
     bool ConsoleLogging = true;
-
-    /**
-     * @brief If this variable is set to `false` output will not be written to a file
-     */
     bool FileLogging = true;
 
-    /**
-     * @brief Initializes the logging subsystem (mainly logging to a file)
-     * 
-     * @param filename Custom filename/filepath to store the logging output
-    */
     void Init(const char* filename)
     {
         LogFile = nullptr;
@@ -139,21 +100,12 @@ namespace Logging
         fflush(LogFile);
     }
 
-    /**
-     * @brief Closes the logging subsystem
-    */
     void Dispose()
     {
         if (LogFile != nullptr)
             fclose(LogFile);
     }
 
-    /**
-     * @brief Logs a message with given level
-     * 
-     * @param[in] message log message
-     * @param[in] level logging level/severity
-    */
     void Log(const char* message, Level level)
     {
         if (!DebugMessages && level == Level::Debug)
@@ -183,12 +135,6 @@ namespace Logging
         }
     }
 
-    /**
-     * @brief Logs an error message and exits with given code
-     * 
-     * @param[in] message log message
-     * @param[in] code error code
-    */
     void LogErrorExit(const char* message, int code)
     {
         Log(message, Error);
@@ -196,14 +142,6 @@ namespace Logging
         exit(code);
     }
 
-    /**
-     * @brief Like printf but for building a string together without using `append` on an `std::string` object
-     * 
-     * @param[in] formatString string which has format information
-     * @param[in] ... any other arguments
-     * 
-     * @returns the new formatted string
-    */
     const char* Format(const char* formatString, ...)
     {
         static char mFormattingBuffer[4096];

@@ -1,7 +1,7 @@
 /**
  * @file Logging.h
  * @author GAMINGNOOBdev (https://github.com/GAMINGNOOBdev)
- * @brief A small utility class for logging
+ * @brief A small utility namespace for logging
  * @version 1.0
  * @date 2024-01-21
  * 
@@ -22,7 +22,7 @@
 #define LOG_COLOR_INFO      "\033[32m"
 
 /**
- * @brief A class that can manage logging output
+ * @brief A namespace that can manage logging output
  */
 namespace Logging
 {

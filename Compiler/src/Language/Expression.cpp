@@ -7,13 +7,6 @@
 namespace Language
 {
 
-    /**
-     * @brief Get the string representation of an expression type
-     *
-     * @param type The expression type that will be "stringified"
-     *
-     * @return The string representation of `type`
-     */
     const char* ExpressionTypeToString(ExpressionType type)
     {
         switch (type)
@@ -45,9 +38,6 @@ namespace Language
         }
     }
 
-    /**
-     * @brief Construct a new `Expression` object
-     */
     Expression::Expression()
     {
         mTokenType = TokenType::Expression;
@@ -57,9 +47,6 @@ namespace Language
         ReturnVariableName = "";
     }
 
-    /**
-     * @brief Identify the type of this expression
-     */
     void Expression::Identify(TokenList& localTokens, TokenList& globalTokens)
     {
         ParseTokens(mInnerTokens, localTokens, globalTokens);
@@ -101,7 +88,7 @@ namespace Language
             case SourceToken::Type::PlusEqual:
             case SourceToken::Type::MinusEqual:
             {
-                // check if variable exists
+                ///TODO: maybe check if variable exists so we don't waste time
                 Type = ExpressionType::Assignment;
                 break;
             }
