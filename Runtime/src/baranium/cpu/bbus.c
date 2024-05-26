@@ -3,6 +3,14 @@
 #include <stdlib.h>
 #include <memory.h>
 
+void bbus_init(bbus* obj, BaraniumFunction* function)
+{
+    if (obj == NULL)
+        return;
+
+    obj->dataHolder = function;
+}
+
 uint8_t bbus_read(struct bbus* obj, uint64_t addr)
 {
     if (obj == NULL)
@@ -33,15 +41,4 @@ uint8_t bbus_eof(struct bbus* obj, uint64_t addr)
         return 1;
 
     return addr >= obj->dataHolder->DataSize;
-}
-
-void bbus_init(bbus* obj, BaraniumFunction* function)
-{
-    if (obj == NULL)
-        return;
-
-    obj->dataHolder = function;
-    obj->read = bbus_read;
-    obj->write = bbus_write;
-    obj->eof = bbus_eof;
 }

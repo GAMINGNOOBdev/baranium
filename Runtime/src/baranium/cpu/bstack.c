@@ -2,14 +2,25 @@
 #include <memory.h>
 #include <stdlib.h>
 
+void bstack_init(bstack* obj)
+{
+    if (obj == NULL)
+        return;
+
+    bstack_clear(obj);
+
+    obj->start = NULL;
+    obj->end = NULL;
+}
+
 void bstack_clear(bstack* obj)
 {
     if (obj == NULL)
         return;
-    
+
     if (obj->start == NULL)
         return;
-    
+
     bstackEntry* next = NULL;
     for (bstackEntry* ptr = obj->start; ptr != NULL;)
     {
@@ -25,7 +36,7 @@ void bstack_push(bstack* obj, uint64_t data)
 {
     if (obj == NULL)
         return;
-    
+
     if (obj->start == NULL)
     {
         obj->start = malloc(sizeof(bstackEntry));
@@ -67,19 +78,4 @@ uint64_t bstack_pop(bstack* obj)
     obj->end = prev;
 
     return data;
-}
-
-void bstack_init(bstack* obj)
-{
-    if (obj == NULL)
-        return;
-
-    if (obj->clear)
-        obj->clear(obj);
-
-    obj->start = NULL;
-    obj->end = NULL;
-    obj->clear = bstack_clear;
-    obj->push = bstack_push;
-    obj->pop = bstack_pop;
 }

@@ -10,21 +10,15 @@ typedef struct bstackEntry
     struct bstackEntry* next;
 } bstackEntry;
 
-struct bstack;
-typedef void(*stack_clear_t)(struct bstack* obj);
-typedef void(*stack_push_t)(struct bstack* obj, uint64_t data);
-typedef uint64_t(*stack_pop_t)(struct bstack* obj);
-
 typedef struct bstack
 {
     bstackEntry* end;
     bstackEntry* start;
-
-    stack_clear_t clear;
-    stack_push_t push;
-    stack_pop_t pop;
 } bstack;
 
 void bstack_init(bstack* obj);
+void bstack_clear(bstack* obj);
+void bstack_push(bstack* obj, uint64_t data);
+uint64_t bstack_pop(bstack* obj);
 
 #endif

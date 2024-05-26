@@ -23,14 +23,9 @@ void bcpu_cleanup(bcpu* obj)
     if (obj == NULL)
         return;
 
-    if (obj->cv_stack.clear)
-        obj->cv_stack.clear(&obj->cv_stack);
-    
-    if (obj->stack.clear)
-        obj->stack.clear(&obj->stack);
-    
-    if (obj->ip_stack.clear)
-        obj->ip_stack.clear(&obj->ip_stack);
+    bstack_clear(&obj->cv_stack);
+    bstack_clear(&obj->stack);
+    bstack_clear(&obj->ip_stack);
 }
 
 // this is the method which executes the instructions from the IP value forward
@@ -39,13 +34,13 @@ void bcpu_tick(bcpu* obj)
     if (obj == NULL)
         return;
 
-    if (obj->bus.eof(&obj->bus, obj->IP))
+    if (bbus_eof(&obj->bus, obj->IP))
     {
         obj->killTriggered = 1;
         return;
     }
 
-    obj->opcode = obj->bus.read(&obj->bus, obj->IP);
+    obj->opcode = bbus_read(&obj->bus, obj->IP);
     LOGDEBUG(stringf("IP: 0x%x | Ticks (total): 0x%x | Opcode: 0x%x | Instruction: '%s'",
                obj->IP, obj->ticks, obj->opcode, opcodes[obj->opcode].name));
     obj->IP++;
@@ -85,7 +80,7 @@ uint64_t _bcpu_fetch(bcpu* obj, int bits)
     obj->fetched = 0;
     for (int i = 0; i < bytes; i++)
     {
-        uint8_t data = obj->bus.read(&obj->bus, obj->IP);
+        uint8_t data = bbus_read(&obj->bus, obj->IP);
         obj->fetched |= data << bitindex;
         bitindex -= 8;
         obj->IP++;
