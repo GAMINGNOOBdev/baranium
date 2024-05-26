@@ -130,7 +130,7 @@ void ArgumentParser::ParseArguments(int argC, const char** argV)
                 AddToParsed(arg0);
                 argIdx++;
 
-                continue;
+                break;
             }
 
             Argument arg0 = Argument();
@@ -138,6 +138,7 @@ void ArgumentParser::ParseArguments(int argC, const char** argV)
             arg0.Name = arg.Name;
             arg0.SecondName = arg.SecondName;
             AddToParsed(arg0);
+            break;
         }
     }
 }

@@ -88,7 +88,6 @@ namespace Language
             case SourceToken::Type::PlusEqual:
             case SourceToken::Type::MinusEqual:
             {
-                ///TODO: maybe check if variable exists so we don't waste time
                 Type = ExpressionType::Assignment;
                 break;
             }

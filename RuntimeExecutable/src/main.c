@@ -2,29 +2,49 @@
 #include <baranium/logging.h>
 #include <baranium/runtime.h>
 #include <baranium/script.h>
+#include <argument_parser.h>
+
+uint8_t debug_mode_enabled;
+
+void print_help_message();
 
 int main(int argc, const char** argv)
 {
-    if (argc < 2)
+    ArgumentParser parser;
+    argument_parser_init(&parser);
+    argument_parser_add(&parser, ArgumentType_Flag, "-h", "--help");
+    argument_parser_add(&parser, ArgumentType_Flag, "-d", "--debug");
+    argument_parser_add(&parser, ArgumentType_Flag, "-v", "--version");
+    argument_parser_parse(&parser, argc - 1, &argv[1]);
+
+    if (argument_parser_has(&parser, "-v"))
     {
-        LOGERROR("please provide one compiled script");
-        return -1;
+        printf("Baranium runtime version %d.%d %s\n", BARANIUM_VERSION_MAJOR, BARANIUM_VERSION_MINOR, BARANIUM_VERSION_PHASE);
+        return 0;
     }
 
-    if (argc > 2)
+    if (argument_parser_has(&parser, "-h"))
     {
-        LOGERROR("I SAID *ONE* COMPILED SCRIPT!!!!!!");
-        return -('w' + 't' + 'f');
+        print_help_message();
+        return 0;
+    }
+
+    debug_mode_enabled = argument_parser_has(&parser, "-d");
+
+    if (parser.unparsed.size != 1)
+    {
+        LOGERROR(stringf("Invalid number of files passed, expected one, got %ld", parser.unparsed.size));
+        argument_parser_dispose(&parser);
+        return -1;
     }
 
     BaraniumRuntime* runtime = baranium_init();
     baranium_set_context(runtime);
 
-    BaraniumHandle* handle = baranium_open_handle(argv[1]);
+    BaraniumHandle* handle = baranium_open_handle(parser.unparsed.start->Value);
     BaraniumScript* script = baranium_open_script(handle);
 
     index_t mainIndex = baranium_script_get_id_of(script, "main");
-    LOGINFO(stringf("index of 'main': %ld", mainIndex));
 
     BaraniumFunction* main = baranium_script_get_function_by_id(script, mainIndex);
     baranium_function_call(runtime, main);
@@ -34,6 +54,16 @@ int main(int argc, const char** argv)
     baranium_close_handle(handle);
 
     baranium_cleanup(runtime);
+    argument_parser_dispose(&parser);
 
     return 0;
+}
+
+void print_help_message()
+{
+    printf("bgs [options] <filepath>\n");
+    printf("Options:\n");
+    printf("\t-h/--help:\tShow this help message\n");
+    printf("\t-v/--version:\tShow the version of the runtime\n");
+    printf("\t-d/--debug:\tEnable debug messages\n");
 }

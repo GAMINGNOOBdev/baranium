@@ -4,7 +4,10 @@ project(bgs)
 
 include_directories(../BGE-File ../Runtime/include include)
 
-set(bgsSources src/main.c)
+set(bgsSources
+    src/argument_parser.c
+    src/main.c
+    )
 
 add_executable(bgs ${bgsSources})
 target_link_libraries(bgs baranium)

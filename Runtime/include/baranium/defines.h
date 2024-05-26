@@ -5,6 +5,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define BARANIUM_VERSION_MAJOR       0
+#define BARANIUM_VERSION_MINOR       1
+#define BARANIUM_VERSION_PHASE       "pre-alpha"
+
 #define BARANIUM_PLATFORM_UNDEFINED  0
 #define BARANIUM_PLATFORM_WINDOWS    1
 #define BARANIUM_PLATFORM_LINUX      2
