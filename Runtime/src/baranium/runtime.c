@@ -37,7 +37,7 @@ void baranium_cleanup(BaraniumRuntime* runtime)
 
     bcpu_cleanup(runtime->cpu);
     bcpu_reset(runtime->cpu);
-    runtime->functionStack->clear(runtime->functionStack);
+    bstack_clear(runtime->functionStack);
     if (!(runtime->start == NULL && runtime->end == NULL))
     {
         BaraniumHandle* handle = runtime->start;
@@ -56,7 +56,6 @@ void baranium_cleanup(BaraniumRuntime* runtime)
 
     free(runtime->functionStack);
     free(runtime->cpu);
-
     free(runtime);
 }
 

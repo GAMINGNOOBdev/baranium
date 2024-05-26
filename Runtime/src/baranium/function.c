@@ -19,8 +19,8 @@ void baranium_function_call(BaraniumRuntime* runtime, BaraniumFunction* function
     if (!runtime || !function)
         return;
 
-    runtime->functionStack->push(runtime->functionStack, (uint64_t)runtime->cpu->bus.dataHolder);
-    runtime->cpu->ip_stack.push(&runtime->cpu->ip_stack, runtime->cpu->IP);
+    bstack_push(runtime->functionStack, (uint64_t)runtime->cpu->bus.dataHolder);
+    bstack_push(&runtime->cpu->ip_stack, runtime->cpu->IP);
 
     runtime->cpu->bus.dataHolder = function;
     runtime->cpu->killTriggered = 0;
@@ -29,6 +29,6 @@ void baranium_function_call(BaraniumRuntime* runtime, BaraniumFunction* function
     while (!runtime->cpu->killTriggered)
         bcpu_tick(runtime->cpu);
 
-    runtime->cpu->IP = runtime->cpu->ip_stack.pop(&runtime->cpu->ip_stack);
-    runtime->cpu->bus.dataHolder = (BaraniumFunction*)runtime->functionStack->pop(runtime->functionStack);
+    runtime->cpu->IP = bstack_pop(&runtime->cpu->ip_stack);
+    runtime->cpu->bus.dataHolder = (BaraniumFunction*)bstack_pop(runtime->functionStack);
 }
