@@ -160,7 +160,9 @@ namespace Binaries
 
         // "compile" the code
         mCompiler.ClearCompiledCode();
+        mCompiler.CompileVariables(function->mParameters);
         mCompiler.Compile(function->mTokens);
+        mCompiler.ClearVariables(function->mParameters);
         mCompiler.FinalizeCompilation();
 
         // Size calculation: compiled code size

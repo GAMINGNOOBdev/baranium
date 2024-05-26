@@ -107,35 +107,65 @@ namespace Binaries
         }
     }
 
+    void Compiler::CompileVariables(VariableList& variables)
+    {
+        for (auto& var : variables)
+            CompileVariable(var);
+    }
+
+    void Compiler::ClearVariables(VariableList& variables)
+    {
+        for (auto& var : variables)
+        {
+            if (!var)
+                continue;
+
+            mCodeBuilder.FEM(var->ID);
+            mVarTable.Remove(*var);
+        }
+    }
+
     void Compiler::Compile(TokenList& tokens)
     {
         for (size_t i = 0; i < tokens.size(); i++)
         {
             auto& token = tokens.at(i);
 
-            if (token->mTokenType == Language::TokenType::Function)
+            switch(token->mTokenType)
+            {
+            default:
+                continue;
+
+            case Language::TokenType::Function:
                 Logging::LogErrorExit("Trying to compile function inside function, bruh");
 
-            if (token->mTokenType == Language::TokenType::Field)
+            case Language::TokenType::Field:
                 Logging::LogErrorExit("Fields should not be inside functions my man");
 
-            if (token->mTokenType == Language::TokenType::Variable)
+            case Language::TokenType::Variable:
                 CompileVariable(std::static_pointer_cast<Language::Variable>(token));
+                continue;
 
-            if (token->mTokenType == Language::TokenType::Expression)
+            case Language::TokenType::Expression:
                 CompileExpression(std::static_pointer_cast<Language::Expression>(token));
+                continue;
 
-            if (token->mTokenType == Language::TokenType::IfElseStatement)
+            case Language::TokenType::IfElseStatement:
                 CompileIfElseStatement(std::static_pointer_cast<Language::IfElseStatement>(token));
+                continue;
 
-            if (token->mTokenType == Language::TokenType::DoWhileLoop)
+            case Language::TokenType::DoWhileLoop:
                 CompileDoWhileLoop(std::static_pointer_cast<Language::Loop>(token));
+                continue;
 
-            if (token->mTokenType == Language::TokenType::WhileLoop)
+            case Language::TokenType::WhileLoop:
                 CompileWhileLoop(std::static_pointer_cast<Language::Loop>(token));
+                continue;
 
-            if (token->mTokenType == Language::TokenType::ForLoop)
+            case Language::TokenType::ForLoop:
                 CompileForLoop(std::static_pointer_cast<Language::Loop>(token));
+                continue;
+            }
         }
     }
 
@@ -147,8 +177,9 @@ namespace Binaries
         mCodeLength = mCodeBuilder.Size();
         mCode = (uint8_t*)malloc(sizeof(uint8_t)*mCodeLength);
         memcpy(mCode, mCodeBuilder.Data(), mCodeLength);
-    }
 
+        mVarTable.Clear();
+    }
 
     uint64_t Compiler::PredictCodeSize(TokenList& tokens)
     {
@@ -194,9 +225,28 @@ namespace Binaries
             size = token.Value.length() + 1; // plus the nullchar at the end
 
         mCodeBuilder.MEM(size, token.ID);
-        uint8_t* data = GetVariableValueAsData(token.Value, token.Type);
-        mCodeBuilder.SET(token.ID, size, data);
-        free(data);
+        if (token.Type != Language::VariableType::GameObject)
+        {
+            uint8_t* data = GetVariableValueAsData(token.Value, token.Type);
+            mCodeBuilder.SET(token.ID, size, data);
+            free(data);
+        }
+        else
+        {
+            if (token.Value == Language::Keywords[KeywordIndex_attached].Name)
+                mCodeBuilder.PUSH(-1);
+            else if (token.Value == Language::Keywords[KeywordIndex_null].Name)
+                mCodeBuilder.PUSH(0);
+            else if (StrIsNumber(token.Value))
+                mCodeBuilder.PUSH(std::stoll(token.Value));
+            else
+            {
+                auto varID = GetVarID(token.Value);
+                mCodeBuilder.PUSHVAR(varID);
+                mCodeBuilder.POPVAR(token.ID);
+            }
+            mCodeBuilder.POPVAR(token.ID);
+        }
 
         mVarTable.Add(token);
     }
@@ -266,7 +316,10 @@ namespace Binaries
         mCodeBuilder.CCV();
 
         if (token.StartVariable)
+        {
             mVarTable.Remove(*token.StartVariable);
+            mCodeBuilder.FEM(token.StartVariable->ID);
+        }
     }
 
     void Compiler::CompileExpression(std::shared_ptr<Language::Expression> token)
@@ -310,11 +363,27 @@ namespace Binaries
         return section->ID;
     }
 
+    index_t Compiler::GetVarID(std::string name, int lineNumber)
+    {
+        index_t varID = -1;
+        NameLookupTable* lookupTable = (NameLookupTable*)mScript.GetNameLookupTable();
+        if (lookupTable)
+            varID = lookupTable->Lookup(name);
+
+        if (varID == -1) // maybe a local variable?
+            varID = mVarTable.Lookup(name);
+
+        if (varID == -1) // ok, the script writer really doesn't know
+            Logging::LogErrorExit(stringf("Line %d: No variable with name '%s' found", lineNumber, name.c_str()));
+
+        return varID;
+    }
+
     void Compiler::CompileExpression(Language::Expression& token)
     {
         auto astRoot = token.mAST.GetRoot();
 
-        if (token.Type == Language::ExpressionType::Invalid || token.Type == Language::ExpressionType::None);
+        if (token.Type == Language::ExpressionType::Invalid || token.Type == Language::ExpressionType::None || astRoot == nullptr)
         {
             mCodeBuilder.NOP();
             mCodeBuilder.KILL(-69420);
@@ -324,8 +393,7 @@ namespace Binaries
         if (token.Type == Language::ExpressionType::Condition)
         {
             /// TODO: --- implement ---
-
-            CompileAstNode(astRoot, true);
+            mCodeBuilder.NOP();
             return;
         }
 
@@ -338,59 +406,183 @@ namespace Binaries
         if (token.Type == Language::ExpressionType::FunctionCall)
         {
             /// TODO: --- implement ---
-
-            CompileAstNode(astRoot, true);
+            mCodeBuilder.NOP();
             return;
         }
 
         if (token.Type == Language::ExpressionType::ReturnStatement)
         {
             /// TODO: --- implement ---
-
-            CompileAstNode(astRoot, true);
+            mCodeBuilder.NOP();
             return;
         }
 
         if (token.Type == Language::ExpressionType::KeywordExpression)
         {
             /// TODO: --- implement ---
-
-            CompileAstNode(astRoot, true);
+            mCodeBuilder.NOP();
             return;
         }
 
         if (token.Type == Language::ExpressionType::ArithmeticOperation)
         {
-            /// TODO: --- implement ---
-
-            CompileAstNode(astRoot, true);
+            CompileArithmeticOperation(astRoot, true);
             return;
         }
     }
 
-    void Compiler::CompileAstNode(TreeNodeObject node, bool isRoot = false)
+    void Compiler::CompileAstNode(TreeNodeObject node, bool isRoot)
     {
-        /// TODO: --- implement ---
+        if (node == nullptr)
+            return;
 
-        mCodeBuilder.NOP();
+        auto token = node->contents;
+
+        if (token.mType == SourceToken::Type::Number && !isRoot)
+        {
+            uint64_t value = 0;
+            if (token.Contents.find_first_of('.') != std::string::npos)
+                value = std::stof(token.Contents);
+            else
+                value = std::stoi(token.Contents);
+
+            mCodeBuilder.PUSH(value);
+        }
+        else if (token.mType == SourceToken::Type::Null && !isRoot)
+            mCodeBuilder.PUSH(0);
+        else if (token.mType == SourceToken::Type::Text && !isRoot)
+            mCodeBuilder.PUSHVAR(GetVarID(token.Contents, token.LineNumber));
+
+        if (token.mType == SourceToken::Type::Plus          || token.mType == SourceToken::Type::Minus      ||
+            token.mType == SourceToken::Type::Asterisk      || token.mType == SourceToken::Type::Slash      ||
+            token.mType == SourceToken::Type::Modulo        || token.mType == SourceToken::Type::And        ||
+            token.mType == SourceToken::Type::Or            || token.mType == SourceToken::Type::Tilde      ||
+            token.mType == SourceToken::Type::MinusMinus    || token.mType == SourceToken::Type::PlusPlus   ||
+            token.mType == SourceToken::Type::Caret)
+            CompileArithmeticOperation(node);
+
+        if (token.mType == SourceToken::Type::EqualSign    || token.mType == SourceToken::Type::ModEqual  ||
+            token.mType == SourceToken::Type::DivEqual     || token.mType == SourceToken::Type::MulEqual  ||
+            token.mType == SourceToken::Type::MinusEqual   || token.mType == SourceToken::Type::PlusEqual ||
+            token.mType == SourceToken::Type::AndEqual     || token.mType == SourceToken::Type::OrEqual   ||
+            token.mType == SourceToken::Type::XorEqual)
+            CompileAssignment(node);
+
+        if (token.mType == SourceToken::Type::EqualTo   || token.mType == SourceToken::Type::NotEqual ||
+            token.mType == SourceToken::Type::LessEqual || token.mType == SourceToken::Type::GreaterEqual);
+            // CompileCondition();
     }
 
     void Compiler::CompileAssignment(TreeNodeObject root)
     {
+        if (root == nullptr)
+            return;
+
         auto leftToken = root->left->contents;
         if (leftToken.mType != SourceToken::Type::Text)
             Logging::LogErrorExit(stringf("Line %d: Invalid assignment, no variable name given, instead found '%s'", leftToken.LineNumber, leftToken.Contents.c_str()));
 
-        NameLookupTable* lookupTable = (NameLookupTable*)mScript.GetNameLookupTable();
         std::string varName = leftToken.Contents;
-        auto varID = lookupTable->Lookup(varName);
-        if (varID == -1) // maybe a local variable?
-            mVarTable.Lookup(varName);
+        auto varID = GetVarID(varName, leftToken.LineNumber);
 
-        if (varID == -1) // ok nah, wtf is the script writer doing
-            Logging::LogErrorExit(stringf("Line %d: No variable with name '%s' found", leftToken.LineNumber, leftToken.Contents.c_str()));
+        if (root->contents.mType != SourceToken::Type::EqualSign)
+            mCodeBuilder.PUSHVAR(varID);
 
-        //
+        CompileAstNode(root->right);
+
+        if (root->contents.mType == SourceToken::Type::ModEqual)
+            mCodeBuilder.MOD();
+        if (root->contents.mType == SourceToken::Type::DivEqual)
+            mCodeBuilder.DIV();
+        if (root->contents.mType == SourceToken::Type::MulEqual)
+            mCodeBuilder.MUL();
+        if (root->contents.mType == SourceToken::Type::MinusEqual)
+            mCodeBuilder.SUB();
+        if (root->contents.mType == SourceToken::Type::PlusEqual)
+            mCodeBuilder.ADD();
+        if (root->contents.mType == SourceToken::Type::AndEqual)
+            mCodeBuilder.AND();
+        if (root->contents.mType == SourceToken::Type::OrEqual)
+            mCodeBuilder.OR();
+        if (root->contents.mType == SourceToken::Type::XorEqual)
+            mCodeBuilder.XOR();
+
+        mCodeBuilder.POPVAR(varID);
+    }
+
+    void Compiler::CompileArithmeticOperation(TreeNodeObject root, bool isRoot)
+    {
+        if (root == nullptr)
+            return;
+
+        auto lhs = root->left;
+        auto rhs = root->right;
+
+        if (root->contents.mType == SourceToken::Type::MinusMinus && lhs->contents.mType == SourceToken::Type::Text)
+        {
+            // unfortunately i don't know any better way right now
+            // to do this other than having duplicated code, sorry
+            std::string varName = lhs->contents.Contents;
+            auto varID = GetVarID(varName, lhs->contents.LineNumber);
+            mCodeBuilder.PUSHVAR(varID);
+            mCodeBuilder.PUSH(1);
+            mCodeBuilder.SUB();
+            mCodeBuilder.POPVAR(varID);
+            return;
+        }
+        if (root->contents.mType == SourceToken::Type::PlusPlus && lhs->contents.mType == SourceToken::Type::Text)
+        {
+            // unfortunately i don't know any better way right now
+            // to do this other than having duplicated code, sorry
+            std::string varName = lhs->contents.Contents;
+            auto varID = GetVarID(varName, lhs->contents.LineNumber);
+            mCodeBuilder.PUSHVAR(varID);
+            mCodeBuilder.PUSH(1);
+            mCodeBuilder.ADD();
+            mCodeBuilder.POPVAR(varID);
+            return;
+        }
+
+        if (isRoot)
+        {
+            // having an arithmetic operation as a normal expression can
+            // be harmful to the stack so we have to be careful and avoid
+            // compilation of arithmetic expressions if they are the root
+            // expression, even if a subexpression is something else
+            mCodeBuilder.NOP();
+            return;
+        }
+
+        if (lhs)
+            CompileAstNode(lhs);
+        else
+            mCodeBuilder.PUSH(0);
+
+        if (rhs)
+            CompileAstNode(rhs);
+        else
+            mCodeBuilder.PUSH(0);
+
+        if (root->contents.mType == SourceToken::Type::Modulo)
+            mCodeBuilder.MOD();
+        if (root->contents.mType == SourceToken::Type::Slash)
+            mCodeBuilder.DIV();
+        if (root->contents.mType == SourceToken::Type::Asterisk)
+            mCodeBuilder.MUL();
+        if (root->contents.mType == SourceToken::Type::Minus)
+            mCodeBuilder.SUB();
+        if (root->contents.mType == SourceToken::Type::Plus)
+            mCodeBuilder.ADD();
+        if (root->contents.mType == SourceToken::Type::And)
+            mCodeBuilder.AND();
+        if (root->contents.mType == SourceToken::Type::Or)
+            mCodeBuilder.OR();
+        if (root->contents.mType == SourceToken::Type::Caret)
+            mCodeBuilder.XOR();
+        if (root->contents.mType == SourceToken::Type::BitshiftLeft)
+            mCodeBuilder.SHFTL();
+        if (root->contents.mType == SourceToken::Type::BitshiftRight)
+            mCodeBuilder.SHFTR();
     }
 
     uint8_t* GetVariableValueAsData(std::string value, Language::VariableType type)
@@ -415,20 +607,7 @@ namespace Binaries
         }
 
         if (type == Language::VariableType::GameObject)
-        {
-            int64_t dataValue = 0;
-            if (value == Language::Keywords[KeywordIndex_attached].Name)
-                dataValue = -1;
-            else if (value == Language::Keywords[KeywordIndex_null].Name)
-                dataValue = 0;
-            else
-            {
-                ///TODO: --- implement getting id of gameobjects ---
-            }
-
-            data = (uint8_t*)malloc(sizeof(int64_t));
-            memcpy(data, &dataValue, sizeof(int64_t));
-        }
+            return nullptr;
 
         if (type == Language::VariableType::Int || type == Language::VariableType::Uint)
         {

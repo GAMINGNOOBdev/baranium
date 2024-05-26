@@ -55,6 +55,20 @@ namespace Binaries
         void CopyVariableData(void* __dst, std::string __src, Language::VariableType varType);
 
         /**
+         * @brief Compile a given list of variables
+         * 
+         * @param variables Variable list
+         */
+        void CompileVariables(VariableList& variables);
+
+        /**
+         * @brief Clear a given list of variables
+         * 
+         * @param variables Variable list
+         */
+        void ClearVariables(VariableList& variables);
+
+        /**
          * @brief Compile the given tokens into binary
          * 
          * @param tokens The tokens that will be compiled
@@ -92,7 +106,11 @@ namespace Binaries
         uint64_t GetIP();
 
     private:
+        index_t GetVarID(std::string name, int lineNumber = -1);
+
+    private:
         void CompileAssignment(TreeNodeObject root);
+        void CompileArithmeticOperation(TreeNodeObject root, bool isRoot = false);
 
     private:
         uint8_t* mCode;

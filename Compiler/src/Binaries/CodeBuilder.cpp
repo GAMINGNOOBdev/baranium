@@ -27,6 +27,24 @@ void CodeBuilder::CCV() { push(0x03); }
 void CodeBuilder::PUSHCV() { push(0x04); }
 void CodeBuilder::POPCV() { push(0x05); }
 
+void CodeBuilder::PUSHVAR(index_t id)
+{
+    push(0x06);
+    // push64(id);
+}
+
+void CodeBuilder::POPVAR(index_t id)
+{
+    push(0x07);
+    // push64(id);
+}
+
+void CodeBuilder::PUSH(uint64_t val)
+{
+    push(0x08);
+    push64(val);
+}
+
 void CodeBuilder::JMP(uint64_t addr)
 {
     push(0x10);
@@ -86,6 +104,17 @@ void CodeBuilder::JGZOFF(uint16_t addr)
     push(0x19);
     push16(addr);
 }
+
+void CodeBuilder::MOD()     { push(0x20); }
+void CodeBuilder::DIV()     { push(0x21); }
+void CodeBuilder::MUL()     { push(0x22); }
+void CodeBuilder::SUB()     { push(0x23); }
+void CodeBuilder::ADD()     { push(0x24); }
+void CodeBuilder::AND()     { push(0x25); }
+void CodeBuilder::OR()      { push(0x26); }
+void CodeBuilder::XOR()     { push(0x27); }
+void CodeBuilder::SHFTL()   { push(0x28); }
+void CodeBuilder::SHFTR()   { push(0x29); }
 
 void CodeBuilder::MEM(size_t size, uint64_t id)
 {

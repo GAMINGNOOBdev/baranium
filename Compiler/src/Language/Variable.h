@@ -79,4 +79,8 @@ namespace Language
 
 }
 
+
+// shortcut for writing convenience
+using VariableList = std::vector<std::shared_ptr<Language::Variable>>;
+
 #endif

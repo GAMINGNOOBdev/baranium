@@ -48,8 +48,8 @@ void bcpu_tick(bcpu* obj)
     obj->opcode = obj->bus.read(&obj->bus, obj->IP);
     LOGDEBUG(stringf("IP: 0x%x | Ticks (total): 0x%x | Opcode: 0x%x | Instruction: '%s'",
                obj->IP, obj->ticks, obj->opcode, opcodes[obj->opcode].name));
-    opcodes[obj->opcode].handle(obj);
     obj->IP++;
+    opcodes[obj->opcode].handle(obj);
     obj->ticks++;
 }
 
@@ -80,11 +80,14 @@ uint64_t _bcpu_fetch(bcpu* obj, int bits)
         return;
     }
     int bytes = bits / 8;
+    int bitindex = bits - 8;
 
     obj->fetched = 0;
     for (int i = 0; i < bytes; i++)
     {
-        obj->fetched |= (obj->bus.read(&obj->bus, obj->IP)) << (bytes - i - 1);
+        uint8_t data = obj->bus.read(&obj->bus, obj->IP);
+        obj->fetched |= data << bitindex;
+        bitindex -= 8;
         obj->IP++;
     }
 

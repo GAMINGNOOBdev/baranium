@@ -151,6 +151,7 @@ namespace Language
     {
         return GetOperationIndex((SourceToken&)token, operationType, wasSpecialChar);
     }
+
     int64_t AbstractSyntaxTree::GetOperationIndex(SourceToken& token, SourceToken::Type& operationType, bool& wasSpecialChar)
     {
         auto operationIterator = std::find_if(Language::SpecialOperators.begin(), Language::SpecialOperators.end(), [token](Language::SpecialOperator& a)

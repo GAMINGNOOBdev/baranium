@@ -148,7 +148,7 @@ void Source::ReadLine(std::string line, int lineNumber)
                 {
                     auto lastToken = mLineTokens.back();
                     specialOperatorIndex = Language::IsSpecialOperator(lastToken.Contents.at(0), chr);
-                    if (Language::IsSpecialChar(lastToken.Contents.at(0)) && specialOperatorIndex != -1)
+                    if (Language::IsSpecialChar(lastToken.Contents.at(0)) != -1 && specialOperatorIndex != -1)
                     {
                         mLineTokens.pop_back();
                         SourceToken token = SourceToken();

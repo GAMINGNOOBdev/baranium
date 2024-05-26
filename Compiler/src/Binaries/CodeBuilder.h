@@ -51,6 +51,15 @@ namespace Binaries
         // pop the compare value from the stack
         void POPCV();
 
+        // push a variable's value to the stack (can't be used on string variables fyi)
+        void PUSHVAR(index_t id);
+
+        // pop a value from the stack into a variable
+        void POPVAR(index_t id);
+
+        // push a value to the stack
+        void PUSH(uint64_t val);
+
         // jump to
         void JMP(uint64_t addr);
 
@@ -80,6 +89,36 @@ namespace Binaries
 
         // jump offset-ed from the current position to
         void JGZOFF(uint16_t addr);
+
+        // modulo two values from the stack
+        void MOD();
+
+        // divide two values from the stack
+        void DIV();
+
+        // multiply two values from the stack
+        void MUL();
+
+        // subtrack two values from the stack
+        void SUB();
+
+        // add two values from the stack
+        void ADD();
+
+        // bitwise and two values from the stack
+        void AND();
+
+        // bitwise or two values from the stack
+        void OR();
+
+        // bitwise exclusive-or two values from the stack
+        void XOR();
+
+        // bitwise shift left
+        void SHFTL();
+
+        // bitwise shift right
+        void SHFTR();
 
         // allocate memory
         void MEM(size_t size, uint64_t id);

@@ -20,5 +20,10 @@ define main()
     # should be an internal function at this point hopefully
     print(testFunctionResult);
 
+    testFunctionResult++;
+    testFunctionResult = 1.0;
+    testFunctionResult -= 40219 * 100 / (40 + 5 % 2);
+    testFunctionResult /= (-10) - (-20);
+
     return EXIT_SUCCESS;
 }

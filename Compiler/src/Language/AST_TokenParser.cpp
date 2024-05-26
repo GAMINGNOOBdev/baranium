@@ -75,14 +75,14 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
         int64_t operationIndex = AbstractSyntaxTree::GetOperationIndex(result->contents, type, wasSpecialOperation);
         result->operation = operationIndex;
         result->specialChar = wasSpecialOperation;
-        result->right = TreeNode::Create();
-        result->right->contents = tokens.Current();
+        result->left = TreeNode::Create();
+        result->left->contents = tokens.Current();
         operationIndex = AbstractSyntaxTree::GetOperationIndex(result->contents, type, wasSpecialOperation);
-        result->right->operation = operationIndex;
-        result->right->specialChar = wasSpecialOperation;
+        result->left->operation = operationIndex;
+        result->left->specialChar = wasSpecialOperation;
 
-        if (result->right->contents.mType != SourceToken::Type::Text)
-            Logging::LogErrorExit(stringf("Line %d: Invalid assignment, expected variable name, got '%s'", result->right->contents.LineNumber, result->right->contents.Contents.c_str()));
+        if (result->left->contents.mType != SourceToken::Type::Text)
+            Logging::LogErrorExit(stringf("Line %d: Invalid assignment, expected variable name, got '%s'", result->left->contents.LineNumber, result->left->contents.Contents.c_str()));
 
         return result;
     };
@@ -100,7 +100,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
         tokens.Next();
         auto closingToken = tokens.Current();
         if (closingToken.mType != SourceToken::Type::ParenthesisClose)
-            Logging::LogErrorExit(stringf("Line %d: Forgot ')'", closingToken.LineNumber));
+            Logging::LogErrorExit(stringf("Line %d: Expected ')', got '%s'", closingToken.LineNumber, closingToken.Contents.c_str()));
 
         return result;
     });
@@ -181,6 +181,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     ast.RegisterInfix(SourceToken::Type::Minus, BindingPower::PrimaryOperation, infixOperatorParser);
     ast.RegisterInfix(SourceToken::Type::Asterisk, BindingPower::SecondaryOperation, infixOperatorParser);
     ast.RegisterInfix(SourceToken::Type::Slash, BindingPower::SecondaryOperation, infixOperatorParser);
+    ast.RegisterInfix(SourceToken::Type::Modulo, BindingPower::SecondaryOperation, infixOperatorParser);
     ast.RegisterInfix(SourceToken::Type::Or, BindingPower::BitwiseOperation, infixOperatorParser);
     ast.RegisterInfix(SourceToken::Type::And, BindingPower::BitwiseOperation, infixOperatorParser);
     ast.RegisterInfix(SourceToken::Type::Caret, BindingPower::BitwiseOperation, infixOperatorParser);
