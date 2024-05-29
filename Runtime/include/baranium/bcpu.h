@@ -17,6 +17,10 @@
 #ifndef __BARANIUM__BCPU_H_
 #define __BARANIUM__BCPU_H_ 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "cpu/bstack.h"
 #include "cpu/bbus.h"
 #include <stdint.h>
@@ -60,5 +64,9 @@ void bcpu_tick(bcpu* obj);
 
 // resets the cpu
 void bcpu_reset(bcpu* obj);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

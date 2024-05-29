@@ -30,11 +30,15 @@ int main(int argc, const char** argv)
     }
 
     debug_mode_enabled = argument_parser_has(parser, "-d");
+    logEnableDebugMsgs(debug_mode_enabled);
+    FILE* logOutput = fopen("runtime.log", "wb+");
+    logSetStream(logOutput);
 
     if (parser->unparsed->size != 1)
     {
         LOGERROR(stringf("Invalid number of files passed, expected one, got %ld", parser->unparsed->size));
         argument_parser_dispose(parser);
+        fclose(logOutput);
         return -1;
     }
 
@@ -57,6 +61,7 @@ int main(int argc, const char** argv)
     baranium_close_handle(handle);
 
     baranium_cleanup(runtime);
+    fclose(logOutput);
 
     return 0;
 }

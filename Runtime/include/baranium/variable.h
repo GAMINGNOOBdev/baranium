@@ -1,6 +1,10 @@
 #ifndef __BARANIUM__VARIABLE_H_
 #define __BARANIUM__VARIABLE_H_ 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "defines.h"
 #include <stddef.h>
 
@@ -38,5 +42,9 @@ BARANIUMAPI void baranium_variable_dispose(BaraniumVariable* var);
  * @returns The size of the variable type
  */
 BARANIUMAPI size_t baranium_variable_get_size_of_type(enum BaraniumVariableType type);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

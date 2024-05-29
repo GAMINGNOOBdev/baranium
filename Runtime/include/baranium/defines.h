@@ -1,6 +1,10 @@
 #ifndef __BARANIUM__DEFINES_H_
 #define __BARANIUM__DEFINES_H_ 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -13,14 +17,12 @@
 #define BARANIUM_PLATFORM_WINDOWS    1
 #define BARANIUM_PLATFORM_LINUX      2
 #define BARANIUM_PLATFORM_APPLE      3
-#define BARANIUM_PLATFORM_SWITCH     4
-#define BARANIUM_PLATFORM_PSP        6
+#define BARANIUM_PLATFORM_PSP        4
 
 #define BARANIUM_PLATFORM_NAME_UNKNOWN   "Unknown"
 #define BARANIUM_PLATFORM_NAME_WINDOWS   "Windows"
 #define BARANIUM_PLATFORM_NAME_LINUX     "Linux"
 #define BARANIUM_PLATFORM_NAME_APPLE     "Apple MacOS"
-#define BARANIUM_PLATFORM_NAME_SWITCH    "Nintendo Switch"
 #define BARANIUM_PLATFORM_NAME_PSP       "PlayStationPortable (PSP)"
 
 #if defined(_WIN32) || defined(WINAPI_FAMILY)
@@ -32,9 +34,6 @@
 #elif defined(__APPLE__)
 #   define BARANIUM_PLATFORM         BARANIUM_PLATFORM_APPLE
 #   define BARANIUM_PLATFORM_NAME    BARANIUM_PLATFORM_NAME_APPLE
-#elif defined(__SWITCH__)
-#   define BARANIUM_PLATFORM         BARANIUM_PLATFORM_SWITCH
-#   define BARANIUM_PLATFORM_NAME    BARANIUM_PLATFORM_NAME_SWITCH
 #elif defined(__psp__)
 #   define BARANIUM_PLATFORM         BARANIUM_PLATFORM_PSP
 #   define BARANIUM_PLATFORM_NAME    BARANIUM_PLATFORM_NAME_PSP
@@ -90,5 +89,9 @@ typedef struct BaraniumRuntime
 
 typedef int64_t index_t;
 #define INVALID_INDEX ((index_t)-1)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

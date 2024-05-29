@@ -1,6 +1,10 @@
 #ifndef __BARANIUM__SCRIPT_H_
 #define __BARANIUM__SCRIPT_H_ 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include "defines.h"
 #include "field.h"
@@ -189,5 +193,9 @@ BARANIUMAPI BaraniumFunction* baranium_script_get_function(BaraniumScript* scrip
  * @returns The found function, `NULL` if not found
  */
 BARANIUMAPI BaraniumFunction* baranium_script_get_function_by_id(BaraniumScript* script, index_t functionID);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

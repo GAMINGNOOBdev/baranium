@@ -1,7 +1,12 @@
 #ifndef __BARANIUM__LOGGING_H_
 #define __BARANIUM__LOGGING_H_ 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "defines.h"
+#include <stdio.h>
 
 typedef unsigned char loglevel_t;
 
@@ -17,7 +22,7 @@ typedef unsigned char loglevel_t;
 #define LOGWARNING(msg) logStr(LOGLEVEL_WARNING, msg)
 
 /**
- * Like printf but for building a string together
+ * @brief Like printf but for building a string together
  * 
  * @param[in] formatString string which has format information
  * @param[in] ... any other arguments
@@ -27,11 +32,33 @@ typedef unsigned char loglevel_t;
 BARANIUMAPI const char* stringf(const char* formatString, ...);
 
 /**
+ * @brief En-/Disable debug messages showing up
+ * 
+ * @note By default debug messages are off
+ * 
+ * @param val "Boolean" value, 1 = debug messages show up, 0 = no debug messages
+ */
+BARANIUMAPI void logEnableDebugMsgs(uint8_t val);
+
+/**
+ * @brief Set an output stream for log messages
+ * 
+ * @param stream The output stream to which will be written, NULL to disable logging
+ */
+BARANIUMAPI void logSetStream(FILE* stream);
+
+/**
  * @brief Log a message onto the cmd line
+ * 
+ * @note Logging it turned off by default, set the output stream first before logging messages
  * 
  * @param lvl Logging level
  * @param msg Log message
  */
 BARANIUMAPI void logStr(loglevel_t lvl, const char* msg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

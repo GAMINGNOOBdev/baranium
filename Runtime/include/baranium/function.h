@@ -1,6 +1,10 @@
 #ifndef __BARANIUM__FUNCTION_H_
 #define __BARANIUM__FUNCTION_H_ 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "defines.h"
 #include "variable.h"
 
@@ -26,5 +30,9 @@ typedef struct BaraniumFunction
 BARANIUMAPI void baranium_function_dispose(BaraniumFunction* var);
 
 BARANIUMAPI void baranium_function_call(BaraniumRuntime* runtime, BaraniumFunction* function, ...);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

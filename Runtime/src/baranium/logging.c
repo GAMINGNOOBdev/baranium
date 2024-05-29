@@ -3,7 +3,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <stdio.h>
 
 #define LOG_COLOR_COUNT     5
 #define LOG_COLOR_NONE      "\033[0m"
@@ -20,28 +19,18 @@ static const char* LOG_COLORS[] = {
     LOG_COLOR_WARNING,
 };
 
-static const char* loglevelToString(loglevel_t lvl)
-{
-    switch (lvl)
-    {
-        default:
-            return "[NONE]\t\t";
-        
-        case LOGLEVEL_INFO:
-            return "[INFO]\t\t";
+// off by default
+static uint8_t logging_debug_messages_enabled = 0;
 
-        case LOGLEVEL_DEBUG:
-            return "[DEBUG]\t\t";
+// no output by default
+static FILE* logging_log_messages_output_stream = NULL;
 
-        case LOGLEVEL_ERROR:
-            return "[ERROR]\t\t";
-
-        case LOGLEVEL_WARNING:
-            return "[WARNING]\t";
-    }
-
-    return "[NONE]\t\t";
-}
+static const char* LOG_LEVEL_STRINGS[] = {
+    "[INFO]\t\t",
+    "[DEBUG]\t\t",
+    "[ERROR]\t\t",
+    "[WARNING]\t"
+};
 
 const char* stringf(const char* formatString, ...)
 {
@@ -55,14 +44,32 @@ const char* stringf(const char* formatString, ...)
     return mFormattingBuffer;
 }
 
+void logEnableDebugMsgs(uint8_t val)
+{
+    logging_debug_messages_enabled = val;
+}
+
+void logSetStream(FILE* stream)
+{
+    logging_log_messages_output_stream = stream;
+}
+
 void logStr(loglevel_t lvl, const char* msg)
 {
-    if (lvl > LOG_COLOR_COUNT || msg == NULL)
-        return;
+    if (lvl >= LOG_COLOR_COUNT - 1 || msg == NULL) return;
+    if (logging_log_messages_output_stream == NULL) return;
+    if (!logging_debug_messages_enabled && lvl == LOGLEVEL_DEBUG) return;
 
-    #ifndef _WIN32
-        printf("%s%s%s%s\n", LOG_COLORS[lvl+1], loglevelToString(lvl), msg, LOG_COLORS[0]);
-    #else
-        printf("%s%s\n", loglevelToString(lvl), msg);
-    #endif
+#if BARANIUM_PLATFORM != BARANIUM_PLATFORM_WINDOWS
+
+    if (logging_log_messages_output_stream == stdout)
+        fprintf(logging_log_messages_output_stream, "%s%s%s%s\n", LOG_COLORS[lvl+1], LOG_LEVEL_STRINGS[lvl], msg, LOG_COLORS[0]);
+    else
+        fprintf(logging_log_messages_output_stream, "%s%s\n", LOG_LEVEL_STRINGS[lvl], msg);
+
+#else
+
+    fprintf(logging_log_messages_output_stream, "%s%s\n", LOG_LEVEL_STRINGS[lvl], msg);
+
+#endif
 }

@@ -1,6 +1,10 @@
 #ifndef __BARANIUM__RUNTIME_H_
 #define __BARANIUM__RUNTIME_H_ 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "defines.h"
 
 /**
@@ -43,5 +47,9 @@ BARANIUMAPI BaraniumHandle* baranium_open_handle(const char* source);
  * @param handle The handle that will be closed
  */
 BARANIUMAPI void baranium_close_handle(BaraniumHandle* handle);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
