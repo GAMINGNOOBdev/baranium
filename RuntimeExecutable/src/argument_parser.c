@@ -26,16 +26,21 @@ void DisposeArgument(Argument* obj)
 /// Argument List ///
 /////////////////////
 
-void argument_list_init(ArgumentList* obj)
+struct ArgumentList* argument_list_init()
 {
-    if (!obj) return;
+    struct ArgumentList* obj = malloc(sizeof(struct ArgumentList));
+    if (!obj) return NULL;
+
+    memset(obj, 0, sizeof(struct ArgumentList));
 
     obj->size = 0;
     obj->start = NULL;
     obj->end = NULL;
+
+    return obj;
 }
 
-void argument_list_clear(ArgumentList* obj)
+void argument_list_clear(struct ArgumentList* obj)
 {
     if (!obj) return;
 
@@ -54,8 +59,18 @@ void argument_list_clear(ArgumentList* obj)
     obj->size = 0;
 }
 
-void argument_list_add(ArgumentList* obj, Argument* arg)
+void argument_list_dispose(struct ArgumentList* obj)
 {
+    if (!obj) return;
+
+    argument_list_clear(obj);
+    free(obj);
+}
+
+void argument_list_add(struct ArgumentList* obj, Argument* arg)
+{
+    if (!obj) return;
+
     if (obj->start == NULL)
     {
         arg->next = NULL;
@@ -73,7 +88,7 @@ void argument_list_add(ArgumentList* obj, Argument* arg)
     obj->size++;
 }
 
-void argument_list_remove(ArgumentList* obj, Argument* arg)
+void argument_list_remove(struct ArgumentList* obj, Argument* arg)
 {
     if (obj == NULL)
         return;
@@ -130,22 +145,28 @@ void argument_list_remove(ArgumentList* obj, Argument* arg)
 /// Argument Parser ///
 ///////////////////////
 
-void argument_parser_init(ArgumentParser* obj)
+ArgumentParser* argument_parser_init()
 {
-    if (!obj) return;
+    ArgumentParser* obj = malloc(sizeof(ArgumentParser));
+    if (!obj) return NULL;
 
-    argument_list_init(&obj->unparsed);
-    argument_list_init(&obj->parsed);
-    argument_list_init(&obj->lookup);
+    memset(obj, 0, sizeof(ArgumentParser));
+
+    obj->unparsed = argument_list_init();
+    obj->parsed = argument_list_init();
+    obj->lookup = argument_list_init();
+
+    return obj;
 }
 
 void argument_parser_dispose(ArgumentParser* obj)
 {
     if (!obj) return;
 
-    argument_list_clear(&obj->unparsed);
-    argument_list_clear(&obj->parsed);
-    argument_list_clear(&obj->lookup);
+    argument_list_dispose(obj->unparsed);
+    argument_list_dispose(obj->parsed);
+    argument_list_dispose(obj->lookup);
+    free(obj);
 }
 
 void argument_parser_add(ArgumentParser* obj, ArgumentType type, const char* name, const char* alternateName)
@@ -153,18 +174,27 @@ void argument_parser_add(ArgumentParser* obj, ArgumentType type, const char* nam
     if (!obj || !name) return;
 
     Argument* arg = CreateArgument(type, name, alternateName, "");
-    argument_list_add(&obj->lookup, arg);
+    argument_list_add(obj->lookup, arg);
 }
 
-Argument* get_matching_argument(ArgumentList* list, const char* name)
+Argument* get_matching_argument(struct ArgumentList* list, const char* name)
 {
     if (!list || !name) return NULL;
     if (!list->size) return NULL;
 
     for (Argument* ptr = list->start; ptr != NULL; ptr = ptr->next)
+    {
+        if (ptr->Name == NULL)
+            continue;
+        
         if (strcmp(name, ptr->Name) == 0)
             return ptr;
-    
+
+        if (ptr->SecondName != NULL)
+            if (strcmp(name, ptr->SecondName) == 0)
+                return ptr;
+    }
+
     return NULL;
 }
 
@@ -172,19 +202,19 @@ void argument_parser_parse(ArgumentParser* obj, int argc, const char** argv)
 {
     if (!obj) return;
 
-    argument_list_clear(&obj->unparsed);
-    argument_list_clear(&obj->parsed);
+    argument_list_clear(obj->unparsed);
+    argument_list_clear(obj->parsed);
 
-    for (int i = 0; i < argc; i++)
+    for (int i = 1; i < argc; i++)
     {
         const char* argStr = argv[i];
         if (argStr[0] != '-')
         {
-            argument_list_add(&obj->unparsed, CreateArgument(ArgumentType_Invalid, argStr, argStr, argStr));
+            argument_list_add(obj->unparsed, CreateArgument(ArgumentType_Invalid, argStr, argStr, argStr));
             continue;
         }
 
-        Argument* lookupArgument = get_matching_argument(&obj->lookup, argStr);
+        Argument* lookupArgument = get_matching_argument(obj->lookup, argStr);
         if (!lookupArgument)
             continue;
         
@@ -192,18 +222,21 @@ void argument_parser_parse(ArgumentParser* obj, int argc, const char** argv)
         {
             if (i == argc - 1) break;
 
-            argument_list_add(&obj->parsed, CreateArgument(ArgumentType_Value, lookupArgument->Name, lookupArgument->SecondName, argv[i+1]));
+            argument_list_add(obj->parsed, CreateArgument(ArgumentType_Value, lookupArgument->Name, lookupArgument->SecondName, argv[i+1]));
             i++;
             continue;
         }
 
-        argument_list_add(&obj->parsed, CreateArgument(ArgumentType_Flag, lookupArgument->Name, lookupArgument->SecondName, ""));
+        argument_list_add(obj->parsed, CreateArgument(ArgumentType_Flag, lookupArgument->Name, lookupArgument->SecondName, ""));
     }
 }
 
 Argument* argument_parser_get(ArgumentParser* obj, const char* name)
 {
-    return get_matching_argument(&obj->parsed, name);
+    if (!obj)
+        return NULL;
+
+    return get_matching_argument(obj->parsed, name);
 }
 
 uint8_t argument_parser_has(ArgumentParser* obj, const char* name)
