@@ -26,6 +26,7 @@ int main(int argc, const char** argv)
     if (argument_parser_has(parser, "-h"))
     {
         print_help_message();
+        argument_parser_dispose(parser);
         return 0;
     }
 
