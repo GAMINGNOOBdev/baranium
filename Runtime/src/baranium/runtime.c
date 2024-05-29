@@ -16,12 +16,8 @@ BaraniumRuntime* baranium_init()
     BaraniumRuntime* runtimeHandle = malloc(sizeof(BaraniumRuntime));
     memset(runtimeHandle, 0, sizeof(BaraniumRuntime));
 
-    runtimeHandle->cpu = malloc(sizeof(bcpu));
-    runtimeHandle->functionStack = malloc(sizeof(bstack));
-
-    bstack_init(runtimeHandle->functionStack);
-    bcpu_init(runtimeHandle->cpu);
-    bcpu_reset(runtimeHandle->cpu);
+    runtimeHandle->cpu = bcpu_init();
+    runtimeHandle->functionStack = bstack_init();
     return runtimeHandle;
 }
 
@@ -32,12 +28,8 @@ void baranium_set_context(BaraniumRuntime* runtimeContext)
 
 void baranium_cleanup(BaraniumRuntime* runtime)
 {
-    if (runtime == NULL)
-        return;
+    if (runtime == NULL) return;
 
-    bcpu_cleanup(runtime->cpu);
-    bcpu_reset(runtime->cpu);
-    bstack_clear(runtime->functionStack);
     if (!(runtime->start == NULL && runtime->end == NULL))
     {
         BaraniumHandle* handle = runtime->start;
@@ -54,8 +46,8 @@ void baranium_cleanup(BaraniumRuntime* runtime)
         }
     }
 
-    free(runtime->functionStack);
-    free(runtime->cpu);
+    bcpu_dispose(runtime->cpu);
+    bstack_dispose(runtime->functionStack);
     free(runtime);
 }
 

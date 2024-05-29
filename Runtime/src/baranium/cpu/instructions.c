@@ -37,14 +37,14 @@ void PUSHCV(bcpu* cpu)
 {
     if (!cpu) return;
 
-    bstack_push(&cpu->cv_stack, cpu->cv);
+    bstack_push(cpu->cv_stack, cpu->cv);
 }
 
 void POPCV(bcpu* cpu)
 {
     if (!cpu) return;
 
-    cpu->cv = bstack_pop(&cpu->cv_stack);
+    cpu->cv = bstack_pop(cpu->cv_stack);
 }
 
 void PUSHVAR(bcpu* cpu)
@@ -53,7 +53,7 @@ void PUSHVAR(bcpu* cpu)
 
     // index_t id = cpu->fetch(cpu, 64);
     ///TODO: actually push the variable value
-    bstack_push(&cpu->stack, 0);
+    bstack_push(cpu->stack, 0);
 }
 
 void POPVAR(bcpu* cpu)
@@ -62,7 +62,7 @@ void POPVAR(bcpu* cpu)
     
     // index_t id = cpu->fetch(cpu, 64);
     ///TODO: actually assign the variable value
-    bstack_pop(&cpu->stack);
+    bstack_pop(cpu->stack);
 }
 
 void PUSH(bcpu* cpu)
@@ -70,21 +70,21 @@ void PUSH(bcpu* cpu)
     if (!cpu) return;
     
     uint64_t value = cpu->fetch(cpu, 64);
-    bstack_push(&cpu->stack, value);
+    bstack_push(cpu->stack, value);
 }
 
 void PUSHIP(bcpu* cpu)
 {
     if (!cpu) return;
 
-    bstack_push(&cpu->ip_stack, cpu->IP);
+    bstack_push(cpu->ip_stack, cpu->IP);
 }
 
 void POPIP(bcpu* cpu)
 {
     if (!cpu) return;
 
-    cpu->IP = bstack_pop(&cpu->ip_stack);
+    cpu->IP = bstack_pop(cpu->ip_stack);
 }
 
 void JMP(bcpu* cpu)
@@ -195,8 +195,8 @@ void MOD(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
     if (val1 == 0)
     {
@@ -205,15 +205,15 @@ void MOD(bcpu* cpu)
         return;
     }
 
-    bstack_push(&cpu->stack, val0 % val1);
+    bstack_push(cpu->stack, val0 % val1);
 }
 
 void DIV(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
     if (val1 == 0)
     {
@@ -222,87 +222,87 @@ void DIV(bcpu* cpu)
         return;
     }
 
-    bstack_push(&cpu->stack, val0 / val1);
+    bstack_push(cpu->stack, val0 / val1);
 }
 
 void MUL(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
-    bstack_push(&cpu->stack, val0 * val1);
+    bstack_push(cpu->stack, val0 * val1);
 }
 
 void SUB(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
-    bstack_push(&cpu->stack, val0 - val1);
+    bstack_push(cpu->stack, val0 - val1);
 }
 
 void ADD(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
-    bstack_push(&cpu->stack, val0 + val1);
+    bstack_push(cpu->stack, val0 + val1);
 }
 
 void AND(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
-    bstack_push(&cpu->stack, val0 & val1);
+    bstack_push(cpu->stack, val0 & val1);
 }
 
 void OR(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
-    bstack_push(&cpu->stack, val0 | val1);
+    bstack_push(cpu->stack, val0 | val1);
 }
 
 void XOR(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
-    bstack_push(&cpu->stack, val0 ^ val1);
+    bstack_push(cpu->stack, val0 ^ val1);
 }
 
 void SHFTL(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
-    bstack_push(&cpu->stack, val0 << val1);
+    bstack_push(cpu->stack, val0 << val1);
 }
 
 void SHFTR(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(&cpu->stack);
-    uint64_t val1 = bstack_pop(&cpu->stack);
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
 
-    bstack_push(&cpu->stack, val0 >> val1);
+    bstack_push(cpu->stack, val0 >> val1);
 }
 
 void MEM(bcpu* cpu)
@@ -342,7 +342,7 @@ void KILL(bcpu* cpu)
     if (!cpu) return;
 
     int64_t errorCode = cpu->fetch(cpu, 64);
-    bstack_push(&cpu->stack, errorCode);
+    bstack_push(cpu->stack, errorCode);
     cpu->flags.FORCED_KILL = true;
     cpu->killTriggered = true;
 }

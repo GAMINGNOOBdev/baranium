@@ -33,26 +33,26 @@ typedef uint64_t(*BCPUFETCH)(struct bcpu* obj, int bits);
 typedef struct bcpu
 {
     uint64_t IP;            // Instruction Pointer (Program Counter)
-    bstack stack;           // Stack for the cpu to store data temporarily
-    bstack ip_stack;        // Instruction pointer stack for the cpu to store data temporarily
-    bstack cv_stack;        // Compare value stack for the cpu to store data temporarily
+    bstack* stack;          // Stack for the cpu to store data temporarily
+    bstack* ip_stack;       // Instruction pointer stack for the cpu to store data temporarily
+    bstack* cv_stack;       // Compare value stack for the cpu to store data temporarily
     bcpu_flags flags;       // Flags
     uint8_t opcode;         // operation code/instruction
     uint64_t ticks;         // total number of ticks the cpu has executed
     uint8_t killTriggered;  // Only set if execution has ended
                             // has been triggered and the application should quit
     int64_t cv;             // compare value
-    bbus bus;               // the bus to read data from
+    bbus* bus;              // the bus to read data from
 
     uint64_t fetched;
     BCPUFETCH fetch;
 } bcpu;
 
-// initialize the cpu
-void bcpu_init(bcpu* obj);
+// create and initialize the cpu
+bcpu* bcpu_init();
 
-// clean any used memory
-void bcpu_cleanup(bcpu* obj);
+// dispose and clean any used memory by the cpu
+void bcpu_dispose(bcpu* obj);
 
 // this is the method which executes the instructions from the IP value forward
 // some instructions can take multiple calls to this function to execute properly

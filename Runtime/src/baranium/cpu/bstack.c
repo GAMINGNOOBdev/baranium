@@ -2,24 +2,32 @@
 #include <memory.h>
 #include <stdlib.h>
 
-void bstack_init(bstack* obj)
+bstack* bstack_init()
 {
-    if (obj == NULL)
-        return;
+    bstack* obj = malloc(sizeof(bstack));
+    if (obj == NULL) return;
 
     bstack_clear(obj);
 
     obj->start = NULL;
     obj->end = NULL;
+
+    return obj;
+}
+
+void bstack_dispose(bstack* obj)
+{
+    if (!obj) return;
+
+    bstack_clear(obj);
+    free(obj);
 }
 
 void bstack_clear(bstack* obj)
 {
-    if (obj == NULL)
-        return;
+    if (obj == NULL) return;
 
-    if (obj->start == NULL)
-        return;
+    if (obj->start == NULL) return;
 
     bstackEntry* next = NULL;
     for (bstackEntry* ptr = obj->start; ptr != NULL;)
