@@ -9,7 +9,7 @@ define myVeryFancyFunction(int var)
     float variable0 = 10.0;
     int variable1 = -10;
     uint variable2 = 10;
-    gameobject object = myObject;
+    object object = myObject;
     bool isStupidCode = false;
 
     # expression ast test
@@ -17,7 +17,7 @@ define myVeryFancyFunction(int var)
     if (true || false)
         isStupidCode = 10 + ((-variable2) * 6 - 1) / variable1 == getIsStupidCode(1,2,3,4);
 
-    gameobject attachedObject = attached;
+    object attachedObject = attached;
     string name = TEST_DEFINE;
     return attachedObject;
 }

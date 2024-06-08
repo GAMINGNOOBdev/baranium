@@ -1,6 +1,8 @@
 #include <baranium/cpu/bcpu_opcodes.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
+#include <stdlib.h>
+#include <memory.h>
 
 // function references (all declared at the end of this file)
 uint64_t _bcpu_fetch(bcpu* obj, int bits);
@@ -9,6 +11,7 @@ uint64_t _bcpu_fetch(bcpu* obj, int bits);
 bcpu* bcpu_init()
 {
     bcpu* obj = malloc(sizeof(bcpu));
+    memset(obj, 0, sizeof(bcpu));
     if (obj == NULL)
         return;
 
@@ -26,7 +29,6 @@ void bcpu_dispose(bcpu* obj)
     if (obj == NULL)
         return;
 
-    bstack_dispose(obj->cv_stack);
     bstack_dispose(obj->stack);
     bstack_dispose(obj->ip_stack);
     bbus_dispose(obj->bus);
@@ -47,7 +49,7 @@ void bcpu_tick(bcpu* obj)
     }
 
     obj->opcode = bbus_read(obj->bus, obj->IP);
-    LOGDEBUG(stringf("IP: 0x%x | Ticks (total): 0x%x | Opcode: 0x%x | Instruction: '%s'",
+    LOGDEBUG(stringf("IP: 0x%2.16x | Ticks (total): 0x%2.16x | Opcode: 0x%2.2x | Instruction: '%s'",
                obj->IP, obj->ticks, obj->opcode, opcodes[obj->opcode].name));
     obj->IP++;
     opcodes[obj->opcode].handle(obj);
@@ -63,7 +65,6 @@ void bcpu_reset(bcpu* obj)
     obj->IP = 0;
     obj->stack = bstack_init();
     obj->ip_stack = bstack_init();
-    obj->cv_stack = bstack_init();
     obj->flags.CMP = 1;
     obj->flags.RESERVED = 0;
     obj->ticks = 0;

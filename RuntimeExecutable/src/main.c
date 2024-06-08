@@ -10,6 +10,12 @@ void print_help_message();
 
 int main(int argc, const char** argv)
 {
+    if (argc < 2)
+    {
+        print_help_message();
+        return 0;
+    }
+
     ArgumentParser* parser = argument_parser_init();
     argument_parser_add(parser, ArgumentType_Flag, "-h", "--help");
     argument_parser_add(parser, ArgumentType_Flag, "-d", "--debug");
@@ -37,6 +43,7 @@ int main(int argc, const char** argv)
 
     if (parser->unparsed->size != 1)
     {
+        print_help_message();
         LOGERROR(stringf("Invalid number of files passed, expected one, got %ld", parser->unparsed->size));
         argument_parser_dispose(parser);
         fclose(logOutput);

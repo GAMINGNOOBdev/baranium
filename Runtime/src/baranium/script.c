@@ -214,6 +214,7 @@ BaraniumVariable* baranium_script_get_variable_by_id(BaraniumScript* script, ind
         return NULL;
 
     result = malloc(sizeof(BaraniumVariable));
+    memset(result, 0, sizeof(BaraniumVariable));
     result->ID = variableID;
     result->Type = *foundSection->Data;
     result->Value = (void*)(((uint8_t*)foundSection->Data) + 1);
@@ -239,6 +240,7 @@ BaraniumField* baranium_script_get_field_by_id(BaraniumScript* script, index_t f
         return NULL;
 
     result = malloc(sizeof(BaraniumField));
+    memset(result, 0, sizeof(BaraniumField));
     result->ID = fieldID;
     result->Type = *foundSection->Data;
     result->Value = (void*)(((uint8_t*)foundSection->Data) + 1);
@@ -264,6 +266,7 @@ BaraniumFunction* baranium_script_get_function_by_id(BaraniumScript* script, ind
         return NULL;
 
     result = malloc(sizeof(BaraniumFunction));
+    memset(result, 0, sizeof(BaraniumFunction));
     result->DataSize = foundSection->DataSize;
     result->Data = foundSection->Data;
     result->ID = functionID;

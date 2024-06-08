@@ -64,6 +64,7 @@ namespace Language
 
         TreeNodeObject rootNode = mAST.GetRoot();
         auto firstToken = rootNode->contents;
+        LineNumber = firstToken.LineNumber;
 
         switch (firstToken.mType)
         {
@@ -132,14 +133,18 @@ namespace Language
 
                     objectToken = tokens.at(1);
 
-                    if (TokensListContains(objectToken.Contents, localTokens, globalTokens) != nullptr && (objectToken.Contents == "null" || objectToken.Contents == Keywords[KeywordIndex_attached].Name))
+                    auto objParsedToken = TokensListContains(objectToken.Contents, localTokens, globalTokens);
+                    if (objParsedToken == nullptr && !(objectToken.Contents == "null" || objectToken.Contents == Keywords[KeywordIndex_attached].Name))
                     {
-                        Logging::Log(stringf("Line %d: Cannot parse keyword expression: Cannot find variable named '%s'", firstToken.LineNumber, objectToken.Contents), Logging::Level::Error);
+                        Logging::Log(stringf("Line %d: Cannot parse keyword expression: Cannot find variable named '%s'", firstToken.LineNumber, objectToken.Contents.c_str()), Logging::Level::Error);
                         Logging::Dispose();
                         exit(-1);
                     }
 
                     Type = ExpressionType::KeywordExpression;
+                    ReturnType = VariableType::Object;
+                    ReturnValue = objectToken.Contents;
+                    LineNumber = objectToken.LineNumber;
                 }
 
                 break;

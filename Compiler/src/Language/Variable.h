@@ -12,7 +12,7 @@ namespace Language
     {
         Invalid,
         Void,
-        GameObject,
+        Object,
         String,
         Float,
         Bool,

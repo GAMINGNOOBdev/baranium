@@ -47,7 +47,7 @@ namespace Binaries
             case Language::VariableType::Void:
                 break;
 
-            case Language::VariableType::GameObject:
+            case Language::VariableType::Object:
             {
                 int64_t objID;
                 if (__src.empty())
@@ -225,7 +225,7 @@ namespace Binaries
             size = token.Value.length() + 1; // plus the nullchar at the end
 
         mCodeBuilder.MEM(size, token.ID);
-        if (token.Type != Language::VariableType::GameObject)
+        if (token.Type != Language::VariableType::Object)
         {
             uint8_t* data = GetVariableValueAsData(token.Value, token.Type);
             mCodeBuilder.SET(token.ID, size, data);
@@ -392,8 +392,7 @@ namespace Binaries
 
         if (token.Type == Language::ExpressionType::Condition)
         {
-            /// TODO: --- implement ---
-            mCodeBuilder.NOP();
+            CompileCondition(astRoot);
             return;
         }
 
@@ -412,15 +411,13 @@ namespace Binaries
 
         if (token.Type == Language::ExpressionType::ReturnStatement)
         {
-            /// TODO: --- implement ---
-            mCodeBuilder.NOP();
+            CompileReturnStatement(token);
             return;
         }
 
         if (token.Type == Language::ExpressionType::KeywordExpression)
         {
-            /// TODO: --- implement ---
-            mCodeBuilder.NOP();
+            CompileKeywordExpression(token);
             return;
         }
 
@@ -433,8 +430,7 @@ namespace Binaries
 
     void Compiler::CompileAstNode(TreeNodeObject node, bool isRoot)
     {
-        if (node == nullptr)
-            return;
+        if (node == nullptr) return;
 
         auto token = node->contents;
 
@@ -469,14 +465,16 @@ namespace Binaries
             CompileAssignment(node);
 
         if (token.mType == SourceToken::Type::EqualTo   || token.mType == SourceToken::Type::NotEqual ||
-            token.mType == SourceToken::Type::LessEqual || token.mType == SourceToken::Type::GreaterEqual);
-            // CompileCondition();
+            token.mType == SourceToken::Type::LessEqual || token.mType == SourceToken::Type::GreaterEqual)
+        {
+            CompileCondition(node);
+            mCodeBuilder.PUSHCV();
+        }
     }
 
     void Compiler::CompileAssignment(TreeNodeObject root)
     {
-        if (root == nullptr)
-            return;
+        if (root == nullptr) return;
 
         auto leftToken = root->left->contents;
         if (leftToken.mType != SourceToken::Type::Text)
@@ -510,10 +508,33 @@ namespace Binaries
         mCodeBuilder.POPVAR(varID);
     }
 
+    void Compiler::CompileReturnStatement(Language::Expression& expression)
+    {
+        if (expression.ReturnExpression != nullptr)
+        {
+            CompileAstNode(expression.ReturnExpression->mAST.GetRoot(), true);
+        }
+        else if (!expression.ReturnVariableName.empty())
+        {
+            std::string varName = expression.ReturnVariableName;
+            auto varID = GetVarID(varName, expression.LineNumber);
+            mCodeBuilder.PUSHVAR(varID);
+        }
+        else if (expression.ReturnType != Language::VariableType::Void)
+        {
+            Language::Variable var = Language::Variable();
+            var.Type = expression.ReturnType;
+            var.Value = expression.ReturnValue;
+            CompileVariable(var);
+            mCodeBuilder.PUSHVAR(var.ID);
+            mCodeBuilder.FEM(var.ID);
+        }
+        mCodeBuilder.RET();
+    }
+
     void Compiler::CompileArithmeticOperation(TreeNodeObject root, bool isRoot)
     {
-        if (root == nullptr)
-            return;
+        if (root == nullptr) return;
 
         auto lhs = root->left;
         auto rhs = root->right;
@@ -585,6 +606,69 @@ namespace Binaries
             mCodeBuilder.SHFTR();
     }
 
+    void Compiler::CompileCondition(TreeNodeObject root)
+    {
+        if (root == nullptr) return;
+
+        auto lhs = root->left;
+        auto rhs = root->right;
+
+        if (lhs)
+            CompileAstNode(lhs);
+        else
+            mCodeBuilder.PUSH(0);
+
+        if (rhs)
+            CompileAstNode(rhs);
+        else
+            mCodeBuilder.PUSH(0);
+
+        mCodeBuilder.CMP();
+    }
+
+    void Compiler::CompileKeywordExpression(Language::Expression& expression)
+    {
+        std::string keyword = std::string(expression.mAST.GetRoot()->contents.Contents);
+
+        if (expression.ReturnValue == Language::Keywords[KeywordIndex_null].Name)
+        {
+            // it wouldn't make sense to do any sort of operation on a non-existent object
+            mCodeBuilder.NOP();
+            return;
+        }
+        else if (expression.ReturnValue == Language::Keywords[KeywordIndex_attached].Name)
+            mCodeBuilder.PUSH(-1);
+        else
+        {
+            auto id = GetVarID(expression.ReturnValue, expression.LineNumber);
+            ///TODO: check if variable is an signed/unsigned integer or an object, since any other type doesn't make sense
+            mCodeBuilder.PUSHVAR(id);
+        }
+
+        if (keyword == Language::Keywords[KeywordIndex_instantiate].Name)
+        {
+            mCodeBuilder.INSTANTIATE();
+            return;
+        }
+        else if (keyword == Language::Keywords[KeywordIndex_delete].Name)
+        {
+            mCodeBuilder.DELETE();
+            return;
+        }
+        else if (keyword == Language::Keywords[KeywordIndex_attach].Name)
+        {
+            mCodeBuilder.ATTACH();
+            return;
+        }
+        else if (keyword == Language::Keywords[KeywordIndex_detach].Name)
+        {
+            mCodeBuilder.DETACH();
+            return;
+        }
+
+        Logging::LogErrorExit(stringf("Line %d: Unknown keyword or maybe variable doesn't exist?", expression.LineNumber));
+    }
+
     uint8_t* GetVariableValueAsData(std::string value, Language::VariableType type)
     {
         uint8_t* data = nullptr;
@@ -592,6 +676,7 @@ namespace Binaries
         if (type == Language::VariableType::Bool)
         {
             data = (uint8_t*)malloc(1);
+            if (!data) return nullptr;
             *data = value == "true";
         }
 
@@ -606,7 +691,7 @@ namespace Binaries
             memcpy(data, &dataValue, sizeof(double));
         }
 
-        if (type == Language::VariableType::GameObject)
+        if (type == Language::VariableType::Object)
             return nullptr;
 
         if (type == Language::VariableType::Int || type == Language::VariableType::Uint)

@@ -426,7 +426,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
     if (varType == Language::VariableType::Invalid || tokens.empty())
         return "null";
 
-    if (varType == Language::VariableType::GameObject)
+    if (varType == Language::VariableType::Object)
     {
         auto& dataToken = tokens.at(tokenIndex);
         tokenIndex++;
@@ -440,7 +440,7 @@ std::string TokenParser::ParseVariableValue(SourceTokenList tokens, Language::Va
         if (dataToken.mType == SourceToken::Type::Null)
             return "null";
 
-        Logging::LogErrorExit(stringf("Line %d: Invalid gameobject assignment", dataToken.LineNumber));
+        Logging::LogErrorExit(stringf("Line %d: Invalid object assignment", dataToken.LineNumber));
     }
 
     if (varType == Language::VariableType::String)

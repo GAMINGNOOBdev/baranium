@@ -12,7 +12,7 @@ std::vector<Keyword> Language::Keywords = {
     Keyword{"null",         SourceToken::Type::Null},
 
     // types
-    Keyword{"gameobject",   SourceToken::Type::Keyword},
+    Keyword{"object",       SourceToken::Type::Keyword},
     Keyword{"string",       SourceToken::Type::Keyword},
     Keyword{"float",        SourceToken::Type::Keyword},
     Keyword{"bool",         SourceToken::Type::Keyword},
@@ -27,7 +27,7 @@ std::vector<Keyword> Language::Keywords = {
     Keyword{"if",           SourceToken::Type::Keyword},
     Keyword{"else",         SourceToken::Type::Keyword},
 
-    // gameobject management related stuff
+    // object management related stuff
     Keyword{"instantiate",  SourceToken::Type::Keyword},
     Keyword{"delete",       SourceToken::Type::Keyword},
 
@@ -114,7 +114,7 @@ std::vector<SpecialCharacter> Language::SpecialOperationCharacters = {
 
 bool Language::IsInternalType(SourceToken& token)
 {
-    return token.KeywordIndex >= KeywordIndex_gameobject && token.KeywordIndex <= KeywordIndex_uint;
+    return token.KeywordIndex >= KeywordIndex_object && token.KeywordIndex <= KeywordIndex_uint;
 }
 
 int Language::IsKeyword(std::string string)

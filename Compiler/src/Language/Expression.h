@@ -35,6 +35,7 @@ namespace Language
 
     struct Expression : public Token
     {
+        int LineNumber;
         ExpressionType Type;
         AbstractSyntaxTree mAST;
         std::string ReturnValue;

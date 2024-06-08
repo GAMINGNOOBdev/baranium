@@ -5,6 +5,7 @@
 bstack* bstack_init()
 {
     bstack* obj = malloc(sizeof(bstack));
+    memset(obj, 0, sizeof(bstack));
     if (obj == NULL) return;
 
     bstack_clear(obj);
@@ -48,6 +49,7 @@ void bstack_push(bstack* obj, uint64_t data)
     if (obj->start == NULL)
     {
         obj->start = malloc(sizeof(bstackEntry));
+        memset(obj->start, 0, sizeof(bstackEntry));
         obj->start->prev = NULL;
         obj->start->next = NULL;
         obj->start->data = data;
@@ -56,6 +58,7 @@ void bstack_push(bstack* obj, uint64_t data)
     }
 
     bstackEntry* newEntry = malloc(sizeof(bstackEntry));
+    memset(newEntry, 0, sizeof(bstackEntry));
     newEntry->prev = obj->end;
     newEntry->data = data;
     newEntry->next = NULL;

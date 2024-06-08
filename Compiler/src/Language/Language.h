@@ -11,7 +11,7 @@
 #define KeywordIndex_field         0
 #define KeywordIndex_attached      1
 #define KeywordIndex_null          2
-#define KeywordIndex_gameobject    3
+#define KeywordIndex_object        3
 #define KeywordIndex_string        4
 #define KeywordIndex_float         5
 #define KeywordIndex_bool          6

@@ -60,6 +60,12 @@ namespace Binaries
         // push a value to the stack
         void PUSH(uint64_t val);
 
+        // call a function with a specific id
+        void CALL(index_t id);
+
+        // return from a function
+        void RET();
+
         // jump to
         void JMP(uint64_t addr);
 
@@ -120,6 +126,9 @@ namespace Binaries
         // bitwise shift right
         void SHFTR();
 
+        // compare two values on the stack
+        void CMP();
+
         // allocate memory
         void MEM(size_t size, uint64_t id);
 
@@ -128,6 +137,18 @@ namespace Binaries
 
         // set var data
         void SET(uint64_t id, size_t size, void* data);
+
+        // instantiate an object
+        void INSTANTIATE();
+
+        // delete an object
+        void DELETE();
+
+        // attach to an object
+        void ATTACH();
+
+        // detach from an object
+        void DETACH();
 
         // stop execution with return code
         void KILL(int64_t code);

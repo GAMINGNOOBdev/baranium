@@ -12,7 +12,7 @@ enum BaraniumVariableType
 {
     BaraniumVariableType_Invalid = -1,
     BaraniumVariableType_Void,
-    BaraniumVariableType_GameObject,
+    BaraniumVariableType_Object,
     BaraniumVariableType_String,
     BaraniumVariableType_Float,
     BaraniumVariableType_Bool,

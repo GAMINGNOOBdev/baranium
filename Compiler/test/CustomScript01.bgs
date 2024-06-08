@@ -16,7 +16,7 @@
 +include Library1.bgs,Library2.bgs,Library3.bgs
 
 # fields
-field gameobject myObject = attached;   # 'attached' should just get the object on which
+field object myObject = attached;   # 'attached' should just get the object on which
                                         # this script is attached, if not attached to an
                                         # object or run directly by the user it will be
                                         # set to null
@@ -40,7 +40,7 @@ define moveObject()
     float variable0 = 10.0;
     int variable1 = -10;
     uint variable2 = 10;
-    gameobject object = myObject;
+    object object = myObject;
     # vec2 position2D = vec2(0,0);
     # vec3 position3D = vec3(0,0,0);
     # vec4 color4D = vec4(0,0,0,1.0);
@@ -120,7 +120,7 @@ define update(float delta)
     return;
 }
 
-define f(float x, float y, float z, int w, gameobject object)
+define f(float x, float y, float z, int w, object object)
 {
     return w;
 }

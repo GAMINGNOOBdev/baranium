@@ -25,5 +25,10 @@ define main()
     testFunctionResult -= 40219 * 100 / (40 + 5 % 2);
     testFunctionResult /= (-10) - (-20);
 
+    instantiate attached;
+    attach attached;
+    detach detached;
+    delete attached;
+
     return EXIT_SUCCESS;
 }

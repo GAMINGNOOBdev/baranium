@@ -45,6 +45,17 @@ void CodeBuilder::PUSH(uint64_t val)
     push64(val);
 }
 
+void CodeBuilder::CALL(index_t id)
+{
+    push(0x0E);
+    push64(id);
+}
+
+void CodeBuilder::RET()
+{
+    push(0x0F);
+}
+
 void CodeBuilder::JMP(uint64_t addr)
 {
     push(0x10);
@@ -115,6 +126,7 @@ void CodeBuilder::OR()      { push(0x26); }
 void CodeBuilder::XOR()     { push(0x27); }
 void CodeBuilder::SHFTL()   { push(0x28); }
 void CodeBuilder::SHFTR()   { push(0x29); }
+void CodeBuilder::CMP()     { push(0x30); }
 
 void CodeBuilder::MEM(size_t size, uint64_t id)
 {
@@ -141,6 +153,17 @@ void CodeBuilder::SET(uint64_t id, size_t size, void* data)
         push(*dataPtr);
         dataPtr++;
     }
+}
+
+void CodeBuilder::INSTANTIATE()     { push(0xD0); }
+void CodeBuilder::DELETE()          { push(0xD1); }
+void CodeBuilder::ATTACH()          { push(0xD2); }
+void CodeBuilder::DETACH()          { push(0xD3); }
+
+void CodeBuilder::KILL(int64_t code)
+{
+    push(0xFF);
+    push64(code);
 }
 
 void CodeBuilder::push64(uint64_t data)
@@ -172,12 +195,6 @@ void CodeBuilder::push16(uint16_t data)
 void CodeBuilder::push(uint8_t data)
 {
     mData.push_back(data);
-}
-
-void CodeBuilder::KILL(int64_t code)
-{
-    push(0xFF);
-    push64(code);
 }
 
 }

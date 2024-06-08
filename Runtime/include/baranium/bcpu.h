@@ -39,7 +39,6 @@ typedef struct bcpu
     uint64_t IP;            // Instruction Pointer (Program Counter)
     bstack* stack;          // Stack for the cpu to store data temporarily
     bstack* ip_stack;       // Instruction pointer stack for the cpu to store data temporarily
-    bstack* cv_stack;       // Compare value stack for the cpu to store data temporarily
     bcpu_flags flags;       // Flags
     uint8_t opcode;         // operation code/instruction
     uint64_t ticks;         // total number of ticks the cpu has executed

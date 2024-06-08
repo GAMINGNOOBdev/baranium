@@ -15,8 +15,8 @@ namespace Language
             case VariableType::Void:
                 return "Void";
 
-            case VariableType::GameObject:
-                return "GameObject";
+            case VariableType::Object:
+                return "Object";
 
             case VariableType::String:
                 return "String";
@@ -44,7 +44,7 @@ namespace Language
             case VariableType::Invalid:
                 return 0; // zero means that nothing is being stored here
 
-            case VariableType::GameObject:
+            case VariableType::Object:
                 return 8; // int64_t internally
 
             case VariableType::String:
@@ -69,7 +69,7 @@ namespace Language
             return VariableType::Invalid;
         }
 
-        return (VariableType)( (int)VariableType::GameObject + token.KeywordIndex - (KEYWORDS_TYPES_START) );
+        return (VariableType)( (int)VariableType::Object + token.KeywordIndex - (KEYWORDS_TYPES_START) );
     }
 
     VariableType Variable::PredictType(SourceTokenList& tokens)

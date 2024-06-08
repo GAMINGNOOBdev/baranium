@@ -44,8 +44,8 @@ void bcpu_opcodes_init()
         opcodes[0x0B] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x0C] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x0D] = createOpcode("???", INVALID_OPCODE);
-        opcodes[0x0E] = createOpcode("PUSHIP", PUSHIP);
-        opcodes[0x0F] = createOpcode("POPIP/RET", POPIP);
+        opcodes[0x0E] = createOpcode("CALL", CALL);
+        opcodes[0x0F] = createOpcode("RET", RET);
     }
 
     { // 0x10 - 0x1F
@@ -87,7 +87,7 @@ void bcpu_opcodes_init()
     }
 
     { // 0x30 - 0x3F
-        opcodes[0x30] = createOpcode("???", INVALID_OPCODE);
+        opcodes[0x30] = createOpcode("CMP", CMP);
         opcodes[0x31] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x32] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x33] = createOpcode("???", INVALID_OPCODE);
@@ -277,10 +277,10 @@ void bcpu_opcodes_init()
     }
 
     { // 0xD0 - 0xDF
-        opcodes[0xD0] = createOpcode("???", INVALID_OPCODE);
-        opcodes[0xD1] = createOpcode("???", INVALID_OPCODE);
-        opcodes[0xD2] = createOpcode("???", INVALID_OPCODE);
-        opcodes[0xD3] = createOpcode("???", INVALID_OPCODE);
+        opcodes[0xD0] = createOpcode("INSTANTIATE", INSTANTIATE);
+        opcodes[0xD1] = createOpcode("DELETE", DELETE);
+        opcodes[0xD2] = createOpcode("ATTACH", ATTACH);
+        opcodes[0xD3] = createOpcode("DETACH", DETACH);
         opcodes[0xD4] = createOpcode("???", INVALID_OPCODE);
         opcodes[0xD5] = createOpcode("???", INVALID_OPCODE);
         opcodes[0xD6] = createOpcode("???", INVALID_OPCODE);

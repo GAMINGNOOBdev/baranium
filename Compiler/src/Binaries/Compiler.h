@@ -110,7 +110,10 @@ namespace Binaries
 
     private:
         void CompileAssignment(TreeNodeObject root);
+        void CompileReturnStatement(Language::Expression& expression);
         void CompileArithmeticOperation(TreeNodeObject root, bool isRoot = false);
+        void CompileCondition(TreeNodeObject root);
+        void CompileKeywordExpression(Language::Expression& expression);
 
     private:
         uint8_t* mCode;

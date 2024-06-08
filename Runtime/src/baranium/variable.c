@@ -17,7 +17,7 @@ size_t baranium_variable_get_size_of_type(enum BaraniumVariableType type)
         case BaraniumVariableType_Invalid:
             return 0; // zero means that nothing is being stored here
 
-        case BaraniumVariableType_GameObject:
+        case BaraniumVariableType_Object:
             return 8; // int64_t internally
 
         case BaraniumVariableType_String:

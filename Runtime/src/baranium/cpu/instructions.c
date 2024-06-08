@@ -37,14 +37,14 @@ void PUSHCV(bcpu* cpu)
 {
     if (!cpu) return;
 
-    bstack_push(cpu->cv_stack, cpu->cv);
+    bstack_push(cpu->stack, cpu->cv);
 }
 
 void POPCV(bcpu* cpu)
 {
     if (!cpu) return;
 
-    cpu->cv = bstack_pop(cpu->cv_stack);
+    cpu->cv = bstack_pop(cpu->stack);
 }
 
 void PUSHVAR(bcpu* cpu)
@@ -73,18 +73,19 @@ void PUSH(bcpu* cpu)
     bstack_push(cpu->stack, value);
 }
 
-void PUSHIP(bcpu* cpu)
+void CALL(bcpu* cpu)
 {
     if (!cpu) return;
 
     bstack_push(cpu->ip_stack, cpu->IP);
 }
 
-void POPIP(bcpu* cpu)
+void RET(bcpu* cpu)
 {
     if (!cpu) return;
 
     cpu->IP = bstack_pop(cpu->ip_stack);
+    cpu->killTriggered = 1;
 }
 
 void JMP(bcpu* cpu)
@@ -195,34 +196,34 @@ void MOD(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(cpu->stack);
-    uint64_t val1 = bstack_pop(cpu->stack);
+    uint64_t divisor = bstack_pop(cpu->stack);
+    uint64_t divident = bstack_pop(cpu->stack);
 
-    if (val1 == 0)
+    if (divident == 0)
     {
         cpu->killTriggered = 1;
         cpu->flags.FORCED_KILL = 1;
         return;
     }
 
-    bstack_push(cpu->stack, val0 % val1);
+    bstack_push(cpu->stack, divisor % divident);
 }
 
 void DIV(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(cpu->stack);
-    uint64_t val1 = bstack_pop(cpu->stack);
+    uint64_t divisor = bstack_pop(cpu->stack);
+    uint64_t divident = bstack_pop(cpu->stack);
 
-    if (val1 == 0)
+    if (divisor == 0)
     {
         cpu->killTriggered = 1;
         cpu->flags.FORCED_KILL = 1;
         return;
     }
 
-    bstack_push(cpu->stack, val0 / val1);
+    bstack_push(cpu->stack, divident / divisor);
 }
 
 void MUL(bcpu* cpu)
@@ -239,10 +240,10 @@ void SUB(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t val0 = bstack_pop(cpu->stack);
-    uint64_t val1 = bstack_pop(cpu->stack);
+    uint64_t subtrahend = bstack_pop(cpu->stack);
+    uint64_t minuend = bstack_pop(cpu->stack);
 
-    bstack_push(cpu->stack, val0 - val1);
+    bstack_push(cpu->stack, minuend - subtrahend);
 }
 
 void ADD(bcpu* cpu)
@@ -305,6 +306,17 @@ void SHFTR(bcpu* cpu)
     bstack_push(cpu->stack, val0 >> val1);
 }
 
+void CMP(bcpu* cpu)
+{
+    if (!cpu) return;
+    if (!cpu->flags.CMP) return;
+
+    uint64_t val0 = bstack_pop(cpu->stack);
+    uint64_t val1 = bstack_pop(cpu->stack);
+
+    cpu->cv = val0 - val1;
+}
+
 void MEM(bcpu* cpu)
 {
     if (!cpu) return;
@@ -312,7 +324,7 @@ void MEM(bcpu* cpu)
     uint64_t size = cpu->fetch(cpu, 64);
     uint64_t id = cpu->fetch(cpu, 64);
 
-    // do some allocation stuff
+    ///TODO: do some allocation stuff
 }
 
 void FEM(bcpu* cpu)
@@ -321,7 +333,7 @@ void FEM(bcpu* cpu)
 
     uint64_t id = cpu->fetch(cpu, 64);
 
-    // do some deallocation stuff
+    ///TODO: do some deallocation stuff
 }
 
 void SET(bcpu* cpu)
@@ -333,8 +345,49 @@ void SET(bcpu* cpu)
 
     for (uint64_t i = 0; i < size; i++)
     {
-        cpu->fetch(cpu, 8); // do smth with the fetched data
+        uint8_t fetched = cpu->fetch(cpu, 8);
+        ///TODO: do smth with the fetched data
     }
+}
+
+void INSTANTIATE(bcpu* cpu)
+{
+    if (!cpu) return;
+
+    index_t id = bstack_pop(cpu->stack);
+    ///TODO: actually do some stuff for these object handles
+
+    LOGDEBUG(stringf("Object with id '%ld' created", id));
+}
+
+void DELETE(bcpu* cpu)
+{
+    if (!cpu) return;
+
+    index_t id = bstack_pop(cpu->stack);
+    ///TODO: actually do some stuff for these object handles
+
+    LOGDEBUG(stringf("Object with id '%ld' deleted", id));
+}
+
+void ATTACH(bcpu* cpu)
+{
+    if (!cpu) return;
+
+    index_t id = bstack_pop(cpu->stack);
+    ///TODO: actually do some stuff for these object handles
+
+    LOGDEBUG(stringf("Attached to object with id '%ld'", id));
+}
+
+void DETACH(bcpu* cpu)
+{
+    if (!cpu) return;
+
+    index_t id = bstack_pop(cpu->stack);
+    ///TODO: actually do some stuff for these object handles
+
+    LOGDEBUG(stringf("Detached from object with id '%ld'", id));
 }
 
 void KILL(bcpu* cpu)
