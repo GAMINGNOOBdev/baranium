@@ -8,6 +8,9 @@ extern "C" {
 #include "defines.h"
 #include "variable.h"
 
+// forward declaration needed to create a pointer
+struct BaraniumScript;
+
 typedef struct BaraniumFunction
 {
     size_t DataSize;
@@ -20,6 +23,8 @@ typedef struct BaraniumFunction
 
     void* Data;
     BaraniumVariable* Parameters;
+
+    struct BaraniumScript* Script;
 } BaraniumFunction;
 
 /**

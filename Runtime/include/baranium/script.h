@@ -31,6 +31,7 @@ typedef struct BaraniumSection
     uint8_t Type;
     index_t ID;
     uint64_t DataSize;
+    uint64_t DataLocation; // mostly used by function sections because code size can sometimes be quite big and code should probably be dynamically loaded and unloaded when not needed
     uint8_t* Data;
 
     struct BaraniumSection* next;
@@ -67,6 +68,7 @@ typedef struct BaraniumScript
     BaraniumSection* SectionsStart;
     BaraniumSection* SectionsEnd;
     BaraniumScriptNameTable NameTable;
+    BaraniumHandle* Handle;
 } BaraniumScript;
 
 /**

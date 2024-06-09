@@ -531,6 +531,7 @@ namespace Binaries
             CompileVariable(var);
             mCodeBuilder.PUSHVAR(var.ID);
             mCodeBuilder.FEM(var.ID);
+            mVarTable.Remove(var);
         }
 
         // clear all currently allocated variables

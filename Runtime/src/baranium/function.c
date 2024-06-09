@@ -9,6 +9,9 @@ void baranium_function_dispose(BaraniumFunction* function)
     if (function == NULL)
         return;
 
+    if (function->Data)
+        free(function->Data);
+
     free(function);
 }
 
