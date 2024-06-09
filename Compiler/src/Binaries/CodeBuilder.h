@@ -33,6 +33,11 @@ namespace Binaries
          */
         uint64_t Size();
 
+        /**
+         * @brief Check if the last instruction is a return statement
+         */
+        bool ReturnedFromExecution();
+
         // no operation
         void NOP();
 
@@ -130,13 +135,13 @@ namespace Binaries
         void CMP();
 
         // allocate memory
-        void MEM(size_t size, uint64_t id);
+        void MEM(size_t size, index_t id);
 
         // deallocate memory
-        void FEM(uint64_t id);
+        void FEM(index_t id);
 
         // set var data
-        void SET(uint64_t id, size_t size, void* data);
+        void SET(index_t id, size_t size, void* data);
 
         // instantiate an object
         void INSTANTIATE();

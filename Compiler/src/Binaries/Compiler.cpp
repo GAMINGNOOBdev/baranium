@@ -115,6 +115,9 @@ namespace Binaries
 
     void Compiler::ClearVariables(VariableList& variables)
     {
+        if (mCodeBuilder.ReturnedFromExecution())
+            return;
+
         for (auto& var : variables)
         {
             if (!var)
@@ -529,6 +532,11 @@ namespace Binaries
             mCodeBuilder.PUSHVAR(var.ID);
             mCodeBuilder.FEM(var.ID);
         }
+
+        // clear all currently allocated variables
+        for (auto& var : mVarTable.GetAllEntries())
+            mCodeBuilder.FEM(var.ID);
+
         mCodeBuilder.RET();
     }
 

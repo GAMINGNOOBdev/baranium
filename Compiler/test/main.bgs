@@ -27,7 +27,7 @@ define main()
 
     instantiate attached;
     attach attached;
-    detach detached;
+    detach attached;
     delete attached;
 
     return EXIT_SUCCESS;

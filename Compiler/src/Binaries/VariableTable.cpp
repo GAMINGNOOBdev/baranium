@@ -5,14 +5,13 @@ namespace Binaries
 {
 
     VariableTable::VariableTable()
-        : mEntries(), mEntryCount(0)
+        : mEntries()
     {
     }
 
     void VariableTable::Clear()
     {
         mEntries.clear();
-        mEntryCount = 0;
     }
 
     index_t VariableTable::Lookup(std::string name)
@@ -48,7 +47,6 @@ namespace Binaries
             return;
 
         mEntries.push_back( VariableTableEntry{std::string(var.mName), var.ID} );
-        mEntryCount++;
     }
 
     void VariableTable::Remove(Language::Variable& var)
@@ -59,6 +57,11 @@ namespace Binaries
 
         if (iterator != mEntries.end())
             mEntries.erase(iterator);
+    }
+
+    const std::vector<VariableTableEntry> VariableTable::GetAllEntries()
+    {
+        return mEntries;
     }
 
 }

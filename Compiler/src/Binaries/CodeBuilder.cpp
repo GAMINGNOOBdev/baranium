@@ -20,6 +20,14 @@ uint64_t CodeBuilder::Size()
     return mData.size();
 }
 
+bool CodeBuilder::ReturnedFromExecution()
+{
+    if (mData.size() == 0)
+        return true;
+
+    return mData.at(mData.size()-1) == 0x0F;
+}
+
 void CodeBuilder::NOP() { push(0x00); }
 void CodeBuilder::CCF() { push(0x01); }
 void CodeBuilder::SCF() { push(0x02); }
@@ -128,20 +136,20 @@ void CodeBuilder::SHFTL()   { push(0x28); }
 void CodeBuilder::SHFTR()   { push(0x29); }
 void CodeBuilder::CMP()     { push(0x30); }
 
-void CodeBuilder::MEM(size_t size, uint64_t id)
+void CodeBuilder::MEM(size_t size, index_t id)
 {
     push(0x80);
     push64(size);
     push64(id);
 }
 
-void CodeBuilder::FEM(uint64_t id)
+void CodeBuilder::FEM(index_t id)
 {
     push(0x81);
     push64(id);
 }
 
-void CodeBuilder::SET(uint64_t id, size_t size, void* data)
+void CodeBuilder::SET(index_t id, size_t size, void* data)
 {
     push(0x82);
     push64(id);

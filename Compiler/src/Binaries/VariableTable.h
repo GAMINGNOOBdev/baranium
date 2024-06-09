@@ -69,10 +69,12 @@ namespace Binaries
          */
         void Remove(Language::Variable& var);
 
-    private:
-        // The number of names that are saved
-        uint64_t mEntryCount;
+        /**
+         * @brief Get all variable entries
+         */
+        const std::vector<VariableTableEntry> GetAllEntries();
 
+    private:
         // Name entries, can be directly written to a file using fwrite
         std::vector<VariableTableEntry> mEntries;
     };
