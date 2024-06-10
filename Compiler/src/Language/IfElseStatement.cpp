@@ -37,11 +37,7 @@ namespace Language
             }
 
             if (token.KeywordIndex == KeywordIndex_else)
-            {
-                Logging::Log(stringf("Line %d: missing `if` for `else` statement", token.LineNumber));
-                Logging::Dispose();
-                exit(-1);
-            }
+                Logging::LogErrorExit(stringf("Line %d: missing `if` for `else` statement", token.LineNumber));
 
             if (token.mType == SourceToken::Type::Field)
             {

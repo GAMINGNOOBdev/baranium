@@ -1,3 +1,4 @@
+#include "../MemoryManager.h"
 #include "CompiledScript.h"
 #include "../StringUtil.h"
 #include "../Logging.h"
@@ -178,7 +179,7 @@ namespace Binaries
             free(mCode);
 
         mCodeLength = mCodeBuilder.Size();
-        mCode = (uint8_t*)malloc(sizeof(uint8_t)*mCodeLength);
+        mCode = (uint8_t*)MemoryManager::allocate(sizeof(uint8_t)*mCodeLength);
         memcpy(mCode, mCodeBuilder.Data(), mCodeLength);
 
         mVarTable.Clear();
@@ -684,7 +685,7 @@ namespace Binaries
 
         if (type == Language::VariableType::Bool)
         {
-            data = (uint8_t*)malloc(1);
+            data = (uint8_t*)MemoryManager::allocate(1);
             if (!data) return nullptr;
             *data = value == "true";
         }
@@ -696,7 +697,7 @@ namespace Binaries
             if (!value.empty())
                 dataValue = std::stod(value);
 
-            data = (uint8_t*)malloc(sizeof(double));
+            data = (uint8_t*)MemoryManager::allocate(sizeof(double));
             memcpy(data, &dataValue, sizeof(double));
         }
 
@@ -710,13 +711,13 @@ namespace Binaries
             if (!value.empty())
                 dataValue = std::stoll(value);
 
-            data = (uint8_t*)malloc(sizeof(int64_t));
+            data = (uint8_t*)MemoryManager::allocate(sizeof(int64_t));
             memcpy(data, &dataValue, sizeof(int64_t));
         }
 
         if (type == Language::VariableType::String)
         {
-            data = (uint8_t*)malloc(value.length() + 1);
+            data = (uint8_t*)MemoryManager::allocate(value.length() + 1);
             memset(data, 0, value.length() + 1);
             memcpy(data, value.data(), value.length());
         }

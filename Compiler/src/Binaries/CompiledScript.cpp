@@ -1,3 +1,4 @@
+#include "../MemoryManager.h"
 #include "CompiledScript.h"
 #include "../Logging.h"
 #include <algorithm>
@@ -48,9 +49,7 @@ namespace Binaries
 
                 default:
                 case Language::TokenType::Invalid:
-                    Logging::Log("Invalid global token", Logging::Error);
-                    Logging::Dispose();
-                    exit(-1);
+                    Logging::LogErrorExit("Invalid global token");
                     break;
             }
         }
@@ -123,7 +122,7 @@ namespace Binaries
 
         size_t dataSize = sizeof(uint8_t) + dataTypeSize;
         fieldSection.DataSize = dataSize;
-        fieldSection.Data = (uint8_t*)malloc(dataSize);
+        fieldSection.Data = (uint8_t*)MemoryManager::allocate(dataSize);
         memset(fieldSection.Data, 0, dataSize);
 
         mCompiler.CopyVariableData(fieldSection.Data, field->Value, field->Type);
@@ -144,7 +143,7 @@ namespace Binaries
         // Size calculation: data type (1 byte) + data size
         size_t dataSize = sizeof(uint8_t) + dataTypeSize;
         variableSection.DataSize = dataSize;
-        variableSection.Data = (uint8_t*)malloc(dataSize);
+        variableSection.Data = (uint8_t*)MemoryManager::allocate(dataSize);
         memset(variableSection.Data, 0, dataSize);
 
         mCompiler.CopyVariableData(variableSection.Data, variable->Value, variable->Type);
@@ -167,7 +166,7 @@ namespace Binaries
 
         // Size calculation: compiled code size
         functionSection.DataSize = mCompiler.GetCompiledCodeSize();
-        functionSection.Data = (uint8_t*)malloc(functionSection.DataSize);
+        functionSection.Data = (uint8_t*)MemoryManager::allocate(functionSection.DataSize);
         memcpy(functionSection.Data, mCompiler.GetCompiledCode(), functionSection.DataSize);
 
         // prepare for the next compilation + clear up duplicated memory

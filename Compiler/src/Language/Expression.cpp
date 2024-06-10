@@ -135,11 +135,7 @@ namespace Language
 
                     auto objParsedToken = TokensListContains(objectToken.Contents, localTokens, globalTokens);
                     if (objParsedToken == nullptr && !(objectToken.Contents == "null" || objectToken.Contents == Keywords[KeywordIndex_attached].Name))
-                    {
-                        Logging::Log(stringf("Line %d: Cannot parse keyword expression: Cannot find variable named '%s'", firstToken.LineNumber, objectToken.Contents.c_str()), Logging::Level::Error);
-                        Logging::Dispose();
-                        exit(-1);
-                    }
+                        Logging::LogErrorExit(stringf("Line %d: Cannot parse keyword expression: Cannot find variable named '%s'", firstToken.LineNumber, objectToken.Contents.c_str()));
 
                     Type = ExpressionType::KeywordExpression;
                     ReturnType = VariableType::Object;

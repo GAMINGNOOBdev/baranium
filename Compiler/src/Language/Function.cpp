@@ -27,11 +27,7 @@ namespace Language
             auto& token = mInnerTokens.at(index);
 
             if (token.KeywordIndex == KeywordIndex_define)
-            {
-                Logging::Log(stringf("Line %d: Invalid function syntax: function inside function", token.LineNumber), Logging::Level::Error);
-                Logging::Dispose();
-                exit(-1);
-            }
+                Logging::LogErrorExit(stringf("Line %d: Invalid function syntax: function inside function", token.LineNumber));
 
             if (token.KeywordIndex >= KeywordIndex_do && token.KeywordIndex <= KeywordIndex_while)
             {
@@ -46,18 +42,10 @@ namespace Language
             }
 
             if (token.KeywordIndex == KeywordIndex_else)
-            {
-                Logging::Log(stringf("Line %d: missing `if` for `else` statement", token.LineNumber));
-                Logging::Dispose();
-                exit(-1);
-            }
+                Logging::LogErrorExit(stringf("Line %d: missing `if` for `else` statement", token.LineNumber));
 
             if (token.mType == SourceToken::Type::Field)
-            {
-                Logging::Log(stringf("Line %d: Invalid function syntax: fields inside function not allowed", token.LineNumber), Logging::Level::Error);
-                Logging::Dispose();
-                exit(-1);
-            }
+                Logging::LogErrorExit(stringf("Line %d: Invalid function syntax: fields inside function not allowed", token.LineNumber));
 
             if (Language::IsInternalType(token))
             {

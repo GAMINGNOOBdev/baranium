@@ -21,6 +21,7 @@ set(bgscSources
     src/Language/Field.cpp
     src/Language/Loop.cpp
     src/ArgumentParser.cpp
+    src/MemoryManager.cpp
     src/Preprocessor.cpp
     src/SourceToken.cpp
     src/TokenParser.cpp

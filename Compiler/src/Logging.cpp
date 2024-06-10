@@ -9,6 +9,7 @@
  * 
  */
 
+#include "MemoryManager.h"
 #include "Logging.h"
 #include <string.h>
 #include <stdarg.h>
@@ -139,6 +140,7 @@ namespace Logging
     {
         Log(message, Error);
         Dispose();
+        MemoryManager::dealloc_all();
         exit(code);
     }
 

@@ -40,11 +40,7 @@ namespace Language
             auto& token = mInnerTokens.at(index);
 
             if (token.KeywordIndex == KeywordIndex_define)
-            {
-                Logging::Log(stringf("Line %d: Invalid syntax: function definition inside a loop", token.LineNumber), Logging::Level::Error);
-                Logging::Dispose();
-                exit(-1);
-            }
+                Logging::LogErrorExit(stringf("Line %d: Invalid syntax: function definition inside a loop", token.LineNumber));
 
             if (token.KeywordIndex >= KeywordIndex_do && token.KeywordIndex <= KeywordIndex_while)
             {
@@ -59,25 +55,13 @@ namespace Language
             }
 
             if (token.KeywordIndex == KeywordIndex_else)
-            {
-                Logging::Log(stringf("Line %d: missing `if` for `else` statement", token.LineNumber));
-                Logging::Dispose();
-                exit(-1);
-            }
+                Logging::LogErrorExit(stringf("Line %d: missing `if` for `else` statement", token.LineNumber));
 
             if (token.mType == SourceToken::Type::Field)
-            {
-                Logging::Log(stringf("Line %d: Invalid syntax: fields are not allowed outside of the global scope", token.LineNumber), Logging::Level::Error);
-                Logging::Dispose();
-                exit(-1);
-            }
+                Logging::LogErrorExit(stringf("Line %d: Invalid syntax: fields are not allowed outside of the global scope", token.LineNumber));
 
             if (Language::IsInternalType(token))
-            {
-                Logging::Log(stringf("Line %d: Invalid syntax: variables are not allowed inside of loops", token.LineNumber), Logging::Level::Error);
-                Logging::Dispose();
-                exit(-1);
-            }
+                Logging::LogErrorExit(stringf("Line %d: Invalid syntax: variables are not allowed inside of loops", token.LineNumber));
 
             TokenParser::ReadExpression(index, token, mInnerTokens, mTokens, globalTokens);
         }
