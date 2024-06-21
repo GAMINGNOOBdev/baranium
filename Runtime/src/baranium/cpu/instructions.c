@@ -1,3 +1,4 @@
+#include <baranium/backend/errors.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
 #include <stdbool.h>
@@ -321,32 +322,54 @@ void MEM(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t size = cpu->fetch(cpu, 64);
-    uint64_t id = cpu->fetch(cpu, 64);
+    size_t size = cpu->fetch(cpu, 64);
+    enum BaraniumVariableType type = cpu->fetch(cpu, 8);
+    index_t id = cpu->fetch(cpu, 64);
 
-    ///TODO: do some allocation stuff
+    bvarmgr_alloc(cpu->varmgr, type, id, size);
 }
 
 void FEM(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t id = cpu->fetch(cpu, 64);
-
-    ///TODO: do some deallocation stuff
+    index_t id = cpu->fetch(cpu, 64);
+    bvarmgr_dealloc(cpu->varmgr, id);
 }
 
 void SET(bcpu* cpu)
 {
     if (!cpu) return;
 
-    uint64_t id = cpu->fetch(cpu, 64);
-    uint64_t size = cpu->fetch(cpu, 64);
+    index_t id = cpu->fetch(cpu, 64);
+    size_t size = cpu->fetch(cpu, 64);
 
-    for (uint64_t i = 0; i < size; i++)
+    LOGDEBUG(stringf("Setting variable with id '%ld' and size '%ld'", id, size));
+
+    BaraniumVariable* var = bvarmgr_get(cpu->varmgr, id);
+    if (!var)
+    {
+        bstack_push(cpu->stack, ERR_NO_VAR_FOUND);
+        cpu->flags.FORCED_KILL = true;
+        cpu->killTriggered = true;
+        return;
+    }
+
+    if (var->Size != size)
+    {
+        bstack_push(cpu->stack, ERR_VAR_WRONG_SIZE);
+        cpu->flags.FORCED_KILL = true;
+        cpu->killTriggered = true;
+        return;
+    }
+
+    uint8_t* varData = (uint8_t*)var->Value;
+
+    for (size_t i = 0; i < size; i++)
     {
         uint8_t fetched = cpu->fetch(cpu, 8);
-        ///TODO: do smth with the fetched data
+        *varData = fetched;
+        varData++;
     }
 }
 

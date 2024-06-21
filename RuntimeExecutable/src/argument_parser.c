@@ -5,6 +5,8 @@
 Argument* CreateArgument(ArgumentType type, const char* name, const char* secondName, const char* value)
 {
     Argument* obj = (Argument*)malloc(sizeof(Argument));
+    if (!obj)
+        return NULL;
     memset(obj, 0, sizeof(Argument));
 
     memcpy(&obj->Type, &type, sizeof(ArgumentType));
@@ -70,6 +72,7 @@ void argument_list_dispose(struct ArgumentList* obj)
 void argument_list_add(struct ArgumentList* obj, Argument* arg)
 {
     if (!obj) return;
+    if (!arg) return;
 
     if (obj->start == NULL)
     {

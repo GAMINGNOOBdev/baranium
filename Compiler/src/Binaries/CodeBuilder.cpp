@@ -136,10 +136,11 @@ void CodeBuilder::SHFTL()   { push(0x28); }
 void CodeBuilder::SHFTR()   { push(0x29); }
 void CodeBuilder::CMP()     { push(0x30); }
 
-void CodeBuilder::MEM(size_t size, index_t id)
+void CodeBuilder::MEM(size_t size, uint8_t type, index_t id)
 {
     push(0x80);
     push64(size);
+    push(type);
     push64(id);
 }
 

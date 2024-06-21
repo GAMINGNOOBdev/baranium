@@ -1,0 +1,46 @@
+#ifndef __BACKEND__BVARMGR_H_
+#define __BACKEND__BVARMGR_H_ 1
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "../variable.h"
+
+typedef struct bvarmgr_n
+{
+    struct bvarmgr_n* prev;
+    BaraniumVariable* variable;
+    struct bvarmgr_n* next;
+} bvarmgr_n;
+
+typedef struct bvarmgr
+{
+    bvarmgr_n* start;
+    bvarmgr_n* end;
+    size_t count;
+} bvarmgr;
+
+// create and initialize a variable manager
+bvarmgr* bvarmgr_init();
+
+// dispose a variable manager
+void bvarmgr_dispose(bvarmgr* obj);
+
+// clear a variable manager
+void bvarmgr_clear(bvarmgr* obj);
+
+// allocate/create a variable
+void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, size_t size);
+
+// get a created variable if existent
+BaraniumVariable* bvarmgr_get(bvarmgr* obj, index_t id);
+
+// delete and free memory used by a variable
+void bvarmgr_dealloc(bvarmgr* obj, index_t id);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

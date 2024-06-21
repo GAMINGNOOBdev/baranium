@@ -23,6 +23,7 @@ enum BaraniumVariableType
 typedef struct BaraniumVariable
 {
     enum BaraniumVariableType Type;
+    size_t Size;
     void* Value;
     index_t ID;
 } BaraniumVariable;

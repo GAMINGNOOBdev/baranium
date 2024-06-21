@@ -33,6 +33,7 @@ set(bgscSources
     )
 
 add_executable(bgsc ${bgscSources})
+add_compile_definitions(BGEFILE_SILENCED)
 
 if( MSVC )
     if(${CMAKE_VERSION} VERSION_LESS "3.6.0")

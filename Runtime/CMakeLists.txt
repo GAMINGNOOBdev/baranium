@@ -13,6 +13,7 @@ set(baraniumSources
     src/baranium/cpu/bcpu_opcodes.c
     src/baranium/cpu/bstack.c
     src/baranium/cpu/bbus.c
+    src/baranium/backend/bvarmgr.c
     src/baranium/function.c
     src/baranium/variable.c
     src/baranium/field.c

@@ -228,7 +228,7 @@ namespace Binaries
         if (token.Type == Language::VariableType::String)
             size = token.Value.length() + 1; // plus the nullchar at the end
 
-        mCodeBuilder.MEM(size, token.ID);
+        mCodeBuilder.MEM(size, (uint8_t)token.Type, token.ID);
         if (token.Type != Language::VariableType::Object)
         {
             uint8_t* data = GetVariableValueAsData(token.Value, token.Type);

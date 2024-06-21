@@ -1,0 +1,7 @@
+#ifndef __BARANIUM__BACKEND__ERRORS_H_
+#define __BARANIUM__BACKEND__ERRORS_H_ 1
+
+#define ERR_NO_VAR_FOUND    1
+#define ERR_VAR_WRONG_SIZE  2
+
+#endif

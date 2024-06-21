@@ -63,6 +63,9 @@ BaraniumScript* baranium_open_script(BaraniumHandle* handle)
     FILE* file = handle->file;
 
     BaraniumScript* script = malloc(sizeof(BaraniumScript));
+    if (!script)
+        return NULL;
+
     memset(script, 0, sizeof(BaraniumScript));
     script->Handle = handle;
 
@@ -78,6 +81,9 @@ BaraniumScript* baranium_open_script(BaraniumHandle* handle)
     for (uint64_t i = 0; i < script->Header.SectionCount; i++)
     {
         section = malloc(sizeof(BaraniumSection));
+        if (!section)
+            continue;
+
         memset(section, 0, sizeof(BaraniumSection));
 
         fread(&section->Type, sizeof(uint8_t), 1, file);
@@ -86,8 +92,17 @@ BaraniumScript* baranium_open_script(BaraniumHandle* handle)
         if (section->Type != BaraniumSectionType_Functions)
         {
             section->Data = malloc(section->DataSize);
-            memset(section->Data, 0, section->DataSize);
-            fread(section->Data, sizeof(uint8_t), section->DataSize, file);
+            if (!section->Data)
+            {
+                fseek(file, section->DataSize, SEEK_CUR);
+                free(section);
+                continue;
+            }
+            else
+            {
+                memset(section->Data, 0, section->DataSize);
+                fread(section->Data, sizeof(uint8_t), section->DataSize, file);
+            }
         }
         else
         {
@@ -103,10 +118,19 @@ BaraniumScript* baranium_open_script(BaraniumHandle* handle)
     for (uint64_t i = 0; i < script->NameTable.NameCount; i++)
     {
         entry = malloc(sizeof(BaraniumScriptNameTableEntry));
+        if (!entry)
+            continue;
+
         memset(entry, 0, sizeof(BaraniumScriptNameTableEntry));
 
         fread(&entry->NameLength, sizeof(uint8_t), 1, file);
         entry->Name = malloc(entry->NameLength);
+        if (!entry->Name)
+        {
+            free(entry);
+            continue;
+        }
+
         memset(entry->Name, 0, entry->NameLength);
         fread(entry->Name, sizeof(uint8_t), entry->NameLength, file);
         fread(&entry->ID, sizeof(index_t), 1, file);
@@ -225,6 +249,8 @@ BaraniumVariable* baranium_script_get_variable_by_id(BaraniumScript* script, ind
         return NULL;
 
     result = malloc(sizeof(BaraniumVariable));
+    if (!result)
+        return NULL;
     memset(result, 0, sizeof(BaraniumVariable));
     result->ID = variableID;
     result->Type = *foundSection->Data;
@@ -251,6 +277,9 @@ BaraniumField* baranium_script_get_field_by_id(BaraniumScript* script, index_t f
         return NULL;
 
     result = malloc(sizeof(BaraniumField));
+    if (!result)
+        return NULL;
+
     memset(result, 0, sizeof(BaraniumField));
     result->ID = fieldID;
     result->Type = *foundSection->Data;
@@ -277,6 +306,9 @@ BaraniumFunction* baranium_script_get_function_by_id(BaraniumScript* script, ind
         return NULL;
 
     result = malloc(sizeof(BaraniumFunction));
+    if (!result)
+        return NULL;
+
     memset(result, 0, sizeof(BaraniumFunction));
     result->DataSize = foundSection->DataSize;
     result->Data = malloc(foundSection->DataSize);

@@ -20,6 +20,8 @@ define main()
     # should be an internal function at this point hopefully
     print(testFunctionResult);
 
+    string testString = "This is a test string object that is created because of debugging purposes and to see if the internal variable manager can actually allocate this big of objects/variables";
+
     testFunctionResult++;
     testFunctionResult = 1.0;
     testFunctionResult -= 40219 * 100 / (40 + 5 % 2);

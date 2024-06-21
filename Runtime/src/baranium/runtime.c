@@ -14,6 +14,9 @@ BaraniumRuntime* baranium_init()
     bcpu_opcodes_init();
 
     BaraniumRuntime* runtimeHandle = malloc(sizeof(BaraniumRuntime));
+    if (!runtimeHandle)
+        return NULL;
+
     memset(runtimeHandle, 0, sizeof(BaraniumRuntime));
 
     runtimeHandle->cpu = bcpu_init();
@@ -54,7 +57,7 @@ void baranium_cleanup(BaraniumRuntime* runtime)
 BaraniumHandle* baranium_open_handle(const char* source)
 {
     if (current_active_runtime == NULL)
-        return;
+        return NULL;
 
     FILE* file = fopen(source, "rb");
     if (file == NULL)
@@ -64,6 +67,9 @@ BaraniumHandle* baranium_open_handle(const char* source)
     }
 
     BaraniumHandle* handle = (BaraniumHandle*)malloc(sizeof(BaraniumHandle));
+    if (!handle)
+        return NULL;
+
     memset(handle, 0, sizeof(BaraniumHandle));
     handle->file = file;
 

@@ -32,6 +32,9 @@ void baranium_function_call(BaraniumRuntime* runtime, BaraniumFunction* function
     while (!runtime->cpu->killTriggered)
         bcpu_tick(runtime->cpu);
 
+    if (runtime->cpu->flags.FORCED_KILL)
+        LOGERROR(stringf("Exited with code %ld", bstack_pop(runtime->cpu->stack)));
+
     runtime->cpu->IP = bstack_pop(runtime->cpu->ip_stack);
     runtime->cpu->bus->dataHolder = (BaraniumFunction*)bstack_pop(runtime->functionStack);
 }

@@ -6,9 +6,9 @@
 bbus* bbus_init(BaraniumFunction* function)
 {
     bbus* obj = malloc(sizeof(bbus));
-    memset(obj, 0, sizeof(bbus));
     if (obj == NULL) return;
 
+    memset(obj, 0, sizeof(bbus));
     obj->dataHolder = function;
 
     return obj;

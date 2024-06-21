@@ -11,10 +11,10 @@ uint64_t _bcpu_fetch(bcpu* obj, int bits);
 bcpu* bcpu_init()
 {
     bcpu* obj = malloc(sizeof(bcpu));
-    memset(obj, 0, sizeof(bcpu));
     if (obj == NULL)
         return;
 
+    memset(obj, 0, sizeof(bcpu));
     obj->fetched = 0;
     obj->fetch = _bcpu_fetch;
     obj->ticks = 0;
@@ -32,6 +32,7 @@ void bcpu_dispose(bcpu* obj)
     bstack_dispose(obj->stack);
     bstack_dispose(obj->ip_stack);
     bbus_dispose(obj->bus);
+    bvarmgr_dispose(obj->varmgr);
 
     free(obj);
 }
@@ -69,6 +70,7 @@ void bcpu_reset(bcpu* obj)
     obj->flags.RESERVED = 0;
     obj->ticks = 0;
     obj->bus = bbus_init(NULL);
+    obj->varmgr = bvarmgr_init();
 }
 
 uint64_t _bcpu_fetch(bcpu* obj, int bits)

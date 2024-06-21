@@ -135,7 +135,7 @@ namespace Binaries
         void CMP();
 
         // allocate memory
-        void MEM(size_t size, index_t id);
+        void MEM(size_t size, uint8_t type, index_t id);
 
         // deallocate memory
         void FEM(index_t id);

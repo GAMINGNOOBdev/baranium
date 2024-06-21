@@ -5,6 +5,9 @@ void baranium_variable_dispose(BaraniumVariable* variable)
     if (variable == NULL)
         return;
 
+    if (variable->Value != NULL)
+        free(variable->Value);
+
     free(variable);
 }
 
