@@ -92,6 +92,28 @@ BaraniumVariable* bvarmgr_get(bvarmgr* obj, index_t id)
     if (!obj->start)
         return NULL;
 
+    index_t maxIndex = 0;
+    if (obj->end)
+    if (obj->end->variable)
+        maxIndex = obj->end->variable->ID;
+
+    if (id > maxIndex / 2)
+    {
+        bvarmgr_n* entry = obj->end;
+        for (; entry != NULL; entry = entry->prev)
+        {
+            if (entry->variable == NULL)
+                continue;
+
+            if (entry->variable->ID != id)
+                continue;
+
+            break;
+        }
+
+        return entry->variable;
+    }
+
     bvarmgr_n* entry = obj->start;
     for (; entry != NULL; entry = entry->next)
     {
