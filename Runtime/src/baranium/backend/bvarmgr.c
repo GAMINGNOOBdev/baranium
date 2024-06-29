@@ -52,6 +52,8 @@ void bvarmgr_clear(bvarmgr* obj)
     obj->count = 0;
 }
 
+void bvarmgr_add(bvarmgr* obj, BaraniumVariable* var);
+
 void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, size_t size)
 {
     if (obj == NULL)
@@ -79,38 +81,7 @@ void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, siz
 
     LOGDEBUG(stringf("Allocated variable with id %ld and size %ld", id, size));
 
-    if (obj->start == NULL)
-    {
-        obj->start = malloc(sizeof(bvarmgr_n));
-        if (!obj->start)
-        {
-            baranium_variable_dispose(variable);
-            return;
-        }
-        memset(obj->start, 0, sizeof(bvarmgr_n));
-        obj->start->prev = NULL;
-        obj->start->next = NULL;
-        obj->start->variable = variable;
-        obj->end = obj->start;
-        obj->count = 1;
-        return;
-    }
-
-    bvarmgr_n* newEntry = malloc(sizeof(bvarmgr_n));
-    if (!newEntry)
-    {
-        baranium_variable_dispose(variable);
-        return;
-    }
-    memset(newEntry, 0, sizeof(bvarmgr_n));
-    newEntry->prev = obj->end;
-    newEntry->variable = variable;
-    newEntry->next = NULL;
-    obj->end->next = newEntry;
-    obj->end = newEntry;
-    obj->count++;
-
-    return;
+    bvarmgr_add(obj, variable);
 }
 
 BaraniumVariable* bvarmgr_get(bvarmgr* obj, index_t id)
@@ -143,7 +114,7 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
 
     if (obj->start == NULL)
         return;
-    
+
     bvarmgr_n* foundEntry = NULL;
 
     for (bvarmgr_n* entry = obj->start; entry != NULL; entry = entry->next)
@@ -191,4 +162,58 @@ destroy:
     LOGDEBUG(stringf("Disposed variable with id %ld", id));
     baranium_variable_dispose(foundEntry->variable);
     free(foundEntry);
+}
+
+void bvarmgr_add(bvarmgr* obj, BaraniumVariable* var)
+{
+    if (obj == NULL || var == NULL)
+        return;
+
+    if (obj->start == NULL)
+    {
+        obj->start = malloc(sizeof(bvarmgr_n));
+        if (!obj->start)
+        {
+            baranium_variable_dispose(var);
+            return;
+        }
+        memset(obj->start, 0, sizeof(bvarmgr_n));
+        obj->start->prev = NULL;
+        obj->start->next = NULL;
+        obj->start->variable = var;
+        obj->end = obj->start;
+        obj->count = 1;
+        return;
+    }
+
+    bvarmgr_n* prev = obj->start;
+    bvarmgr_n* next = obj->end;
+    for (bvarmgr_n* curr; curr != NULL; curr = curr->next)
+    {
+        if (!curr->variable)
+            continue;
+        
+        if (curr->variable->ID < var->ID)
+        {
+            prev = curr;
+            next = curr->next;
+            continue;
+        }
+        
+        break;
+    }
+
+    bvarmgr_n* newEntry = malloc(sizeof(bvarmgr_n));
+    if (!newEntry)
+    {
+        baranium_variable_dispose(var);
+        return;
+    }
+    memset(newEntry, 0, sizeof(bvarmgr_n));
+    newEntry->prev = prev;
+    newEntry->variable = var;
+    newEntry->next = next;
+    prev->next = newEntry;
+    next->prev = newEntry;
+    obj->count++;
 }

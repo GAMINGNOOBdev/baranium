@@ -224,7 +224,7 @@ char* baranium_script_get_name_of(BaraniumScript* script, index_t id)
     {
         if (current->ID == id)
             return current->Name;
-        
+
         current = current->next;
     }
 
