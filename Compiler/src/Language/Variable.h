@@ -10,8 +10,8 @@ namespace Language
 
     enum class VariableType : uint8_t
     {
-        Invalid = -1,
-        Void,
+        Invalid = (uint8_t)-1,
+        Void = 0,
         Object,
         String,
         Float,
