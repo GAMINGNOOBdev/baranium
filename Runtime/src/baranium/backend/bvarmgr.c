@@ -88,31 +88,9 @@ BaraniumVariable* bvarmgr_get(bvarmgr* obj, index_t id)
 {
     if (!obj)
         return NULL;
-    
+
     if (!obj->start)
         return NULL;
-
-    index_t maxIndex = 0;
-    if (obj->end)
-    if (obj->end->variable)
-        maxIndex = obj->end->variable->ID;
-
-    if (id > maxIndex / 2)
-    {
-        bvarmgr_n* entry = obj->end;
-        for (; entry != NULL; entry = entry->prev)
-        {
-            if (entry->variable == NULL)
-                continue;
-
-            if (entry->variable->ID != id)
-                continue;
-
-            break;
-        }
-
-        return entry->variable;
-    }
 
     bvarmgr_n* entry = obj->start;
     for (; entry != NULL; entry = entry->next)
@@ -125,6 +103,9 @@ BaraniumVariable* bvarmgr_get(bvarmgr* obj, index_t id)
 
         break;
     }
+
+    if (!entry)
+        return NULL;
 
     return entry->variable;
 }
@@ -209,20 +190,31 @@ void bvarmgr_add(bvarmgr* obj, BaraniumVariable* var)
     }
 
     bvarmgr_n* prev = obj->start;
-    bvarmgr_n* next = obj->end;
-    for (bvarmgr_n* curr; curr != NULL; curr = curr->next)
+    bvarmgr_n* next = NULL;
+    for (bvarmgr_n* curr = obj->start; curr != NULL; curr = curr->next)
     {
         if (!curr->variable)
             continue;
-        
-        if (curr->variable->ID < var->ID)
+
+        prev = curr;
+        next = curr->next;
+
+        if (next)
         {
-            prev = curr;
-            next = curr->next;
-            continue;
+            if (prev->variable->ID < var->ID && next->variable->ID > var->ID)
+                break;
         }
-        
-        break;
+        else
+        {
+            if (prev->variable->ID < var->ID) // we good
+                break;
+            else if (prev->variable->ID > var->ID) // we already too far
+            {
+                next = prev;
+                prev = next->prev;
+                break;
+            }
+        }
     }
 
     bvarmgr_n* newEntry = malloc(sizeof(bvarmgr_n));
@@ -235,7 +227,12 @@ void bvarmgr_add(bvarmgr* obj, BaraniumVariable* var)
     newEntry->prev = prev;
     newEntry->variable = var;
     newEntry->next = next;
-    prev->next = newEntry;
-    next->prev = newEntry;
+
+    if (prev)
+        prev->next = newEntry;
+
+    if (next)
+        next->prev = newEntry;
+
     obj->count++;
 }

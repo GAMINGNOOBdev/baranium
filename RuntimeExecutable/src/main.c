@@ -22,16 +22,16 @@ int main(int argc, const char** argv)
     argument_parser_add(parser, ArgumentType_Flag, "-v", "--version");
     argument_parser_parse(parser, argc, argv);
 
-    if (argument_parser_has(parser, "-v"))
+    if (argument_parser_has(parser, "-h"))
     {
-        printf("Baranium runtime version %d.%d %s\n", BARANIUM_VERSION_MAJOR, BARANIUM_VERSION_MINOR, BARANIUM_VERSION_PHASE);
+        print_help_message();
         argument_parser_dispose(parser);
         return 0;
     }
 
-    if (argument_parser_has(parser, "-h"))
+    if (argument_parser_has(parser, "-v"))
     {
-        print_help_message();
+        printf("Baranium runtime version %d.%d %s\n", BARANIUM_VERSION_MAJOR, BARANIUM_VERSION_MINOR, BARANIUM_VERSION_PHASE);
         argument_parser_dispose(parser);
         return 0;
     }
@@ -40,6 +40,9 @@ int main(int argc, const char** argv)
     logEnableDebugMsgs(debug_mode_enabled);
     FILE* logOutput = fopen("runtime.log", "wb+");
     logSetStream(logOutput);
+
+    if (logEnableDebugMsgs)
+        LOGINFO("Debug messages enabled");
 
     if (parser->unparsed->size != 1)
     {
