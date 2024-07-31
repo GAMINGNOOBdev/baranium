@@ -12,6 +12,9 @@ define f(float x)
     return result;
 }
 
+field object my_super_awesome_object = attached;
+string super_duper_awesome_shitstorm_object = "well hello there";
+
 define main()
 {
     float testFunctionResult;

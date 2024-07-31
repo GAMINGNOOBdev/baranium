@@ -5,12 +5,16 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include "../variable.h"
+#include "../field.h"
 
 typedef struct bvarmgr_n
 {
     struct bvarmgr_n* prev;
     BaraniumVariable* variable;
+    BaraniumField* field;
+    bool isVariable;
     struct bvarmgr_n* next;
 } bvarmgr_n;
 
@@ -31,10 +35,10 @@ void bvarmgr_dispose(bvarmgr* obj);
 void bvarmgr_clear(bvarmgr* obj);
 
 // allocate/create a variable
-void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, size_t size);
+void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, size_t size, bool isField);
 
-// get a created variable if existent
-BaraniumVariable* bvarmgr_get(bvarmgr* obj, index_t id);
+// get a created entry if existent
+bvarmgr_n* bvarmgr_get(bvarmgr* obj, index_t id);
 
 // delete and free memory used by a variable
 void bvarmgr_dealloc(bvarmgr* obj, index_t id);

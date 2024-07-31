@@ -1,5 +1,6 @@
 #pragma warning(disable: 4996)
 
+#include <baranium/backend/bvarmgr.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
 #include <baranium/script.h>
@@ -12,11 +13,52 @@ uint8_t BARANIUM_SCRIPT_HEADER_MAGIC[4] = {
     MAGIC_NUM_0, MAGIC_NUM_1, MAGIC_NUM_2, MAGIC_NUM_3
 };
 
+void baranium_script_dynadd_var_or_field(BaraniumSection* section)
+{
+    ///TODO: add variable/field to variable manager
+
+    bvarmgr* varmgr = baranium_get_context()->varmgr;
+    enum BaraniumVariableType type = (enum BaraniumVariableType)*( (uint8_t*)section->Data );
+    index_t id = section->ID;
+    size_t size = section->DataSize - 1;
+    uint8_t isField = section->Type == BaraniumSectionType_Fields;
+    void* data = (void*)( ((uint64_t)section->Data) + 1 );
+
+    bvarmgr_alloc(varmgr, type, id, size, isField);
+    bvarmgr_n* entry = bvarmgr_get(varmgr, id);
+    if (!entry)
+    {
+        LOGERROR(stringf("Could not append %s with id %ld", isField ? "field" : "variable", id));
+        return;
+    }
+
+    void* dataPtr = NULL;
+    if (isField)
+        dataPtr = entry->field->Value;
+    else
+        dataPtr = entry->variable->Value;
+
+    if (!dataPtr)
+    {
+        LOGERROR(stringf("Could not allocate memory for %s with id %ld", isField ? "field" : "variable", id));
+        bvarmgr_dealloc(varmgr, id);
+        return;
+    }
+
+    memcpy(dataPtr, data, size);
+}
+
 void baranium_script_append_section(BaraniumScript* script, BaraniumSection* section)
 {
     if (script == NULL || section == NULL)
         return;
-    
+
+    if (section->Type == BaraniumSectionType_Fields || section->Type == BaraniumSectionType_Variables)
+    {
+        baranium_script_dynadd_var_or_field(section);
+        return;
+    }
+
     if (script->SectionsStart == NULL)
     {
         script->SectionsStart = section;

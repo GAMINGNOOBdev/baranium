@@ -47,15 +47,14 @@ typedef struct bcpu
                             // has been triggered and the application should quit
     int64_t cv;             // compare value
     bbus* bus;              // the bus to read data from
-    bvarmgr* varmgr;        // variable manager
-    // bfieldmgr* fieldmgr;    // field manager
 
     uint64_t fetched;
     BCPUFETCH fetch;
+    BaraniumRuntime* runtime;
 } bcpu;
 
 // create and initialize the cpu
-bcpu* bcpu_init();
+bcpu* bcpu_init(BaraniumRuntime* runtime);
 
 // dispose and clean any used memory by the cpu
 void bcpu_dispose(bcpu* obj);

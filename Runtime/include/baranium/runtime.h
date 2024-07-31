@@ -22,6 +22,11 @@ BARANIUMAPI BaraniumRuntime* baranium_init();
 BARANIUMAPI void baranium_set_context(BaraniumRuntime* runtimeContext);
 
 /**
+ * @brief Get the current global runtime context
+ */
+BARANIUMAPI BaraniumRuntime* baranium_get_context();
+
+/**
  * @brief Safely dispose a runtime instance
  * 
  * @param runtime The instance of the runtime that should be disposed

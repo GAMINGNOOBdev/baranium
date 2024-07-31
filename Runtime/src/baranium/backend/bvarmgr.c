@@ -3,10 +3,28 @@
 #include <memory.h>
 #include <stdlib.h>
 
+void bvarmgr_n_free(bvarmgr_n* obj)
+{
+    if (!obj)
+        return;
+
+    if (obj->isVariable)
+    {
+        if (obj->variable)
+            baranium_variable_dispose(obj->variable);
+    }
+    else
+    {
+        if (obj->field)
+            baranium_field_dispose(obj->field);
+    }
+    free(obj);
+}
+
 bvarmgr* bvarmgr_init()
 {
     bvarmgr* obj = malloc(sizeof(bvarmgr));
-    if (obj == NULL) return;
+    if (obj == NULL) return NULL;
 
     memset(obj, 0, sizeof(bvarmgr));
     bvarmgr_clear(obj);
@@ -42,9 +60,7 @@ void bvarmgr_clear(bvarmgr* obj)
     for (bvarmgr_n* ptr = obj->start; ptr != NULL;)
     {
         next = ptr->next;
-        if (ptr->variable)
-            baranium_variable_dispose(ptr->variable);
-        free(ptr);
+        bvarmgr_n_free(ptr);
         ptr = next;
     }
 
@@ -52,9 +68,9 @@ void bvarmgr_clear(bvarmgr* obj)
     obj->count = 0;
 }
 
-void bvarmgr_add(bvarmgr* obj, BaraniumVariable* var);
+int bvarmgr_add(bvarmgr* obj, BaraniumVariable* var, BaraniumField* field);
 
-void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, size_t size)
+void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, size_t size, bool isField)
 {
     if (obj == NULL)
         return;
@@ -62,29 +78,58 @@ void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, siz
     if (type == BaraniumVariableType_Invalid || type == BaraniumVariableType_Void)
         return;
 
-    BaraniumVariable* variable = malloc(sizeof(BaraniumVariable));
-    if (variable == NULL)
-        return;
-
-    memset(variable, 0, sizeof(BaraniumVariable));
-    variable->ID = id;
-    variable->Type = type;
-    variable->Size = size;
-
-    variable->Value = malloc(size); // quick sidenote: even if the object is a string, the nullchar is automatically added to the size in the compilation process
-    if (!variable->Value)
+    BaraniumVariable* variable = NULL;
+    BaraniumField* field = NULL;
+    if (isField == false)
     {
-        free(variable);
+        variable = malloc(sizeof(BaraniumVariable));
+        if (variable == NULL)
+            return;
+
+        memset(variable, 0, sizeof(BaraniumVariable));
+        variable->ID = id;
+        variable->Type = type;
+        variable->Size = size;
+
+        variable->Value = malloc(size); // quick sidenote: even if the object is a string, the nullchar is automatically added to the size in the compilation process
+        if (!variable->Value)
+        {
+            free(variable);
+            return;
+        }
+        memset(variable->Value, 0, size);
+    }
+    else
+    {
+        field = malloc(sizeof(BaraniumField));
+        if (field == NULL)
+            return;
+
+        memset(field, 0, sizeof(BaraniumField));
+        field->ID = id;
+        field->Type = type;
+        field->Size = size;
+
+        field->Value = malloc(size); // quick sidenote: even if the object is a string, the nullchar is automatically added to the size in the compilation process
+        if (!field->Value)
+        {
+            free(field);
+            return;
+        }
+        memset(field->Value, 0, size);
+    }
+
+    int status = bvarmgr_add(obj, variable, field);
+    if (status)
+    {
+        LOGERROR(stringf("Could not allocate %s with id %ld and size %ld, status code 0x%2.2x", isField ? "field" : "variable", id, size, status));
         return;
     }
-    memset(variable->Value, 0, size);
 
-    LOGDEBUG(stringf("Allocated variable with id %ld and size %ld", id, size));
-
-    bvarmgr_add(obj, variable);
+    LOGDEBUG(stringf("Allocated %s with id %ld and size %ld", isField ? "field" : "variable", id, size));
 }
 
-BaraniumVariable* bvarmgr_get(bvarmgr* obj, index_t id)
+bvarmgr_n* bvarmgr_get(bvarmgr* obj, index_t id)
 {
     if (!obj)
         return NULL;
@@ -95,19 +140,27 @@ BaraniumVariable* bvarmgr_get(bvarmgr* obj, index_t id)
     bvarmgr_n* entry = obj->start;
     for (; entry != NULL; entry = entry->next)
     {
-        if (entry->variable == NULL)
-            continue;
-        
-        if (entry->variable->ID != id)
-            continue;
+        if (entry->variable != NULL)
+        {
+            if (entry->variable->ID == id)
+            {
+                break;
+            }
+        }
 
-        break;
+        if (entry->field != NULL)
+        {
+            if (entry->field->ID == id)
+            {
+                break;
+            }
+        }
     }
 
     if (!entry)
         return NULL;
 
-    return entry->variable;
+    return entry;
 }
 
 void bvarmgr_dealloc(bvarmgr* obj, index_t id)
@@ -119,28 +172,41 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
         return;
 
     bvarmgr_n* foundEntry = NULL;
-
+    int8_t index = -1;
     for (bvarmgr_n* entry = obj->start; entry != NULL; entry = entry->next)
     {
-        if (entry->variable == NULL)
-            continue;
-        
-        if (entry->variable->ID != id)
-            continue;
+        index++;
 
-        foundEntry = entry;
-        break;
+        if (entry->variable != NULL)
+        {
+            if (entry->variable->ID == id)
+            {
+                foundEntry = entry;
+                break;
+            }
+        }
+
+        if (entry->field != NULL)
+        {
+            if (entry->field->ID == id)
+            {
+                foundEntry = entry;
+                break;
+            }
+        }
     }
 
     if (!foundEntry)
+    {
+        LOGERROR(stringf("Could not find variable with id %ld", id));
         return;
+    }
 
     bvarmgr_n* prev = foundEntry->prev;
     bvarmgr_n* next = foundEntry->next;
 
     if (foundEntry == obj->start && foundEntry == obj->end)
     {
-        obj->count = 0;
         obj->start = obj->end = NULL;
         goto destroy;
     }
@@ -149,7 +215,6 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
         next->prev = NULL;
         obj->start = next;
         foundEntry->next = NULL;
-        obj->count--;
         goto destroy;
     }
     else if (foundEntry == obj->end)
@@ -157,20 +222,28 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
         prev->next = NULL;
         obj->end = prev;
         foundEntry->prev = NULL;
-        obj->count--;
         goto destroy;
     }
 
+    if (next)
+        next->prev = prev;
+
+    if (prev)
+        prev->next = next;
+
+    foundEntry->next = NULL;
+    foundEntry->prev = NULL;
+
 destroy:
+    obj->count--;
     LOGDEBUG(stringf("Disposed variable with id %ld", id));
-    baranium_variable_dispose(foundEntry->variable);
-    free(foundEntry);
+    bvarmgr_n_free(foundEntry);
 }
 
-void bvarmgr_add(bvarmgr* obj, BaraniumVariable* var)
+int bvarmgr_add(bvarmgr* obj, BaraniumVariable* var, BaraniumField* field)
 {
-    if (obj == NULL || var == NULL)
-        return;
+    if (obj == NULL || (var == NULL && field == NULL))
+        return 1;
 
     if (obj->start == NULL)
     {
@@ -178,61 +251,36 @@ void bvarmgr_add(bvarmgr* obj, BaraniumVariable* var)
         if (!obj->start)
         {
             baranium_variable_dispose(var);
-            return;
+            baranium_field_dispose(field);
+            return 2;
         }
         memset(obj->start, 0, sizeof(bvarmgr_n));
         obj->start->prev = NULL;
         obj->start->next = NULL;
         obj->start->variable = var;
+        obj->start->field = field;
         obj->end = obj->start;
         obj->count = 1;
-        return;
-    }
-
-    bvarmgr_n* prev = obj->start;
-    bvarmgr_n* next = NULL;
-    for (bvarmgr_n* curr = obj->start; curr != NULL; curr = curr->next)
-    {
-        if (!curr->variable)
-            continue;
-
-        prev = curr;
-        next = curr->next;
-
-        if (next)
-        {
-            if (prev->variable->ID < var->ID && next->variable->ID > var->ID)
-                break;
-        }
-        else
-        {
-            if (prev->variable->ID < var->ID) // we good
-                break;
-            else if (prev->variable->ID > var->ID) // we already too far
-            {
-                next = prev;
-                prev = next->prev;
-                break;
-            }
-        }
+        return 0;
     }
 
     bvarmgr_n* newEntry = malloc(sizeof(bvarmgr_n));
     if (!newEntry)
     {
         baranium_variable_dispose(var);
-        return;
+        baranium_field_dispose(field);
+        return 2;
     }
     memset(newEntry, 0, sizeof(bvarmgr_n));
-    newEntry->prev = prev;
+    newEntry->prev = obj->end;
     newEntry->variable = var;
-    newEntry->next = next;
+    newEntry->field = field;
+    newEntry->next = NULL;
 
-    if (prev)
-        prev->next = newEntry;
+    obj->end->next = newEntry;
 
-    if (next)
-        next->prev = newEntry;
-
+    obj->end = newEntry;
     obj->count++;
+
+    return 0;
 }

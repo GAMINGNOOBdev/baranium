@@ -8,7 +8,7 @@
 uint64_t _bcpu_fetch(bcpu* obj, int bits);
 
 // initializes the cpu with the requered function pointers and also sets the bus of the cpu
-bcpu* bcpu_init()
+bcpu* bcpu_init(BaraniumRuntime* runtime)
 {
     bcpu* obj = malloc(sizeof(bcpu));
     if (obj == NULL)
@@ -19,6 +19,7 @@ bcpu* bcpu_init()
     obj->fetch = _bcpu_fetch;
     obj->ticks = 0;
     obj->killTriggered = 0;
+    obj->runtime = runtime;
     bcpu_reset(obj);
 
     return obj;
@@ -32,7 +33,6 @@ void bcpu_dispose(bcpu* obj)
     bstack_dispose(obj->stack);
     bstack_dispose(obj->ip_stack);
     bbus_dispose(obj->bus);
-    bvarmgr_dispose(obj->varmgr);
 
     free(obj);
 }
@@ -70,7 +70,6 @@ void bcpu_reset(bcpu* obj)
     obj->flags.RESERVED = 0;
     obj->ticks = 0;
     obj->bus = bbus_init(NULL);
-    obj->varmgr = bvarmgr_init();
 }
 
 uint64_t _bcpu_fetch(bcpu* obj, int bits)

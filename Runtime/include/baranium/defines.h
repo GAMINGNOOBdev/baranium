@@ -76,6 +76,7 @@ typedef struct BaraniumHandle
 // forward declarations because we need them
 struct bstack;
 struct bcpu;
+struct bvarmgr;
 
 typedef struct BaraniumRuntime
 {
@@ -83,6 +84,7 @@ typedef struct BaraniumRuntime
     BaraniumHandle* end;
     uint64_t openHandles;
     struct bstack* functionStack;
+    struct bvarmgr* varmgr;
     struct bcpu* cpu;
 } BaraniumRuntime;
 

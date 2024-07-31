@@ -115,11 +115,11 @@ namespace Binaries
         fieldSection.ID = field->ID;
         fieldSection.Type = SectionType::Field;
 
-        // Size calculation: data type, data size
-        uint8_t dataTypeSize = Language::VariableTypeBytes(field->Type);
+        int8_t dataTypeSize = Language::VariableTypeBytes(field->Type);
         if (dataTypeSize == -1) // meaning this is a string
             dataTypeSize = field->Value.length() + 1; // for now store the initial string's length + 1 because of the null-char at the end
 
+        // Size calculation: data type(1 byte) + data size
         size_t dataSize = sizeof(uint8_t) + dataTypeSize;
         fieldSection.DataSize = dataSize;
         fieldSection.Data = (uint8_t*)MemoryManager::allocate(dataSize);

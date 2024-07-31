@@ -10,6 +10,7 @@ extern "C" {
 typedef struct BaraniumField
 {
     enum BaraniumVariableType Type;
+    size_t Size;
     void* Value;
     index_t ID;
 } BaraniumField;
@@ -17,9 +18,9 @@ typedef struct BaraniumField
 /**
  * @brief Dispose a field
  * 
- * @param var The field to dispose
+ * @param field The field to dispose
  */
-BARANIUMAPI void baranium_field_dispose(BaraniumField* var);
+BARANIUMAPI void baranium_field_dispose(BaraniumField* field);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,5 @@
 #include <baranium/variable.h>
+#include <stdlib.h>
 
 void baranium_variable_dispose(BaraniumVariable* variable)
 {

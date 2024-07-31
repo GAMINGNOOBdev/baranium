@@ -322,38 +322,45 @@ void MEM(bcpu* cpu)
 {
     if (!cpu) return;
 
+    bvarmgr* varmgr = cpu->runtime->varmgr;
+
     size_t size = cpu->fetch(cpu, 64);
     enum BaraniumVariableType type = cpu->fetch(cpu, 8);
     index_t id = cpu->fetch(cpu, 64);
 
-    bvarmgr_alloc(cpu->varmgr, type, id, size);
+    bvarmgr_alloc(varmgr, type, id, size, false);
 }
 
 void FEM(bcpu* cpu)
 {
     if (!cpu) return;
 
+    bvarmgr* varmgr = cpu->runtime->varmgr;
+
     index_t id = cpu->fetch(cpu, 64);
-    bvarmgr_dealloc(cpu->varmgr, id);
+    bvarmgr_dealloc(varmgr, id);
 }
 
 void SET(bcpu* cpu)
 {
     if (!cpu) return;
 
+    bvarmgr* varmgr = cpu->runtime->varmgr;
+
     index_t id = cpu->fetch(cpu, 64);
     size_t size = cpu->fetch(cpu, 64);
 
     LOGDEBUG(stringf("Setting variable with id '%ld' and size '%ld'", id, size));
 
-    BaraniumVariable* var = bvarmgr_get(cpu->varmgr, id);
-    if (!var)
+    bvarmgr_n* entry = bvarmgr_get(varmgr, id);
+    if (!entry)
     {
         bstack_push(cpu->stack, ERR_NO_VAR_FOUND);
         cpu->flags.FORCED_KILL = true;
         cpu->killTriggered = true;
         return;
     }
+    BaraniumVariable* var = entry->variable;
 
     if (var->Size != size)
     {
