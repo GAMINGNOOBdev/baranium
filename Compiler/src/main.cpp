@@ -186,7 +186,7 @@ int main(const int argc, const char** argv)
 
 void PrintUsage()
 {
-    printf("bgsc [options] files...\n\n");
+    printf("barc [options] files...\n\n");
     printf("Options:\n");
     printf("\t-o <path>\tSpecify output file\n");
     printf("\t-h\t\tShow this help message\n");

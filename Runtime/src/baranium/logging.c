@@ -72,4 +72,7 @@ void logStr(loglevel_t lvl, const char* msg)
     fprintf(logging_log_messages_output_stream, "%s%s\n", LOG_LEVEL_STRINGS[lvl], msg);
 
 #endif
+
+    if (logging_log_messages_output_stream != stdout || logging_log_messages_output_stream != stderr)
+        fflush(logging_log_messages_output_stream);
 }

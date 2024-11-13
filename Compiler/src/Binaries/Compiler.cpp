@@ -408,8 +408,7 @@ namespace Binaries
 
         if (token.Type == Language::ExpressionType::FunctionCall)
         {
-            /// TODO: --- implement ---
-            mCodeBuilder.NOP();
+            CompileFunctionCall(token);
             return;
         }
 
@@ -442,16 +441,22 @@ namespace Binaries
         {
             uint64_t value = 0;
             if (token.Contents.find_first_of('.') != std::string::npos)
-                value = std::stof(token.Contents);
+            {
+                float val = std::stof(token.Contents);
+                mCodeBuilder.PushFloatValue(val);
+            }
             else
+            {
                 value = std::stoi(token.Contents);
-
-            mCodeBuilder.PUSH(value);
+                mCodeBuilder.PushIntValue(value);
+            }
         }
         else if (token.mType == SourceToken::Type::Null && !isRoot)
-            mCodeBuilder.PUSH(0);
+            mCodeBuilder.PushUintValue(0);
         else if (token.mType == SourceToken::Type::Text && !isRoot)
             mCodeBuilder.PUSHVAR(GetVarID(token.Contents, token.LineNumber));
+        else if (token.mType == SourceToken::Type::DoubleQuote && !isRoot)
+            mCodeBuilder.PushStringValue(node->left->contents.Contents);
 
         if (token.mType == SourceToken::Type::Plus          || token.mType == SourceToken::Type::Minus      ||
             token.mType == SourceToken::Type::Asterisk      || token.mType == SourceToken::Type::Slash      ||
@@ -487,10 +492,10 @@ namespace Binaries
         std::string varName = leftToken.Contents;
         auto varID = GetVarID(varName, leftToken.LineNumber);
 
+        CompileAstNode(root->right);
+
         if (root->contents.mType != SourceToken::Type::EqualSign)
             mCodeBuilder.PUSHVAR(varID);
-
-        CompileAstNode(root->right);
 
         if (root->contents.mType == SourceToken::Type::ModEqual)
             mCodeBuilder.MOD();
@@ -556,7 +561,7 @@ namespace Binaries
             std::string varName = lhs->contents.Contents;
             auto varID = GetVarID(varName, lhs->contents.LineNumber);
             mCodeBuilder.PUSHVAR(varID);
-            mCodeBuilder.PUSH(1);
+            mCodeBuilder.PushIntValue(1);
             mCodeBuilder.SUB();
             mCodeBuilder.POPVAR(varID);
             return;
@@ -568,7 +573,7 @@ namespace Binaries
             std::string varName = lhs->contents.Contents;
             auto varID = GetVarID(varName, lhs->contents.LineNumber);
             mCodeBuilder.PUSHVAR(varID);
-            mCodeBuilder.PUSH(1);
+            mCodeBuilder.PushIntValue(1);
             mCodeBuilder.ADD();
             mCodeBuilder.POPVAR(varID);
             return;
@@ -587,12 +592,12 @@ namespace Binaries
         if (lhs)
             CompileAstNode(lhs);
         else
-            mCodeBuilder.PUSH(0);
+            mCodeBuilder.PushIntValue(0);
 
         if (rhs)
             CompileAstNode(rhs);
         else
-            mCodeBuilder.PUSH(0);
+            mCodeBuilder.PushIntValue(0);
 
         if (root->contents.mType == SourceToken::Type::Modulo)
             mCodeBuilder.MOD();
@@ -626,12 +631,12 @@ namespace Binaries
         if (lhs)
             CompileAstNode(lhs);
         else
-            mCodeBuilder.PUSH(0);
+            mCodeBuilder.PushIntValue(0);
 
         if (rhs)
             CompileAstNode(rhs);
         else
-            mCodeBuilder.PUSH(0);
+            mCodeBuilder.PushIntValue(0);
 
         mCodeBuilder.CMP();
     }
@@ -677,6 +682,12 @@ namespace Binaries
         }
 
         Logging::LogErrorExit(stringf("Line %d: Unknown keyword or maybe variable doesn't exist?", expression.LineNumber));
+    }
+
+    void Compiler::CompileFunctionCall(Language::Expression& expression)
+    {
+        /// TODO: --- implement ---
+        mCodeBuilder.NOP();
     }
 
     uint8_t* GetVariableValueAsData(std::string value, Language::VariableType type)

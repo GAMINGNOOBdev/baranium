@@ -45,20 +45,20 @@ namespace Language
                 return 0; // zero means that nothing is being stored here
 
             case VariableType::Object:
-                return 8; // int64_t internally
+                return sizeof(int64_t); // int64_t internally
 
             case VariableType::String:
                 return -1;// -1 should inform about storing a string, therefore it could have any length
 
             case VariableType::Float:
-                return 4; // floats are still 32-bit, we can change to using double-like 64-bits later
+                return sizeof(float); // floats are still 32-bit, we can change to using double-like 64-bits later
 
             case VariableType::Bool:
-                return 1; // just use a simple single-byte integer
+                return sizeof(bool); // just use a simple single-byte integer
 
             case VariableType::Int:
             case VariableType::Uint:
-                return 4; // default 32-bit integer
+                return sizeof(uint32_t); // default 32-bit integer
         }
     }
 

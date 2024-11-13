@@ -12,7 +12,7 @@ bcpu* bcpu_init(BaraniumRuntime* runtime)
 {
     bcpu* obj = malloc(sizeof(bcpu));
     if (obj == NULL)
-        return;
+        return NULL;
 
     memset(obj, 0, sizeof(bcpu));
     obj->fetched = 0;
@@ -80,7 +80,7 @@ uint64_t _bcpu_fetch(bcpu* obj, int bits)
     if (bits > 64 || bits % 8 != 0)
     {
         obj->killTriggered = 1;
-        return;
+        return 0;
     }
     int bytes = bits / 8;
     int bitindex = bits - 8;
@@ -88,7 +88,7 @@ uint64_t _bcpu_fetch(bcpu* obj, int bits)
     obj->fetched = 0;
     for (int i = 0; i < bytes; i++)
     {
-        uint8_t data = bbus_read(obj->bus, obj->IP);
+        uint64_t data = bbus_read(obj->bus, obj->IP);
         obj->fetched |= data << bitindex;
         bitindex -= 8;
         obj->IP++;

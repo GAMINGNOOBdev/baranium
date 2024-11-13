@@ -38,6 +38,21 @@ namespace Binaries
          */
         bool ReturnedFromExecution();
 
+        // push a string value to the stack (needed for assignments of strings)
+        void PushStringValue(std::string str);
+
+        // push a bool value to the stack
+        void PushBoolValue(bool b);
+
+        // push a uint value to the stack
+        void PushUintValue(uint32_t val);
+
+        // push a int value to the stack
+        void PushIntValue(int32_t val);
+
+        // push a float value to the stack
+        void PushFloatValue(float val);
+
         // no operation
         void NOP();
 

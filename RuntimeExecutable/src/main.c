@@ -79,7 +79,7 @@ int main(int argc, const char** argv)
 
 void print_help_message()
 {
-    printf("bgs [options] <filepath>\n");
+    printf("bar [options] <filepath>\n");
     printf("Options:\n");
     printf("\t-h/--help:\tShow this help message\n");
     printf("\t-v/--version:\tShow the version of the runtime\n");

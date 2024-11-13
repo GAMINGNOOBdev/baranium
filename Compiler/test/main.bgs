@@ -5,7 +5,7 @@
 
 +define EXIT_SUCCESS 0
 
-define f(float x)
+define squared(float x)
 {
     float result;
     result = x * x;
@@ -13,17 +13,19 @@ define f(float x)
 }
 
 field object my_super_awesome_object = attached;
-string super_duper_awesome_shitstorm_object = "well hello there";
+string super_duper_awesome_shitstorm_object = "yo";
 
 define main()
 {
-    float testFunctionResult;
-    testFunctionResult = f(500);
+    string testString = "3";
 
-    # should be an internal function at this point hopefully
-    print(testFunctionResult);
+    super_duper_awesome_shitstorm_object = testString;
+    super_duper_awesome_shitstorm_object = "aaaa";
+    super_duper_awesome_shitstorm_object = "This is a test, hopefully this won't crash it again";
 
-    string testString = "This is a test string object that is created because of debugging purposes and to see if the internal variable manager can actually allocate this big of objects/variables";
+    float testFunctionResult = 0;
+    # testFunctionResult = squared(500);
+    # print(testFunctionResult);      # should be an internal function at this point hopefully
 
     testFunctionResult++;
     testFunctionResult = 1.0;
@@ -35,5 +37,7 @@ define main()
     detach attached;
     delete attached;
 
-    return EXIT_SUCCESS;
+    testFunctionResult = EXIT_SUCCESS;
+    int result = testFunctionResult;
+    return result;
 }

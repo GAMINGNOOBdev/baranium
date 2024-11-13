@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(bgsc)
+project(barc)
 
 include_directories(../BGE-File)
 
-set(bgscSources
+set(barcSources
     src/Language/AbstractSyntaxTree.cpp
     src/Language/AST_TokenParser.cpp
     src/Language/IfElseStatement.cpp
@@ -32,13 +32,13 @@ set(bgscSources
     src/main.cpp
     )
 
-add_executable(bgsc ${bgscSources})
+add_executable(barc ${barcSources})
 add_compile_definitions(BGEFILE_SILENCED)
 
 if( MSVC )
     if(${CMAKE_VERSION} VERSION_LESS "3.6.0")
-        message("\nYou are running a cmake version lower than 3.6.0, you have to set 'bgsc' as the Startup project manually.\n")
+        message("\nYou are running a cmake version lower than 3.6.0, you have to set 'barc' as the Startup project manually.\n")
     else()
-        set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT bgsc )
+        set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT barc )
     endif()
 endif()

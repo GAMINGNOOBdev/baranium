@@ -1,4 +1,5 @@
 #include "CodeBuilder.h"
+#include <memory.h>
 
 namespace Binaries
 {
@@ -28,6 +29,63 @@ bool CodeBuilder::ReturnedFromExecution()
     return mData.at(mData.size()-1) == 0x0F;
 }
 
+void CodeBuilder::PushStringValue(std::string str)
+{
+    uint64_t data = 0;
+
+    size_t strLength = str.length();
+    size_t leftOverSize = strLength;
+    void* value = (void*)str.data();
+    void* valPtr = (void*)str.data();
+    int index = 0;
+    for (index = 0; index * 8 < strLength; index++)
+    {
+        if (leftOverSize < 8)
+            break;
+
+        valPtr = (void*)((uint64_t)value + index*8);
+        memcpy(&data, valPtr, 8);
+        leftOverSize -= 8;
+        PUSH(data);
+    }
+    valPtr = (void*)((uint64_t)value + index*8);
+    data = 0;
+    memcpy(&data, valPtr, leftOverSize);
+    PUSH(data);
+    PUSH(strLength);
+    PUSH((uint64_t)Language::VariableType::String);
+}
+
+void CodeBuilder::PushBoolValue(bool b)
+{
+    PUSH(b);
+    PUSH(sizeof(bool));
+    PUSH((uint64_t)Language::VariableType::Bool);
+}
+
+void CodeBuilder::PushUintValue(uint32_t val)
+{
+    PUSH(val);
+    PUSH(sizeof(uint32_t));
+    PUSH((uint64_t)Language::VariableType::Uint);
+}
+
+void CodeBuilder::PushIntValue(int32_t val)
+{
+    PUSH(val);
+    PUSH(sizeof(int32_t));
+    PUSH((uint64_t)Language::VariableType::Int);
+}
+
+void CodeBuilder::PushFloatValue(float val)
+{
+    uint64_t data = 0;
+    memcpy(&data, &val, sizeof(float));
+    PUSH(data);
+    PUSH(sizeof(float));
+    PUSH((uint64_t)Language::VariableType::Float);
+}
+
 void CodeBuilder::NOP() { push(0x00); }
 void CodeBuilder::CCF() { push(0x01); }
 void CodeBuilder::SCF() { push(0x02); }
@@ -38,13 +96,13 @@ void CodeBuilder::POPCV() { push(0x05); }
 void CodeBuilder::PUSHVAR(index_t id)
 {
     push(0x06);
-    // push64(id);
+    push64(id);
 }
 
 void CodeBuilder::POPVAR(index_t id)
 {
     push(0x07);
-    // push64(id);
+    push64(id);
 }
 
 void CodeBuilder::PUSH(uint64_t val)

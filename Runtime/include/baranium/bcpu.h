@@ -43,8 +43,7 @@ typedef struct bcpu
     bcpu_flags flags;       // Flags
     uint8_t opcode;         // operation code/instruction
     uint64_t ticks;         // total number of ticks the cpu has executed
-    uint8_t killTriggered;  // Only set if execution has ended or
-                            // has been triggered and the application should quit
+    uint8_t killTriggered;  // Only set if execution has ended or has been triggered and the application should quit
     int64_t cv;             // compare value
     bbus* bus;              // the bus to read data from
 

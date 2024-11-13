@@ -114,6 +114,7 @@ namespace Binaries
         void CompileArithmeticOperation(TreeNodeObject root, bool isRoot = false);
         void CompileCondition(TreeNodeObject root);
         void CompileKeywordExpression(Language::Expression& expression);
+        void CompileFunctionCall(Language::Expression& expression);
 
     private:
         uint8_t* mCode;

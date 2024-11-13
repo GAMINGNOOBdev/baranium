@@ -3,6 +3,7 @@
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 void baranium_function_dispose(BaraniumFunction* function)
 {
@@ -20,6 +21,9 @@ void baranium_function_call(BaraniumRuntime* runtime, BaraniumFunction* function
     ///TODO: call the function + parse args and put them into the parameters of the function
 
     if (!runtime || !function)
+        return;
+    
+    if (runtime->cpu->killTriggered)
         return;
 
     bstack_push(runtime->functionStack, (uint64_t)runtime->cpu->bus->dataHolder);

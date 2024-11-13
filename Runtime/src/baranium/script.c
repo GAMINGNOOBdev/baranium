@@ -24,6 +24,8 @@ void baranium_script_dynadd_var_or_field(BaraniumSection* section)
     uint8_t isField = section->Type == BaraniumSectionType_Fields;
     void* data = (void*)( ((uint64_t)section->Data) + 1 );
 
+    LOGDEBUG(stringf("Adding field/variable with id %ld", id));
+
     bvarmgr_alloc(varmgr, type, id, size, isField);
     bvarmgr_n* entry = bvarmgr_get(varmgr, id);
     if (!entry)

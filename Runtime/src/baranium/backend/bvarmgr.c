@@ -259,6 +259,7 @@ int bvarmgr_add(bvarmgr* obj, BaraniumVariable* var, BaraniumField* field)
         obj->start->next = NULL;
         obj->start->variable = var;
         obj->start->field = field;
+        obj->start->isVariable = field == NULL;
         obj->end = obj->start;
         obj->count = 1;
         return 0;
@@ -275,6 +276,7 @@ int bvarmgr_add(bvarmgr* obj, BaraniumVariable* var, BaraniumField* field)
     newEntry->prev = obj->end;
     newEntry->variable = var;
     newEntry->field = field;
+    newEntry->isVariable = field == NULL;
     newEntry->next = NULL;
 
     obj->end->next = newEntry;

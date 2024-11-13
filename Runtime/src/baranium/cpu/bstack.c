@@ -5,7 +5,7 @@
 bstack* bstack_init()
 {
     bstack* obj = malloc(sizeof(bstack));
-    if (obj == NULL) return;
+    if (obj == NULL) return NULL;
 
     memset(obj, 0, sizeof(bstack));
     bstack_clear(obj);
@@ -82,6 +82,7 @@ uint64_t bstack_pop(bstack* obj)
     bstackEntry* prev = obj->end->prev;
     uint64_t data = entry->data;
     free(entry);
+
     if (prev == NULL)
     {
         obj->start = NULL;
