@@ -1,5 +1,5 @@
-#ifndef __BACKEND__BVARMGR_H_
-#define __BACKEND__BVARMGR_H_ 1
+#ifndef __BARANIUM__BACKEND__BVARMGR_H_
+#define __BARANIUM__BACKEND__BVARMGR_H_ 1
 
 #ifdef __cplusplus
 extern "C" {

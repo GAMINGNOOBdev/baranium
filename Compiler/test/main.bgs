@@ -24,11 +24,19 @@ define main()
     super_duper_awesome_shitstorm_object = "This is a test, hopefully this won't crash it again";
 
     float testFunctionResult = 0;
-    # testFunctionResult = squared(500);
+    testFunctionResult = squared(500);
+    squared(20);
     # print(testFunctionResult);      # should be an internal function at this point hopefully
 
     testFunctionResult++;
     testFunctionResult = 1.0;
+    testFunctionResult--;
+
+    if (testFunctionResult == 0)
+    {
+        testFunctionResult = 10000000;
+    }
+
     testFunctionResult -= 40219 * 100 / (40 + 5 % 2);
     testFunctionResult /= (-10) - (-20);
 
@@ -38,6 +46,7 @@ define main()
     delete attached;
 
     testFunctionResult = EXIT_SUCCESS;
-    int result = testFunctionResult;
+    int result;
+    result = testFunctionResult;
     return result;
 }

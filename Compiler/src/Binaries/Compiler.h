@@ -106,7 +106,7 @@ namespace Binaries
         uint64_t GetIP();
 
     private:
-        index_t GetVarID(std::string name, int lineNumber = -1);
+        index_t GetID(std::string name, int lineNumber = -1);
 
     private:
         void CompileAssignment(TreeNodeObject root);
@@ -115,6 +115,7 @@ namespace Binaries
         void CompileCondition(TreeNodeObject root);
         void CompileKeywordExpression(Language::Expression& expression);
         void CompileFunctionCall(Language::Expression& expression);
+        void CompileFunctionCall(TreeNodeObject node);
 
     private:
         uint8_t* mCode;

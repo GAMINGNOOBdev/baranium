@@ -1,5 +1,7 @@
+#include <baranium/backend/bfuncmgr.h>
 #include <baranium/backend/varmath.h>
 #include <baranium/backend/errors.h>
+#include <baranium/runtime.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
 #include <stdbool.h>
@@ -227,14 +229,23 @@ void CALL(bcpu* cpu)
 {
     if (!cpu) return;
 
+    uint64_t id = cpu->fetch(cpu, 64);
     bstack_push(cpu->ip_stack, cpu->IP);
+
+    LOGINFO(stringf("calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
+
+    BaraniumRuntime* runtime = baranium_get_context();
+    BaraniumFunction* func = baranium_function_manager_get(runtime->functionManager, id);
+    baranium_function_call(runtime, func);
+    baranium_function_dispose(func);
+    cpu->IP = bstack_pop(cpu->ip_stack);
+    LOGINFO(stringf("finished calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
 }
 
 void RET(bcpu* cpu)
 {
     if (!cpu) return;
 
-    cpu->IP = bstack_pop(cpu->ip_stack);
     cpu->killTriggered = 1;
 }
 
@@ -259,7 +270,7 @@ void JEQ(bcpu* cpu)
     if (!cpu) return;
 
     uint64_t addr = cpu->fetch(cpu, 64);
-    if (!cpu->flags.CMP || cpu->cv == 0)
+    if (!cpu->flags.CMP || cpu->cv != 0)
         return;
 
     cpu->IP = addr;
@@ -270,7 +281,7 @@ void JEQOFF(bcpu* cpu)
     if (!cpu) return;
 
     uint16_t offset = cpu->fetch(cpu, 16);
-    if (!cpu->flags.CMP || cpu->cv == 0)
+    if (!cpu->flags.CMP || cpu->cv != 0)
         return;
 
     cpu->IP += offset;
@@ -281,7 +292,7 @@ void JNQ(bcpu* cpu)
     if (!cpu) return;
 
     uint64_t addr = cpu->fetch(cpu, 64);
-    if (!cpu->flags.CMP || cpu->cv != 0)
+    if (!cpu->flags.CMP || cpu->cv == 0)
         return;
 
     cpu->IP = addr;
@@ -292,7 +303,7 @@ void JNQOFF(bcpu* cpu)
     if (!cpu) return;
 
     uint16_t offset = cpu->fetch(cpu, 16);
-    if (!cpu->flags.CMP || cpu->cv != 0)
+    if (!cpu->flags.CMP || cpu->cv == 0)
         return;
 
     cpu->IP += offset;

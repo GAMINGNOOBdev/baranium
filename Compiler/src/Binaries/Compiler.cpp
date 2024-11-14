@@ -110,8 +110,12 @@ namespace Binaries
 
     void Compiler::CompileVariables(VariableList& variables)
     {
-        for (auto& var : variables)
-            CompileVariable(var);
+        for (size_t var = variables.size(); var > 0; var--)
+        {
+            auto& entry = variables[var-1];
+            CompileVariable(entry);
+            mCodeBuilder.POPVAR(entry->ID);
+        }
     }
 
     void Compiler::ClearVariables(VariableList& variables)
@@ -188,6 +192,7 @@ namespace Binaries
     uint64_t Compiler::PredictCodeSize(TokenList& tokens)
     {
         Compiler c = Compiler(mScript);
+        c.mVarTable = mVarTable;
         c.Compile(tokens);
         c.FinalizeCompilation();
         size_t size = c.GetCompiledCodeSize();
@@ -205,6 +210,7 @@ namespace Binaries
     uint64_t Compiler::PredictCodeSize(Language::Expression& token)
     {
         Compiler c = Compiler(mScript);
+        c.mVarTable = mVarTable;
         c.CompileExpression(token);
         c.FinalizeCompilation();
         size_t size = c.GetCompiledCodeSize();
@@ -245,7 +251,7 @@ namespace Binaries
                 mCodeBuilder.PUSH(std::stoll(token.Value));
             else
             {
-                auto varID = GetVarID(token.Value);
+                auto varID = GetID(token.Value);
                 mCodeBuilder.PUSHVAR(varID);
                 mCodeBuilder.POPVAR(token.ID);
             }
@@ -260,16 +266,13 @@ namespace Binaries
 
     void Compiler::CompileIfElseStatement(Language::IfElseStatement& token)
     {
-        int codeSize = GetIP() + PredictCodeSize(token.mTokens);
-        int ptr = GetIP();
-        mCodeBuilder.JMPOFF(codeSize);
-        Compile(token.mTokens);
-        int nextPtr = PredictCodeSize(token.Condition) + 1;
-        mCodeBuilder.CCF();
-        mCodeBuilder.JMPOFF(nextPtr);
-        CompileExpression(token.Condition);
-        mCodeBuilder.JEQ(ptr);
         mCodeBuilder.SCF();
+        mCodeBuilder.CCV();
+        CompileExpression(token.Condition);
+        int codeSize = PredictCodeSize(token.mTokens);
+        mCodeBuilder.JNQOFF(codeSize);
+        Compile(token.mTokens);
+        mCodeBuilder.CCF();
         mCodeBuilder.CCV();
 
         for (auto& otherStatement : token.ChainedStatements)
@@ -281,7 +284,7 @@ namespace Binaries
 
     void Compiler::CompileDoWhileLoop(Language::Loop& token)
     {
-        uint16_t pointer = GetIP();
+        uint64_t pointer = GetIP()-1;
         Compile(token.mTokens);
         CompileExpression(token.Condition);
         mCodeBuilder.JEQ(pointer);
@@ -293,9 +296,9 @@ namespace Binaries
 
     void Compiler::CompileWhileLoop(Language::Loop& token)
     {
-        int offset = PredictCodeSize(token.mTokens) + 1;
+        int offset = PredictCodeSize(token.mTokens); // + 1;
         mCodeBuilder.JMPOFF(offset);
-        uint16_t pointer = GetIP();
+        uint64_t pointer = GetIP()-1;
         Compile(token.mTokens);
         CompileExpression(token.Condition);
         mCodeBuilder.JEQ(pointer);
@@ -308,9 +311,9 @@ namespace Binaries
     void Compiler::CompileForLoop(Language::Loop& token)
     {
         CompileVariable(token.StartVariable);
-        int offset = PredictCodeSize(token.mTokens) + 1;
+        int offset = PredictCodeSize(token.mTokens); // + 1;
         mCodeBuilder.JMPOFF(offset);
-        uint16_t pointer = GetIP();
+        uint64_t pointer = GetIP()-1;
         Compile(token.mTokens);
         CompileExpression(token.Condition);
         mCodeBuilder.PUSHCV();
@@ -367,7 +370,7 @@ namespace Binaries
         return section->ID;
     }
 
-    index_t Compiler::GetVarID(std::string name, int lineNumber)
+    index_t Compiler::GetID(std::string name, int lineNumber)
     {
         index_t varID = -1;
         NameLookupTable* lookupTable = (NameLookupTable*)mScript.GetNameLookupTable();
@@ -435,6 +438,12 @@ namespace Binaries
     {
         if (node == nullptr) return;
 
+        if (node->subNodes.size() > 0)
+        {
+            CompileFunctionCall(node);
+            return;
+        }
+
         auto token = node->contents;
 
         if (token.mType == SourceToken::Type::Number && !isRoot)
@@ -454,7 +463,7 @@ namespace Binaries
         else if (token.mType == SourceToken::Type::Null && !isRoot)
             mCodeBuilder.PushUintValue(0);
         else if (token.mType == SourceToken::Type::Text && !isRoot)
-            mCodeBuilder.PUSHVAR(GetVarID(token.Contents, token.LineNumber));
+            mCodeBuilder.PUSHVAR(GetID(token.Contents, token.LineNumber));
         else if (token.mType == SourceToken::Type::DoubleQuote && !isRoot)
             mCodeBuilder.PushStringValue(node->left->contents.Contents);
 
@@ -490,7 +499,7 @@ namespace Binaries
             Logging::LogErrorExit(stringf("Line %d: Invalid assignment, no variable name given, instead found '%s'", leftToken.LineNumber, leftToken.Contents.c_str()));
 
         std::string varName = leftToken.Contents;
-        auto varID = GetVarID(varName, leftToken.LineNumber);
+        auto varID = GetID(varName, leftToken.LineNumber);
 
         CompileAstNode(root->right);
 
@@ -526,7 +535,7 @@ namespace Binaries
         else if (!expression.ReturnVariableName.empty())
         {
             std::string varName = expression.ReturnVariableName;
-            auto varID = GetVarID(varName, expression.LineNumber);
+            auto varID = GetID(varName, expression.LineNumber);
             mCodeBuilder.PUSHVAR(varID);
         }
         else if (expression.ReturnType != Language::VariableType::Void)
@@ -559,7 +568,7 @@ namespace Binaries
             // unfortunately i don't know any better way right now
             // to do this other than having duplicated code, sorry
             std::string varName = lhs->contents.Contents;
-            auto varID = GetVarID(varName, lhs->contents.LineNumber);
+            auto varID = GetID(varName, lhs->contents.LineNumber);
             mCodeBuilder.PUSHVAR(varID);
             mCodeBuilder.PushIntValue(1);
             mCodeBuilder.SUB();
@@ -571,7 +580,7 @@ namespace Binaries
             // unfortunately i don't know any better way right now
             // to do this other than having duplicated code, sorry
             std::string varName = lhs->contents.Contents;
-            auto varID = GetVarID(varName, lhs->contents.LineNumber);
+            auto varID = GetID(varName, lhs->contents.LineNumber);
             mCodeBuilder.PUSHVAR(varID);
             mCodeBuilder.PushIntValue(1);
             mCodeBuilder.ADD();
@@ -655,7 +664,7 @@ namespace Binaries
             mCodeBuilder.PUSH(-1);
         else
         {
-            auto id = GetVarID(expression.ReturnValue, expression.LineNumber);
+            auto id = GetID(expression.ReturnValue, expression.LineNumber);
             ///TODO: check if variable is an signed/unsigned integer or an object, since any other type doesn't make sense
             mCodeBuilder.PUSHVAR(id);
         }
@@ -686,8 +695,17 @@ namespace Binaries
 
     void Compiler::CompileFunctionCall(Language::Expression& expression)
     {
-        /// TODO: --- implement ---
-        mCodeBuilder.NOP();
+        CompileFunctionCall(expression.mAST.GetRoot());
+    }
+
+    void Compiler::CompileFunctionCall(TreeNodeObject node)
+    {
+        std::string functionName = std::string(node->contents.Contents);
+        auto id = GetID(functionName, node->contents.LineNumber);
+        for (auto& subNode : node->subNodes)
+            CompileAstNode(subNode, false);
+
+        mCodeBuilder.CALL(id);
     }
 
     uint8_t* GetVariableValueAsData(std::string value, Language::VariableType type)

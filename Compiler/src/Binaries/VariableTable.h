@@ -74,6 +74,8 @@ namespace Binaries
          */
         const std::vector<VariableTableEntry> GetAllEntries();
 
+        void operator=(VariableTable& other);
+
     private:
         // Name entries, can be directly written to a file using fwrite
         std::vector<VariableTableEntry> mEntries;

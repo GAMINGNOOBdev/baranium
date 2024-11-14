@@ -64,4 +64,12 @@ namespace Binaries
         return mEntries;
     }
 
+    void VariableTable::operator=(VariableTable& other)
+    {
+        mEntries.clear();
+
+        for (auto& entry : other.mEntries)
+            mEntries.push_back(entry);
+    }
+
 }

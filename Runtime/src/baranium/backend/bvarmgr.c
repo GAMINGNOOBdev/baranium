@@ -172,11 +172,8 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
         return;
 
     bvarmgr_n* foundEntry = NULL;
-    int8_t index = -1;
     for (bvarmgr_n* entry = obj->start; entry != NULL; entry = entry->next)
     {
-        index++;
-
         if (entry->variable != NULL)
         {
             if (entry->variable->ID == id)

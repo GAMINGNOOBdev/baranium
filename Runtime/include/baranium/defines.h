@@ -77,12 +77,14 @@ typedef struct BaraniumHandle
 struct bstack;
 struct bcpu;
 struct bvarmgr;
+struct baranium_function_manager;
 
 typedef struct BaraniumRuntime
 {
     BaraniumHandle* start;
     BaraniumHandle* end;
     uint64_t openHandles;
+    struct baranium_function_manager* functionManager;
     struct bstack* functionStack;
     struct bvarmgr* varmgr;
     struct bcpu* cpu;

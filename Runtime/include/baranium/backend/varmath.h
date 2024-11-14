@@ -17,6 +17,10 @@
 #define BARANIUM_VARIABLE_OPERATION_SHFTL   0x09
 #define BARANIUM_VARIABLE_OPERATION_SHFTR   0x0A
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct baranium_compiled_variable
 {
     enum BaraniumVariableType type;
@@ -71,5 +75,9 @@ BARANIUMAPI void baranium_compiled_variable_convert_to_type(baranium_compiled_va
  * @param type Target variable type
  */
 BARANIUMAPI void baranium_compiled_variable_combine(baranium_compiled_variable* lhs, baranium_compiled_variable* rhs, uint8_t operation, enum BaraniumVariableType type);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

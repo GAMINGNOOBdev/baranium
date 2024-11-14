@@ -1,5 +1,6 @@
 #pragma warning(disable: 4996)
 
+#include <baranium/backend/bfuncmgr.h>
 #include <baranium/backend/bvarmgr.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
@@ -15,8 +16,6 @@ uint8_t BARANIUM_SCRIPT_HEADER_MAGIC[4] = {
 
 void baranium_script_dynadd_var_or_field(BaraniumSection* section)
 {
-    ///TODO: add variable/field to variable manager
-
     bvarmgr* varmgr = baranium_get_context()->varmgr;
     enum BaraniumVariableType type = (enum BaraniumVariableType)*( (uint8_t*)section->Data );
     index_t id = section->ID;
@@ -60,6 +59,8 @@ void baranium_script_append_section(BaraniumScript* script, BaraniumSection* sec
         baranium_script_dynadd_var_or_field(section);
         return;
     }
+
+    baranium_function_manager_add(baranium_get_context()->functionManager, section->ID, script);
 
     if (script->SectionsStart == NULL)
     {
@@ -212,6 +213,9 @@ void baranium_close_script(BaraniumScript* script)
         BaraniumSection* next = NULL;
         for (uint64_t i = 0; i < script->Header.SectionCount && current != NULL; i++)
         {
+            if (current->Type == BaraniumSectionType_Functions)
+                baranium_function_manager_remove(baranium_get_context()->functionManager, current->ID);
+
             next = current->next;
             free(current->Data);
             free(current);

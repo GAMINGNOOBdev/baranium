@@ -1,4 +1,6 @@
+#include <baranium/backend/bfuncmgr.h>
 #include <baranium/cpu/bcpu_opcodes.h>
+#include <baranium/backend/bvarmgr.h>
 #include <baranium/cpu/bstack.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
@@ -21,6 +23,7 @@ BaraniumRuntime* baranium_init()
 
     runtimeHandle->cpu = bcpu_init(runtimeHandle);
     runtimeHandle->functionStack = bstack_init();
+    runtimeHandle->functionManager = baranium_function_manager_init();
     runtimeHandle->varmgr = bvarmgr_init();
     return runtimeHandle;
 }
@@ -57,6 +60,7 @@ void baranium_cleanup(BaraniumRuntime* runtime)
 
     bcpu_dispose(runtime->cpu);
     bstack_dispose(runtime->functionStack);
+    baranium_function_manager_dispose(runtime->functionManager);
     bvarmgr_dispose(runtime->varmgr);
     free(runtime);
 }

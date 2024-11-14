@@ -41,7 +41,7 @@ int main(int argc, const char** argv)
     FILE* logOutput = fopen("runtime.log", "wb+");
     logSetStream(logOutput);
 
-    if (logEnableDebugMsgs)
+    if (debug_mode_enabled)
         LOGINFO("Debug messages enabled");
 
     if (parser->unparsed->size != 1)
