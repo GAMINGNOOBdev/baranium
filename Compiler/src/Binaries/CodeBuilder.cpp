@@ -90,24 +90,25 @@ void CodeBuilder::NOP() { push(0x00); }
 void CodeBuilder::CCF() { push(0x01); }
 void CodeBuilder::SCF() { push(0x02); }
 void CodeBuilder::CCV() { push(0x03); }
-void CodeBuilder::PUSHCV() { push(0x04); }
-void CodeBuilder::POPCV() { push(0x05); }
+void CodeBuilder::ICV() { push(0x04); }
+void CodeBuilder::PUSHCV() { push(0x05); }
+void CodeBuilder::POPCV() { push(0x06); }
 
 void CodeBuilder::PUSHVAR(index_t id)
-{
-    push(0x06);
-    push64(id);
-}
-
-void CodeBuilder::POPVAR(index_t id)
 {
     push(0x07);
     push64(id);
 }
 
-void CodeBuilder::PUSH(uint64_t val)
+void CodeBuilder::POPVAR(index_t id)
 {
     push(0x08);
+    push64(id);
+}
+
+void CodeBuilder::PUSH(uint64_t val)
+{
+    push(0x09);
     push64(val);
 }
 
@@ -134,51 +135,15 @@ void CodeBuilder::JMPOFF(int16_t offset)
     push16(offset);
 }
 
-void CodeBuilder::JEQ(uint64_t addr)
+void CodeBuilder::JMPC(uint64_t addr)
 {
     push(0x12);
     push64(addr);
 }
 
-void CodeBuilder::JEQOFF(uint16_t addr)
+void CodeBuilder::JMPCOFF(uint16_t addr)
 {
     push(0x13);
-    push16(addr);
-}
-
-void CodeBuilder::JNQ(uint64_t addr)
-{
-    push(0x14);
-    push64(addr);
-}
-
-void CodeBuilder::JNQOFF(uint16_t addr)
-{
-    push(0x15);
-    push16(addr);
-}
-
-void CodeBuilder::JLZ(uint64_t addr)
-{
-    push(0x16);
-    push64(addr);
-}
-
-void CodeBuilder::JLZOFF(uint16_t addr)
-{
-    push(0x17);
-    push16(addr);
-}
-
-void CodeBuilder::JGZ(uint64_t addr)
-{
-    push(0x18);
-    push64(addr);
-}
-
-void CodeBuilder::JGZOFF(uint16_t addr)
-{
-    push(0x19);
     push16(addr);
 }
 
@@ -192,7 +157,18 @@ void CodeBuilder::OR()      { push(0x26); }
 void CodeBuilder::XOR()     { push(0x27); }
 void CodeBuilder::SHFTL()   { push(0x28); }
 void CodeBuilder::SHFTR()   { push(0x29); }
-void CodeBuilder::CMP()     { push(0x30); }
+
+void CodeBuilder::CMP(uint8_t compareMethod)
+{
+    push(0x30);
+    push(compareMethod);
+}
+
+void CodeBuilder::CMPC(uint8_t compareCombineMethod)
+{
+    push(0x31);
+    push(compareCombineMethod);
+}
 
 void CodeBuilder::MEM(size_t size, uint8_t type, index_t id)
 {

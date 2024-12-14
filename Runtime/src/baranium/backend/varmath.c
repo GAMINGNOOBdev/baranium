@@ -1,3 +1,4 @@
+#include "baranium/variable.h"
 #include <baranium/backend/varmath.h>
 #include <baranium/backend/errors.h>
 #include <baranium/cpu/bstack.h>
@@ -17,7 +18,7 @@ baranium_compiled_variable* baranium_compiled_variable_pop_from_stack(bcpu* cpu)
         return NULL;
 
     memset(result, 0, sizeof(baranium_compiled_variable));
-    result->type = (enum BaraniumVariableType)bstack_pop(cpu->stack);
+    result->type = (baranium_variable_type_t)bstack_pop(cpu->stack);
     size_t size = result->size = (size_t)bstack_pop(cpu->stack);
     void* value = result->value = malloc(result->size);
     if (value == NULL)
@@ -58,7 +59,7 @@ baranium_compiled_variable* baranium_compiled_variable_pop_from_stack(bcpu* cpu)
 
 void baranium_compiled_variable_push_to_stack(bcpu* cpu, baranium_compiled_variable* var)
 {
-    enum BaraniumVariableType type = var->type;
+    baranium_variable_type_t type = var->type;
     uint64_t size = var->size;
     void* value = var->value;
 
@@ -125,18 +126,18 @@ void baranium_compiled_variable_dispose(baranium_compiled_variable* varptr)
         if(operation == BARANIUM_VARIABLE_OPERATION_SHFTL) PerformOperation(out, exprl, exprr, <<); \
         if(operation == BARANIUM_VARIABLE_OPERATION_SHFTR) PerformOperation(out, exprl, exprr, >>)
 
-void baranium_compiled_variable_perform_arithmetic_operation(void* dataLeft, void* dataRight, enum BaraniumVariableType target, uint8_t operation)
+void baranium_compiled_variable_perform_arithmetic_operation(void* dataLeft, void* dataRight, baranium_variable_type_t target, uint8_t operation)
 {
-    if (target == BaraniumVariableType_Invalid || target == BaraniumVariableType_Void || target == BaraniumVariableType_String)
+    if (target == VARIABLE_TYPE_INVALID || target == VARIABLE_TYPE_VOID || target == VARIABLE_TYPE_STRING)
         return;
 
-    if (target == BaraniumVariableType_Object)
+    if (target == VARIABLE_TYPE_OBJECT)
     {
         ForeachOperation(operation, *((int64_t*)dataLeft), *((int64_t*)dataLeft), *((int64_t*)dataRight));
         return;
     }
 
-    if (target == BaraniumVariableType_Float)
+    if (target == VARIABLE_TYPE_FLOAT)
     {
         if(operation == BARANIUM_VARIABLE_OPERATION_AND || operation == BARANIUM_VARIABLE_OPERATION_OR ||
            operation == BARANIUM_VARIABLE_OPERATION_XOR || operation == BARANIUM_VARIABLE_OPERATION_SHFTL ||
@@ -164,19 +165,19 @@ void baranium_compiled_variable_perform_arithmetic_operation(void* dataLeft, voi
         return;
     }
 
-    if (target == BaraniumVariableType_Bool)
+    if (target == VARIABLE_TYPE_BOOL)
     {
         ForeachOperation(operation, *((uint8_t*)dataLeft), *((uint8_t*)dataLeft), *((uint8_t*)dataRight));
         return;
     }
 
-    if (target == BaraniumVariableType_Int)
+    if (target == VARIABLE_TYPE_INT)
     {
         ForeachOperation(operation, *((int32_t*)dataLeft), *((int32_t*)dataLeft), *((int32_t*)dataRight));
         return;
     }
 
-    if (target == BaraniumVariableType_Uint)
+    if (target == VARIABLE_TYPE_UINT)
     {
         ForeachOperation(operation, *((uint32_t*)dataLeft), *((uint32_t*)dataLeft), *((uint32_t*)dataRight));
         return;
@@ -185,17 +186,20 @@ void baranium_compiled_variable_perform_arithmetic_operation(void* dataLeft, voi
 
 void baranium_compiled_variable_as_object(baranium_compiled_variable* var)
 {
-    size_t size = baranium_variable_get_size_of_type(BaraniumVariableType_Object);
+    size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_OBJECT);
     int64_t* newVal = malloc(size);
     memset(newVal, 0, size);
 
-    if (var->type == BaraniumVariableType_Float)
+    if (var->type == VARIABLE_TYPE_FLOAT)
         (*newVal) = (int64_t)*((float*)var->value);
+
+    if (var->type == VARIABLE_TYPE_BOOL)
+        (*newVal) = (int64_t)*((uint8_t*)var->value);
     
-    if (var->type == BaraniumVariableType_Int)
+    if (var->type == VARIABLE_TYPE_INT)
         (*newVal) = (int64_t)*((int32_t*)var->value);
 
-    if (var->type == BaraniumVariableType_Uint)
+    if (var->type == VARIABLE_TYPE_UINT)
         (*newVal) = (int64_t)*((uint32_t*)var->value);
 
     free(var->value);
@@ -205,14 +209,20 @@ void baranium_compiled_variable_as_object(baranium_compiled_variable* var)
 
 void baranium_compiled_variable_as_float(baranium_compiled_variable* var)
 {
-    size_t size = baranium_variable_get_size_of_type(BaraniumVariableType_Float);
+    size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_FLOAT);
     float* newVal = malloc(size);
     memset(newVal, 0, size);
 
-    if (var->type == BaraniumVariableType_Int)
+    if (var->type == VARIABLE_TYPE_OBJECT)
+        (*newVal) = (float)*((int64_t*)var->value);
+
+    if (var->type == VARIABLE_TYPE_BOOL)
+        (*newVal) = (float)*((uint8_t*)var->value);
+
+    if (var->type == VARIABLE_TYPE_INT)
         (*newVal) = (float)*((int32_t*)var->value);
 
-    if (var->type == BaraniumVariableType_Uint)
+    if (var->type == VARIABLE_TYPE_UINT)
         (*newVal) = (float)*((uint32_t*)var->value);
 
     free(var->value);
@@ -222,20 +232,20 @@ void baranium_compiled_variable_as_float(baranium_compiled_variable* var)
 
 void baranium_compiled_variable_as_bool(baranium_compiled_variable* var)
 {
-    size_t size = baranium_variable_get_size_of_type(BaraniumVariableType_Bool);
+    size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_BOOL);
     uint8_t* newVal = malloc(size);
     memset(newVal, 0, size);
 
-    if (var->type == BaraniumVariableType_Object)
+    if (var->type == VARIABLE_TYPE_OBJECT)
         (*newVal) = 0 < *((int64_t*)var->value);
 
-    if (var->type == BaraniumVariableType_Float)
+    if (var->type == VARIABLE_TYPE_FLOAT)
         (*newVal) = 0 < *((float*)var->value);
     
-    if (var->type == BaraniumVariableType_Int)
+    if (var->type == VARIABLE_TYPE_INT)
         (*newVal) = 0 < *((int32_t*)var->value);
 
-    if (var->type == BaraniumVariableType_Uint)
+    if (var->type == VARIABLE_TYPE_UINT)
         (*newVal) = 0 < *((uint32_t*)var->value);
 
     free(var->value);
@@ -245,20 +255,20 @@ void baranium_compiled_variable_as_bool(baranium_compiled_variable* var)
 
 void baranium_compiled_variable_as_int(baranium_compiled_variable* var)
 {
-    size_t size = baranium_variable_get_size_of_type(BaraniumVariableType_Int);
+    size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_INT);
     int32_t* newVal = malloc(size);
     memset(newVal, 0, size);
 
-    if (var->type == BaraniumVariableType_Object)
+    if (var->type == VARIABLE_TYPE_OBJECT)
         (*newVal) = (int32_t)*((int64_t*)var->value);
 
-    if (var->type == BaraniumVariableType_Bool)
+    if (var->type == VARIABLE_TYPE_BOOL)
         (*newVal) = (int32_t)*((uint8_t*)var->value);
 
-    if (var->type == BaraniumVariableType_Float)
+    if (var->type == VARIABLE_TYPE_FLOAT)
         (*newVal) = (int32_t)*((float*)var->value);
 
-    if (var->type == BaraniumVariableType_Uint)
+    if (var->type == VARIABLE_TYPE_UINT)
         (*newVal) = (int32_t)*((uint32_t*)var->value);
 
     free(var->value);
@@ -268,70 +278,70 @@ void baranium_compiled_variable_as_int(baranium_compiled_variable* var)
 
 void baranium_compiled_variable_as_uint(baranium_compiled_variable* var)
 {
-    size_t size = baranium_variable_get_size_of_type(BaraniumVariableType_Uint);
+    size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_UINT);
     uint32_t* newVal = malloc(size);
     memset(newVal, 0, size);
 
-    if (var->type == BaraniumVariableType_Object)
+    if (var->type == VARIABLE_TYPE_OBJECT)
         (*newVal) = (uint32_t)*((int64_t*)var->value);
 
-    if (var->type == BaraniumVariableType_Bool)
+    if (var->type == VARIABLE_TYPE_BOOL)
         (*newVal) = (uint32_t)*((uint8_t*)var->value);
 
-    if (var->type == BaraniumVariableType_Float)
+    if (var->type == VARIABLE_TYPE_FLOAT)
         (*newVal) = (uint32_t)*((float*)var->value);
     
-    if (var->type == BaraniumVariableType_Int)
+    if (var->type == VARIABLE_TYPE_INT)
         (*newVal) = (uint32_t)*((int32_t*)var->value);
-
-    if (var->type == BaraniumVariableType_Uint)
-        (*newVal) = (uint32_t)*((uint32_t*)var->value);
 
     free(var->value);
     var->value = newVal;
     var->size = size;
 }
 
-void baranium_compiled_variable_convert_to_type(baranium_compiled_variable* var, enum BaraniumVariableType targetType)
+void baranium_compiled_variable_convert_to_type(baranium_compiled_variable* var, baranium_variable_type_t targetType)
 {
-    if (targetType == BaraniumVariableType_Invalid || targetType == BaraniumVariableType_Void || targetType == BaraniumVariableType_String) // strings should already be covered
+    if (targetType == VARIABLE_TYPE_INVALID || targetType == VARIABLE_TYPE_VOID || targetType == VARIABLE_TYPE_STRING) // strings should already be covered
+        return;
+    
+    if (targetType == var->type)
         return;
 
-    if (targetType == BaraniumVariableType_Object)
+    if (targetType == VARIABLE_TYPE_OBJECT)
         baranium_compiled_variable_as_object(var);
 
-    if (targetType == BaraniumVariableType_Float)
+    if (targetType == VARIABLE_TYPE_FLOAT)
         baranium_compiled_variable_as_float(var);
 
-    if (targetType == BaraniumVariableType_Bool)
+    if (targetType == VARIABLE_TYPE_BOOL)
         baranium_compiled_variable_as_bool(var);
 
-    if (targetType == BaraniumVariableType_Int)
+    if (targetType == VARIABLE_TYPE_INT)
         baranium_compiled_variable_as_int(var);
 
-    if (targetType == BaraniumVariableType_Uint)
+    if (targetType == VARIABLE_TYPE_UINT)
         baranium_compiled_variable_as_uint(var);
 }
 
-void baranium_compiled_variable_combine(baranium_compiled_variable* lhs, baranium_compiled_variable* rhs, uint8_t operation, enum BaraniumVariableType type)
+void baranium_compiled_variable_combine(baranium_compiled_variable* lhs, baranium_compiled_variable* rhs, uint8_t operation, baranium_variable_type_t type)
 {
     if (lhs == NULL || rhs == NULL || operation == BARANIUM_VARIABLE_OPERATION_NONE)
         return;
 
-    enum BaraniumVariableType resultType = type;
-    if (type == BaraniumVariableType_Invalid || type == BaraniumVariableType_Void)
+    baranium_variable_type_t resultType = type;
+    if (type == VARIABLE_TYPE_INVALID || type == VARIABLE_TYPE_VOID)
         resultType = lhs->type;
     
-    if (resultType == BaraniumVariableType_Invalid || resultType == BaraniumVariableType_Void)
+    if (resultType == VARIABLE_TYPE_INVALID || resultType == VARIABLE_TYPE_VOID)
         return;
     
-    if (operation != BARANIUM_VARIABLE_OPERATION_ADD && resultType == BaraniumVariableType_String) // also special case
+    if (operation != BARANIUM_VARIABLE_OPERATION_ADD && resultType == VARIABLE_TYPE_STRING) // also special case
     {
         LOGERROR("Strings can only be combined using '+'");
         return;
     }
 
-    if (operation == BARANIUM_VARIABLE_OPERATION_ADD && resultType == BaraniumVariableType_String) // very special case
+    if (operation == BARANIUM_VARIABLE_OPERATION_ADD && resultType == VARIABLE_TYPE_STRING) // very special case
     {
         void* value = stringf("%s%s", baranium_variable_stringify(lhs->type, lhs->value), baranium_variable_stringify(rhs->type, rhs->value));
         free(lhs->value);
@@ -339,7 +349,7 @@ void baranium_compiled_variable_combine(baranium_compiled_variable* lhs, baraniu
         lhs->value = malloc(size);
         memset(lhs->value, 0, size);
         memcpy(lhs->value, value, size-1);
-        lhs->type = BaraniumVariableType_String;
+        lhs->type = VARIABLE_TYPE_STRING;
         return;
     }
 

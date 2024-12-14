@@ -12,19 +12,19 @@ extern "C" {
  * 
  * @returns An instance of the runtime and it's data
  */
-BARANIUMAPI BaraniumRuntime* baranium_init();
+BARANIUMAPI baranium_runtime* baranium_init();
 
 /**
  * @brief Set the current global runtime context
  * 
  * @param runtimeContext The new runtime context
  */
-BARANIUMAPI void baranium_set_context(BaraniumRuntime* runtimeContext);
+BARANIUMAPI void baranium_set_context(baranium_runtime* runtimeContext);
 
 /**
  * @brief Get the current global runtime context
  */
-BARANIUMAPI BaraniumRuntime* baranium_get_context();
+BARANIUMAPI baranium_runtime* baranium_get_context();
 
 /**
  * @brief Safely dispose a runtime instance
@@ -33,7 +33,7 @@ BARANIUMAPI BaraniumRuntime* baranium_get_context();
  * 
  * @note `runtime` cannot be set to `null` to automatically dispose the global context
  */
-BARANIUMAPI void baranium_cleanup(BaraniumRuntime* runtime);
+BARANIUMAPI void baranium_cleanup(baranium_runtime* runtime);
 
 /**
  * @brief Open a file handle
@@ -44,14 +44,14 @@ BARANIUMAPI void baranium_cleanup(BaraniumRuntime* runtime);
  * 
  * @returns A handle to the file
  */
-BARANIUMAPI BaraniumHandle* baranium_open_handle(const char* source);
+BARANIUMAPI baranium_handle* baranium_open_handle(const char* source);
 
 /**
  * @brief Close an open file handle
  * 
  * @param handle The handle that will be closed
  */
-BARANIUMAPI void baranium_close_handle(BaraniumHandle* handle);
+BARANIUMAPI void baranium_close_handle(baranium_handle* handle);
 
 #ifdef __cplusplus
 }

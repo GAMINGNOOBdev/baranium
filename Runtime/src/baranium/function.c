@@ -5,7 +5,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-void baranium_function_dispose(BaraniumFunction* function)
+void baranium_function_dispose(baranium_function* function)
 {
     if (function == NULL)
         return;
@@ -16,7 +16,7 @@ void baranium_function_dispose(BaraniumFunction* function)
     free(function);
 }
 
-void baranium_function_call(BaraniumRuntime* runtime, BaraniumFunction* function, ...)
+void baranium_function_call(baranium_runtime* runtime, baranium_function* function, ...)
 {
     ///TODO: call the function + parse args and put them into the parameters of the function
 
@@ -42,5 +42,5 @@ void baranium_function_call(BaraniumRuntime* runtime, BaraniumFunction* function
         runtime->cpu->killTriggered = 0;
 
     runtime->cpu->IP = bstack_pop(runtime->cpu->ip_stack);
-    runtime->cpu->bus->dataHolder = (BaraniumFunction*)bstack_pop(runtime->functionStack);
+    runtime->cpu->bus->dataHolder = (baranium_function*)bstack_pop(runtime->functionStack);
 }

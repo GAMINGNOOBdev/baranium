@@ -84,6 +84,7 @@ void TokenParser::ReadVariable(int& index, SourceToken& current, SourceTokenList
         Logging::LogErrorExit(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     variable->mName = std::string(nameToken.Contents);
+    variable->AssignID();
     
     index++;
     auto& nextToken = tokens.at(index);
@@ -128,6 +129,7 @@ void TokenParser::ReadField(int& index, SourceToken& current, SourceTokenList to
         Logging::LogErrorExit(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     field->mName = std::string(nameToken.Contents);
+    field->AssignID();
     
     index++;
     auto& nextToken = tokens.at(index);
@@ -185,6 +187,7 @@ void TokenParser::ReadFunction(int& index, SourceToken& current, SourceTokenList
         Logging::LogErrorExit(stringf("Line %d: Name \"%s\" is already occupied", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     function->mName = std::string(nameToken.Contents);
+    function->AssignID();
 
     index++;
     auto& parametersStart = tokens.at(index);
@@ -232,8 +235,11 @@ void TokenParser::ReadIfStatement(int& index, SourceToken& current, SourceTokenL
 
     index++;
     auto& nextToken = tokens.at(index);
-    ifElseStatement->Condition->mInnerTokens.push_back(nextToken);
-    if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, ifElseStatement->Condition->mInnerTokens))
+    if (nextToken.mType != SourceToken::Type::ParenthesisOpen)
+        ifElseStatement->Condition->mInnerTokens.push_back(nextToken);
+    else index--;
+    if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose,
+                               tokens, ifElseStatement->Condition->mInnerTokens))
         Logging::LogErrorExit(stringf("Line %d: Invalid condition contents for if-statement", nextToken.LineNumber));
 
     ifElseStatement->Condition->Identify(output, globalTokens);
@@ -398,6 +404,7 @@ void TokenParser::ReadFunctionParameter(int& index, std::shared_ptr<Language::Fu
         Logging::LogErrorExit(stringf("Line %d: No valid name ('%s') has been prodived for parameter in function definition", nameToken.LineNumber, nameToken.Contents.c_str()));
 
     parameter->mName = std::string(nameToken.Contents);
+    parameter->AssignID();
 
     index++;
     auto& nextToken = tokens.at(index);
@@ -846,11 +853,18 @@ parseLoopInitializers:
         int outputSize = output.size();
         subIndex = 0;
         SourceToken varToken = loopVarTokens.at(subIndex);
-        TokenParser::ReadVariable(subIndex, varToken, loopVarTokens, output, globalTokens);
+        bool isVar = varToken.KeywordIndex <= KeywordIndex_uint && varToken.KeywordIndex >= KeywordIndex_object;
+        if (isVar)
+            TokenParser::ReadVariable(subIndex, varToken, loopVarTokens, output, globalTokens);
+        else
+            TokenParser::ReadExpression(subIndex, varToken, loopVarTokens, output, globalTokens);
 
         if (outputSize+1 == output.size())
         {
-            loop->StartVariable = std::static_pointer_cast<Language::Variable>(output.at(outputSize));
+            if (isVar)
+                loop->StartVariable = std::static_pointer_cast<Language::Variable>(output.at(outputSize));
+            else
+                loop->StartExpr = std::static_pointer_cast<Language::Expression>(output.at(outputSize));
             output.pop_back();
         }
     }

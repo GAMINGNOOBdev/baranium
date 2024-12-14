@@ -7,17 +7,17 @@ extern "C" {
 
 #include <stdint.h>
 
-typedef struct bstackEntry
+typedef struct bstack_entry
 {
-    struct bstackEntry* prev;
+    struct bstack_entry* prev;
     uint64_t data;
-    struct bstackEntry* next;
-} bstackEntry;
+    struct bstack_entry* next;
+} bstack_entry;
 
 typedef struct bstack
 {
-    bstackEntry* end;
-    bstackEntry* start;
+    bstack_entry* end;
+    bstack_entry* start;
 } bstack;
 
 // create and initialize a stack

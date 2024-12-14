@@ -21,7 +21,6 @@
 extern "C" {
 #endif
 
-#include "backend/bvarmgr.h"
 #include "cpu/bstack.h"
 #include "cpu/bbus.h"
 #include <stdint.h>
@@ -44,16 +43,16 @@ typedef struct bcpu
     uint8_t opcode;         // operation code/instruction
     uint64_t ticks;         // total number of ticks the cpu has executed
     uint8_t killTriggered;  // Only set if execution has ended or has been triggered and the application should quit
-    int64_t cv;             // compare value
+    uint8_t cv;             // compare value
     bbus* bus;              // the bus to read data from
 
     uint64_t fetched;
     BCPUFETCH fetch;
-    BaraniumRuntime* runtime;
+    baranium_runtime* runtime;
 } bcpu;
 
 // create and initialize the cpu
-bcpu* bcpu_init(BaraniumRuntime* runtime);
+bcpu* bcpu_init(baranium_runtime* runtime);
 
 // dispose and clean any used memory by the cpu
 void bcpu_dispose(bcpu* obj);

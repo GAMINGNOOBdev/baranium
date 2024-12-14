@@ -3,23 +3,24 @@
 #include <baranium/backend/bvarmgr.h>
 #include <baranium/cpu/bstack.h>
 #include <baranium/runtime.h>
+#include <baranium/defines.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
 #include <memory.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-static BaraniumRuntime* current_active_runtime = NULL;
+static baranium_runtime* current_active_runtime = NULL;
 
-BaraniumRuntime* baranium_init()
+baranium_runtime* baranium_init()
 {
     bcpu_opcodes_init();
 
-    BaraniumRuntime* runtimeHandle = malloc(sizeof(BaraniumRuntime));
+    baranium_runtime* runtimeHandle = malloc(sizeof(baranium_runtime));
     if (!runtimeHandle)
         return NULL;
 
-    memset(runtimeHandle, 0, sizeof(BaraniumRuntime));
+    memset(runtimeHandle, 0, sizeof(baranium_runtime));
 
     runtimeHandle->cpu = bcpu_init(runtimeHandle);
     runtimeHandle->functionStack = bstack_init();
@@ -28,24 +29,24 @@ BaraniumRuntime* baranium_init()
     return runtimeHandle;
 }
 
-void baranium_set_context(BaraniumRuntime* runtimeContext)
+void baranium_set_context(baranium_runtime* runtimeContext)
 {
     current_active_runtime = runtimeContext;
 }
 
-BaraniumRuntime* baranium_get_context()
+baranium_runtime* baranium_get_context()
 {
     return current_active_runtime;
 }
 
-void baranium_cleanup(BaraniumRuntime* runtime)
+void baranium_cleanup(baranium_runtime* runtime)
 {
     if (runtime == NULL) return;
 
     if (!(runtime->start == NULL && runtime->end == NULL))
     {
-        BaraniumHandle* handle = runtime->start;
-        BaraniumHandle* next = handle->next;
+        baranium_handle* handle = runtime->start;
+        baranium_handle* next = handle->next;
         while (handle != NULL)
         {
             next = handle->next;
@@ -65,7 +66,7 @@ void baranium_cleanup(BaraniumRuntime* runtime)
     free(runtime);
 }
 
-BaraniumHandle* baranium_open_handle(const char* source)
+baranium_handle* baranium_open_handle(const char* source)
 {
     if (current_active_runtime == NULL)
         return NULL;
@@ -77,11 +78,11 @@ BaraniumHandle* baranium_open_handle(const char* source)
         return NULL;
     }
 
-    BaraniumHandle* handle = (BaraniumHandle*)malloc(sizeof(BaraniumHandle));
+    baranium_handle* handle = (baranium_handle*)malloc(sizeof(baranium_handle));
     if (!handle)
         return NULL;
 
-    memset(handle, 0, sizeof(BaraniumHandle));
+    memset(handle, 0, sizeof(baranium_handle));
     handle->file = file;
 
     if (current_active_runtime->start == NULL)
@@ -108,14 +109,14 @@ end:
     return handle;
 }
 
-void baranium_close_handle(BaraniumHandle* handle)
+void baranium_close_handle(baranium_handle* handle)
 {
     if (current_active_runtime == NULL || handle == NULL)
         return;
 
-    BaraniumHandle* currentHandle = current_active_runtime->start;
-    BaraniumHandle* next = NULL;
-    BaraniumHandle* prev = NULL;
+    baranium_handle* currentHandle = current_active_runtime->start;
+    baranium_handle* next = NULL;
+    baranium_handle* prev = NULL;
     while (currentHandle != handle && currentHandle != NULL)
     {
         next = currentHandle->next;

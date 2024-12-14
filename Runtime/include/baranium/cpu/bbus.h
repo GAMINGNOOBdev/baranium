@@ -10,11 +10,11 @@ extern "C" {
 
 typedef struct bbus
 {
-    BaraniumFunction* dataHolder;
+    baranium_function* dataHolder;
 } bbus;
 
 // create and initialize a bus
-bbus* bbus_init(BaraniumFunction* function);
+bbus* bbus_init(baranium_function* function);
 
 // dispose of a bus
 void bbus_dispose(bbus* obj);

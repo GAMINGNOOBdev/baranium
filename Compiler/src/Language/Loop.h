@@ -31,6 +31,11 @@ namespace Language
         std::shared_ptr<Variable> StartVariable;
 
         /**
+         * @brief The condition for the loop to first execute before starting
+         */
+        std::shared_ptr<Expression> StartExpr;
+
+        /**
          * @brief The condition for the loop to continue executing
          */
         Expression Condition;

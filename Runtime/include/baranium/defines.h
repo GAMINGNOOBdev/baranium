@@ -66,12 +66,12 @@ extern "C" {
 /// Types ///
 /////////////
 
-typedef struct BaraniumHandle
+typedef struct baranium_handle
 {
+    struct baranium_handle* prev;
     FILE* file;
-    struct BaraniumHandle* prev;
-    struct BaraniumHandle* next;
-} BaraniumHandle;
+    struct baranium_handle* next;
+} baranium_handle;
 
 // forward declarations because we need them
 struct bstack;
@@ -79,16 +79,16 @@ struct bcpu;
 struct bvarmgr;
 struct baranium_function_manager;
 
-typedef struct BaraniumRuntime
+typedef struct
 {
-    BaraniumHandle* start;
-    BaraniumHandle* end;
+    baranium_handle* start;
+    baranium_handle* end;
     uint64_t openHandles;
     struct baranium_function_manager* functionManager;
     struct bstack* functionStack;
     struct bvarmgr* varmgr;
     struct bcpu* cpu;
-} BaraniumRuntime;
+} baranium_runtime;
 
 
 typedef int64_t index_t;

@@ -12,7 +12,7 @@ extern "C" {
 struct bcpu;
 typedef void(*OPCODE_HANDLE)(struct bcpu* cpu);
 
-typedef struct bcpu_opcode
+typedef struct
 {
     const char* name;
     OPCODE_HANDLE handle;

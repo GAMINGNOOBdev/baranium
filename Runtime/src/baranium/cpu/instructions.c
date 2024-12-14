@@ -1,12 +1,24 @@
 #include <baranium/backend/bfuncmgr.h>
+#include <baranium/backend/bvarmgr.h>
 #include <baranium/backend/varmath.h>
 #include <baranium/backend/errors.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <memory.h>
+
+#define CMP_LESS_THAN     0x18
+#define CMP_LESS_EQUAL    0x38
+#define CMP_GREATER_THAN  0x28
+#define CMP_GREATER_EQUAL 0x48
+#define CMP_EQUAL         0x08
+#define CMP_NOTEQUAL      0xF8
+
+#define CMP_AND 0
+#define CMP_OR  1
 
 void INVALID_OPCODE(bcpu* cpu)
 {
@@ -39,13 +51,23 @@ void CCV(bcpu* cpu)
     cpu->cv = 0;
 }
 
+void ICV(bcpu* cpu)
+{
+    if (!cpu) return;
+
+    if (cpu->cv)
+        cpu->cv = 0;
+    else
+        cpu->cv = 1;
+}
+
 void PUSHCV(bcpu* cpu)
 {
     if (!cpu) return;
 
     baranium_compiled_variable var;
-    var.size = sizeof(int64_t);
-    var.type = BaraniumVariableType_Int;
+    var.size = sizeof(int32_t);
+    var.type = VARIABLE_TYPE_INT;
     var.value = &cpu->cv;
     baranium_compiled_variable_push_to_stack(cpu, &var);
 }
@@ -55,7 +77,7 @@ void POPCV(bcpu* cpu)
     if (!cpu) return;
 
     baranium_compiled_variable* var = baranium_compiled_variable_pop_from_stack(cpu);
-    cpu->cv = *((int64_t*)var->value);
+    cpu->cv = *((int32_t*)var->value);
     baranium_compiled_variable_dispose(var);
 }
 
@@ -77,7 +99,7 @@ void PUSHVAR(bcpu* cpu)
 
     size_t size = 0;
     void* value = NULL;
-    enum BaraniumVariableType type = BaraniumVariableType_Invalid;
+    baranium_variable_type_t type = VARIABLE_TYPE_INVALID;
     if (var->isVariable)
     {
         size = var->variable->Size;
@@ -91,7 +113,7 @@ void PUSHVAR(bcpu* cpu)
         value = var->field->Value;
     }
 
-    if (type == BaraniumVariableType_Void || type == BaraniumVariableType_Invalid)
+    if (type == VARIABLE_TYPE_VOID || type == VARIABLE_TYPE_INVALID)
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be pushed: Invalid type", id));
         bstack_push(cpu->stack, ERR_VAR_INVALID_TYPE);
@@ -109,7 +131,7 @@ void PUSHVAR(bcpu* cpu)
     else
     {
         size_t leftOverSize = size;
-        int index = 0;
+        size_t index = 0;
         void* valPtr;
         for (index = 0; index * 8 < size; index++)
         {
@@ -146,23 +168,20 @@ void POPVAR(bcpu* cpu)
         return;
     }
 
-    size_t size = 0;
     void* value = NULL;
-    enum BaraniumVariableType type = BaraniumVariableType_Invalid;
+    baranium_variable_type_t type = VARIABLE_TYPE_INVALID;
     if (var->isVariable)
     {
-        size = var->variable->Size;
         type = var->variable->Type;
         value = var->variable->Value;
     }
     else
     {
-        size = var->field->Size;
         type = var->field->Type;
         value = var->field->Value;
     }
 
-    if (type == BaraniumVariableType_Void || type == BaraniumVariableType_Invalid)
+    if (type == VARIABLE_TYPE_VOID || type == VARIABLE_TYPE_INVALID)
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be assigned: Invalid type", id));
         bstack_push(cpu->stack, ERR_VAR_INVALID_TYPE);
@@ -189,7 +208,7 @@ void POPVAR(bcpu* cpu)
     // having to reallocate memory andways) just
     // allocate a new value pointer
 
-    if (type == BaraniumVariableType_String && newvar->type != BaraniumVariableType_String)
+    if (type == VARIABLE_TYPE_STRING && newvar->type != VARIABLE_TYPE_STRING)
     {
         char* stringifiedVersion = baranium_variable_stringify(newvar->type, newvar->value);
         size_t stringSize = strlen(stringifiedVersion);
@@ -201,6 +220,9 @@ void POPVAR(bcpu* cpu)
             memcpy(newvar->value, stringifiedVersion, stringSize);
         }
     }
+
+    // very important step to get an expected result
+    baranium_compiled_variable_convert_to_type(newvar, type);
 
     // assign new size and value pointers for the variable/field
     if (var->isVariable)
@@ -220,7 +242,7 @@ void POPVAR(bcpu* cpu)
 void PUSH(bcpu* cpu)
 {
     if (!cpu) return;
-    
+
     uint64_t value = cpu->fetch(cpu, 64);
     bstack_push(cpu->stack, value);
 }
@@ -234,8 +256,8 @@ void CALL(bcpu* cpu)
 
     LOGINFO(stringf("calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
 
-    BaraniumRuntime* runtime = baranium_get_context();
-    BaraniumFunction* func = baranium_function_manager_get(runtime->functionManager, id);
+    baranium_runtime* runtime = baranium_get_context();
+    baranium_function* func = baranium_function_manager_get(runtime->functionManager, id);
     baranium_function_call(runtime, func);
     baranium_function_dispose(func);
     cpu->IP = bstack_pop(cpu->ip_stack);
@@ -265,89 +287,25 @@ void JMPOFF(bcpu* cpu)
     cpu->IP += offset;
 }
 
-void JEQ(bcpu* cpu)
+void JMPC(bcpu* cpu)
 {
     if (!cpu) return;
-
+    
     uint64_t addr = cpu->fetch(cpu, 64);
-    if (!cpu->flags.CMP || cpu->cv != 0)
+    if (!cpu->flags.CMP) return;
+    if (cpu->cv == 0)
         return;
 
     cpu->IP = addr;
 }
 
-void JEQOFF(bcpu* cpu)
+void JMPCOFF(bcpu* cpu)
 {
     if (!cpu) return;
-
+    
     uint16_t offset = cpu->fetch(cpu, 16);
-    if (!cpu->flags.CMP || cpu->cv != 0)
-        return;
-
-    cpu->IP += offset;
-}
-
-void JNQ(bcpu* cpu)
-{
-    if (!cpu) return;
-
-    uint64_t addr = cpu->fetch(cpu, 64);
-    if (!cpu->flags.CMP || cpu->cv == 0)
-        return;
-
-    cpu->IP = addr;
-}
-
-void JNQOFF(bcpu* cpu)
-{
-    if (!cpu) return;
-
-    uint16_t offset = cpu->fetch(cpu, 16);
-    if (!cpu->flags.CMP || cpu->cv == 0)
-        return;
-
-    cpu->IP += offset;
-}
-
-void JLZ(bcpu* cpu)
-{
-    if (!cpu) return;
-
-    uint64_t addr = cpu->fetch(cpu, 64);
-    if (!cpu->flags.CMP || cpu->cv < 0)
-        return;
-
-    cpu->IP = addr;
-}
-
-void JLZOFF(bcpu* cpu)
-{
-    if (!cpu) return;
-
-    uint16_t offset = cpu->fetch(cpu, 16);
-    if (!cpu->flags.CMP || cpu->cv < 0)
-        return;
-
-    cpu->IP += offset;
-}
-
-void JGZ(bcpu* cpu)
-{
-    if (!cpu) return;
-
-    uint64_t addr = cpu->fetch(cpu, 64);
-    if (!cpu->flags.CMP || cpu->cv > 0)
-        return;
-
-    cpu->IP = addr;
-}
-
-void JGZOFF(bcpu* cpu)
-{
-    if (!cpu) return;
-
-    uint16_t offset = cpu->fetch(cpu, 16);
-    if (!cpu->flags.CMP || cpu->cv > 0)
+    if (!cpu->flags.CMP) return;
+    if (cpu->cv == 0)
         return;
 
     cpu->IP += offset;
@@ -518,10 +476,113 @@ void CMP(bcpu* cpu)
     if (!cpu) return;
     if (!cpu->flags.CMP) return;
 
-    uint64_t val0 = bstack_pop(cpu->stack);
-    uint64_t val1 = bstack_pop(cpu->stack);
+    uint8_t operation = cpu->fetch(cpu, 8);
 
-    cpu->cv = val0 - val1;
+    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
+
+    // yes this is a somewhat lazy way but hey, it's somewhat logical as well so shut up
+    if (val1->type == VARIABLE_TYPE_FLOAT || val0->type == VARIABLE_TYPE_FLOAT)
+    {
+        baranium_compiled_variable_convert_to_type(val0, VARIABLE_TYPE_FLOAT);
+        float value0 = *(float*)val0->value;
+        baranium_compiled_variable_convert_to_type(val1, VARIABLE_TYPE_FLOAT);
+        float value1 = *(float*)val1->value;
+
+        if (operation == CMP_EQUAL)
+        {
+            cpu->cv = (value0 == value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_EQUAL", value0, value1));
+        }
+        if (operation == CMP_NOTEQUAL)
+        {
+            cpu->cv = (value0 != value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_NOTEQUAL", value0, value1));
+        }
+        if (operation == CMP_LESS_THAN)
+        {
+            cpu->cv = (value0 < value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_LESS_THAN", value0, value1));
+        }
+        if (operation == CMP_LESS_EQUAL)
+        {
+            cpu->cv = (value0 <= value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_LESS_EQUAL", value0, value1));
+        }
+        if (operation == CMP_GREATER_THAN)
+        {
+            cpu->cv = (value0 > value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_GREATER_THAN", value0, value1));
+        }
+        if (operation == CMP_GREATER_EQUAL)
+        {
+            cpu->cv = (value0 >= value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_GREATER_EQUAL", value0, value1));
+        }
+    }
+    else
+    {
+        baranium_compiled_variable_convert_to_type(val0, VARIABLE_TYPE_OBJECT);
+        int64_t value0 = *(int64_t*)val0->value;
+        baranium_compiled_variable_convert_to_type(val1, VARIABLE_TYPE_OBJECT);
+        int64_t value1 = *(int64_t*)val1->value;
+
+        if (operation == CMP_EQUAL)
+        {
+            cpu->cv = (value0 == value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_EQUAL", value0, value1));
+        }
+        if (operation == CMP_NOTEQUAL)
+        {
+            cpu->cv = (value0 != value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_NOTEQUAL", value0, value1));
+        }
+        if (operation == CMP_LESS_THAN)
+        {
+            cpu->cv = (value0 < value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_LESS_THAN", value0, value1));
+        }
+        if (operation == CMP_LESS_EQUAL)
+        {
+            cpu->cv = (value0 <= value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_LESS_EQUAL", value0, value1));
+        }
+        if (operation == CMP_GREATER_THAN)
+        {
+            cpu->cv = (value0 > value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_GREATER_THAN", value0, value1));
+        }
+        if (operation == CMP_GREATER_EQUAL)
+        {
+            cpu->cv = (value0 >= value1) ? 1 : 0;
+            LOGDEBUG(stringf("comparing %lld and %lld for CMP_GREATER_EQUAL", value0, value1));
+        }
+    }
+
+    LOGDEBUG(stringf("comparison result: %s", cpu->cv ? "true" : "false"));
+
+    baranium_compiled_variable_dispose(val0);
+    baranium_compiled_variable_dispose(val1);
+}
+
+void CMPC(bcpu* cpu)
+{
+    if (!cpu) return;
+    if (!cpu->flags.CMP) return;
+
+    uint8_t operation = cpu->fetch(cpu, 8);
+
+    POPCV(cpu);
+    int64_t val0 = cpu->cv;
+    POPCV(cpu);
+    int64_t val1 = cpu->cv;
+
+    if (operation == CMP_AND && val0 == val1 && val1 == 1)
+        cpu->cv = 1;
+    else if (operation == CMP_OR && (val0 == 1 || val1 == 1))
+        cpu->cv = 1;
+    else
+        cpu->cv = 0;
 }
 
 void MEM(bcpu* cpu)
@@ -531,7 +592,7 @@ void MEM(bcpu* cpu)
     bvarmgr* varmgr = cpu->runtime->varmgr;
 
     size_t size = cpu->fetch(cpu, 64);
-    enum BaraniumVariableType type = cpu->fetch(cpu, 8);
+    baranium_variable_type_t type = cpu->fetch(cpu, 8);
     index_t id = cpu->fetch(cpu, 64);
 
     bvarmgr_alloc(varmgr, type, id, size, false);
@@ -556,8 +617,6 @@ void SET(bcpu* cpu)
     index_t id = cpu->fetch(cpu, 64);
     size_t size = cpu->fetch(cpu, 64);
 
-    LOGDEBUG(stringf("Setting variable with id '%ld' and size '%ld'", id, size));
-
     bvarmgr_n* entry = bvarmgr_get(varmgr, id);
     if (!entry)
     {
@@ -566,7 +625,7 @@ void SET(bcpu* cpu)
         cpu->killTriggered = true;
         return;
     }
-    BaraniumVariable* var = entry->variable;
+    baranium_variable* var = entry->variable;
 
     if (var->Size != size)
     {

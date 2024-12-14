@@ -34,12 +34,12 @@ void bcpu_opcodes_init()
         opcodes[0x01] = createOpcode("CCF", CCF);
         opcodes[0x02] = createOpcode("SCF", SCF);
         opcodes[0x03] = createOpcode("CCV", CCV);
-        opcodes[0x04] = createOpcode("PUSHCV", PUSHCV);
-        opcodes[0x05] = createOpcode("POPCV", POPCV);
-        opcodes[0x06] = createOpcode("PUSHVAR", PUSHVAR);
-        opcodes[0x07] = createOpcode("POPVAR", POPVAR);
-        opcodes[0x08] = createOpcode("PUSH", PUSH);
-        opcodes[0x09] = createOpcode("???", INVALID_OPCODE);
+        opcodes[0x04] = createOpcode("ICV", ICV);
+        opcodes[0x05] = createOpcode("PUSHCV", PUSHCV);
+        opcodes[0x06] = createOpcode("POPCV", POPCV);
+        opcodes[0x07] = createOpcode("PUSHVAR", PUSHVAR);
+        opcodes[0x08] = createOpcode("POPVAR", POPVAR);
+        opcodes[0x09] = createOpcode("PUSH", PUSH);
         opcodes[0x0A] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x0B] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x0C] = createOpcode("???", INVALID_OPCODE);
@@ -51,14 +51,14 @@ void bcpu_opcodes_init()
     { // 0x10 - 0x1F
         opcodes[0x10] = createOpcode("JMP", JMP);
         opcodes[0x11] = createOpcode("JMPOFF", JMPOFF);
-        opcodes[0x12] = createOpcode("JEQ", JEQ);
-        opcodes[0x13] = createOpcode("JEQOFF", JEQOFF);
-        opcodes[0x14] = createOpcode("JNQ", JNQ);
-        opcodes[0x15] = createOpcode("JNQOFF", JNQOFF);
-        opcodes[0x16] = createOpcode("JLZ", JLZ);
-        opcodes[0x17] = createOpcode("JLZOFF", JLZOFF);
-        opcodes[0x18] = createOpcode("JGZ", JGZ);
-        opcodes[0x19] = createOpcode("JGZOFF", JGZOFF);
+        opcodes[0x12] = createOpcode("JMPC", JMPC);
+        opcodes[0x13] = createOpcode("JMPCOFF", JMPCOFF);
+        opcodes[0x14] = createOpcode("???", INVALID_OPCODE);
+        opcodes[0x15] = createOpcode("???", INVALID_OPCODE);
+        opcodes[0x16] = createOpcode("???", INVALID_OPCODE);
+        opcodes[0x17] = createOpcode("???", INVALID_OPCODE);
+        opcodes[0x18] = createOpcode("???", INVALID_OPCODE);
+        opcodes[0x19] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x1A] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x1B] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x1C] = createOpcode("???", INVALID_OPCODE);
@@ -88,7 +88,7 @@ void bcpu_opcodes_init()
 
     { // 0x30 - 0x3F
         opcodes[0x30] = createOpcode("CMP", CMP);
-        opcodes[0x31] = createOpcode("???", INVALID_OPCODE);
+        opcodes[0x31] = createOpcode("CMPC", CMPC);
         opcodes[0x32] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x33] = createOpcode("???", INVALID_OPCODE);
         opcodes[0x34] = createOpcode("???", INVALID_OPCODE);

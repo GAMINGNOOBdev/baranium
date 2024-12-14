@@ -5,6 +5,16 @@
 #include <stdint.h>
 #include <vector>
 
+#define CMP_LESS_THAN     0x18
+#define CMP_LESS_EQUAL    0x38
+#define CMP_GREATER_THAN  0x28
+#define CMP_GREATER_EQUAL 0x48
+#define CMP_EQUAL         0x08
+#define CMP_NOTEQUAL      0xF8
+
+#define CMP_AND 0
+#define CMP_OR  1
+
 namespace Binaries
 {
 
@@ -65,6 +75,9 @@ namespace Binaries
         // clear compare value
         void CCV();
 
+        // invert compare value
+        void ICV();
+
         // push the compare value to the stack
         void PUSHCV();
 
@@ -93,28 +106,10 @@ namespace Binaries
         void JMPOFF(int16_t offset);
 
         // jump if equal to
-        void JEQ(uint64_t addr);
+        void JMPC(uint64_t addr);
 
         // jump offset-ed from the current position
-        void JEQOFF(uint16_t addr);
-
-        // jump if not equal to
-        void JNQ(uint64_t addr);
-
-        // jump offset-ed from the current position to
-        void JNQOFF(uint16_t addr);
-
-        // jump if less than zero to
-        void JLZ(uint64_t addr);
-
-        // jump offset-ed from the current position to
-        void JLZOFF(uint16_t addr);
-
-        // jump if greater than zero to
-        void JGZ(uint64_t addr);
-
-        // jump offset-ed from the current position to
-        void JGZOFF(uint16_t addr);
+        void JMPCOFF(uint16_t addr);
 
         // modulo two values from the stack
         void MOD();
@@ -147,7 +142,10 @@ namespace Binaries
         void SHFTR();
 
         // compare two values on the stack
-        void CMP();
+        void CMP(uint8_t compareMethod);
+
+        // compare two compared values together
+        void CMPC(uint8_t compareCombineMethod);
 
         // allocate memory
         void MEM(size_t size, uint8_t type, index_t id);

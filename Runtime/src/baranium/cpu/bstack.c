@@ -30,8 +30,8 @@ void bstack_clear(bstack* obj)
 
     if (obj->start == NULL) return;
 
-    bstackEntry* next = NULL;
-    for (bstackEntry* ptr = obj->start; ptr != NULL;)
+    bstack_entry* next = NULL;
+    for (bstack_entry* ptr = obj->start; ptr != NULL;)
     {
         next = ptr->next;
         free(ptr);
@@ -48,10 +48,10 @@ void bstack_push(bstack* obj, uint64_t data)
 
     if (obj->start == NULL)
     {
-        obj->start = malloc(sizeof(bstackEntry));
+        obj->start = malloc(sizeof(bstack_entry));
         if (!obj->start)
             return;
-        memset(obj->start, 0, sizeof(bstackEntry));
+        memset(obj->start, 0, sizeof(bstack_entry));
         obj->start->prev = NULL;
         obj->start->next = NULL;
         obj->start->data = data;
@@ -59,10 +59,10 @@ void bstack_push(bstack* obj, uint64_t data)
         return;
     }
 
-    bstackEntry* newEntry = malloc(sizeof(bstackEntry));
+    bstack_entry* newEntry = malloc(sizeof(bstack_entry));
     if (!newEntry)
         return;
-    memset(newEntry, 0, sizeof(bstackEntry));
+    memset(newEntry, 0, sizeof(bstack_entry));
     newEntry->prev = obj->end;
     newEntry->data = data;
     newEntry->next = NULL;
@@ -78,8 +78,8 @@ uint64_t bstack_pop(bstack* obj)
     if (obj->end == NULL)
         return 0;
 
-    bstackEntry* entry = obj->end;
-    bstackEntry* prev = obj->end->prev;
+    bstack_entry* entry = obj->end;
+    bstack_entry* prev = obj->end->prev;
     uint64_t data = entry->data;
     free(entry);
 

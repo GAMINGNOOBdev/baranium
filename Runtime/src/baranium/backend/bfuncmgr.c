@@ -58,9 +58,9 @@ void baranium_function_manager_clear(baranium_function_manager* obj)
     obj->count = 0;
 }
 
-int baranium_function_manager_add_entry(baranium_function_manager* obj, index_t id, BaraniumScript* script);
+int baranium_function_manager_add_entry(baranium_function_manager* obj, index_t id, baranium_script* script);
 
-void baranium_function_manager_add(baranium_function_manager* obj, index_t id, BaraniumScript* script)
+void baranium_function_manager_add(baranium_function_manager* obj, index_t id, baranium_script* script)
 {
     if (obj == NULL)
         return;
@@ -82,7 +82,7 @@ void baranium_function_manager_add(baranium_function_manager* obj, index_t id, B
     LOGDEBUG(stringf("Allocated entry for function with id %ld", id));
 }
 
-BaraniumFunction* baranium_function_manager_get(baranium_function_manager* obj, index_t id)
+baranium_function* baranium_function_manager_get(baranium_function_manager* obj, index_t id)
 {
     if (!obj)
         return NULL;
@@ -168,7 +168,7 @@ destroy:
     bfuncmgr_n_free(foundEntry);
 }
 
-int baranium_function_manager_add_entry(baranium_function_manager* obj, index_t id, BaraniumScript* script)
+int baranium_function_manager_add_entry(baranium_function_manager* obj, index_t id, baranium_script* script)
 {
     if (obj == NULL || id == INVALID_INDEX || script == NULL)
         return 1;

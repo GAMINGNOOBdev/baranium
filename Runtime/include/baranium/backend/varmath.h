@@ -1,9 +1,9 @@
 #ifndef __BARANIUM__BACKEND__VARMATH_H_
 #define __BARANIUM__BACKEND__VARMATH_H_
 
-#include <baranium/variable.h>
-#include <baranium/defines.h>
-#include <baranium/bcpu.h>
+#include "../variable.h"
+#include "../defines.h"
+#include "../bcpu.h"
 
 #define BARANIUM_VARIABLE_OPERATION_NONE    0x00
 #define BARANIUM_VARIABLE_OPERATION_MOD     0x01
@@ -23,7 +23,7 @@ extern "C" {
 
 typedef struct baranium_compiled_variable
 {
-    enum BaraniumVariableType type;
+    baranium_variable_type_t type;
     void* value;
     size_t size;
 } baranium_compiled_variable;
@@ -62,7 +62,7 @@ BARANIUMAPI void baranium_compiled_variable_dispose(baranium_compiled_variable* 
  * @param var Variable that will be converted
  * @param targetType Target type
  */
-BARANIUMAPI void baranium_compiled_variable_convert_to_type(baranium_compiled_variable* var, enum BaraniumVariableType targetType);
+BARANIUMAPI void baranium_compiled_variable_convert_to_type(baranium_compiled_variable* var, baranium_variable_type_t targetType);
 
 /**
  * @brief Combine two variable's data
@@ -74,7 +74,7 @@ BARANIUMAPI void baranium_compiled_variable_convert_to_type(baranium_compiled_va
  * @param operation Type of operation to be done to the variable
  * @param type Target variable type
  */
-BARANIUMAPI void baranium_compiled_variable_combine(baranium_compiled_variable* lhs, baranium_compiled_variable* rhs, uint8_t operation, enum BaraniumVariableType type);
+BARANIUMAPI void baranium_compiled_variable_combine(baranium_compiled_variable* lhs, baranium_compiled_variable* rhs, uint8_t operation, baranium_variable_type_t type);
 
 #ifdef __cplusplus
 }

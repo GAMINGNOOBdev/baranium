@@ -80,16 +80,6 @@ namespace Logging
     */
     void LogErrorExit(const char* message, int code = -1);
 
-    /**
-     * @brief Like printf but for building a string together without using `append` on an `std::string` object
-     * 
-     * @param[in] formatString string which has format information
-     * @param[in] ... any other arguments
-     * 
-     * @returns the new formatted string
-    */
-    const char* Format(const char* formatString, ...);
-
 }
 
 #endif

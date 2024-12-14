@@ -10,6 +10,7 @@
  */
 
 #include "MemoryManager.h"
+#include "StringUtil.h"
 #include "Logging.h"
 #include <string.h>
 #include <stdarg.h>
@@ -84,13 +85,13 @@ namespace Logging
 
         char* logFileName = (char*)filename;
         if (logFileName == nullptr)
-            logFileName = (char*)Format("%04d-%02d-%02d_%02d-%02d.%02d.log",
+            logFileName = (char*)stringf("%04d-%02d-%02d_%02d-%02d.%02d.log",
                                         now->tm_year+1900, now->tm_mon+1, now->tm_mday,
                                         now->tm_hour, now->tm_min, now->tm_sec);
 
         LogFile = fopen(logFileName, "w+");
 
-        const char* logStartLine = Format("Log created at %02d:%02d:%02d on %02d/%02d/%04d\n",
+        const char* logStartLine = stringf("Log created at %02d:%02d:%02d on %02d/%02d/%04d\n",
                                         now->tm_hour, now->tm_min, now->tm_sec, now->tm_mon+1, now->tm_mday, now->tm_year+1900);
 
         if (LogFile == nullptr)
@@ -116,8 +117,8 @@ namespace Logging
 
         std::string messageStr = message;
 
-        std::string logTime = Format("[%02d:%02d:%02d]", now->tm_hour, now->tm_min, now->tm_sec);
-        std::string logMessage = Format("%s\t%s\t%s\n", logTime.c_str(), GetLogLevelAsString(level), messageStr.c_str());
+        std::string logTime = stringf("[%02d:%02d:%02d]", now->tm_hour, now->tm_min, now->tm_sec);
+        std::string logMessage = stringf("%s\t%s\t%s\n", logTime.c_str(), GetLogLevelAsString(level), messageStr.c_str());
 
         if (LogFile != nullptr && FileLogging)
         {
@@ -142,18 +143,6 @@ namespace Logging
         Dispose();
         MemoryManager::dealloc_all();
         exit(code);
-    }
-
-    const char* Format(const char* formatString, ...)
-    {
-        static char mFormattingBuffer[4096];
-
-        va_list args;
-        va_start(args, formatString);
-        int result = vsnprintf(mFormattingBuffer, 4096, formatString, args);
-        va_end(args);
-
-        return mFormattingBuffer;
     }
 
 }

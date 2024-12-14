@@ -1,8 +1,12 @@
 #include "../MemoryManager.h"
+#include "CodeBuilder.h"
 #include "CompiledScript.h"
 #include "../StringUtil.h"
 #include "../Logging.h"
 #include "Compiler.h"
+#include <cstdint>
+#include <cstdlib>
+#include <cassert>
 #include <memory.h>
 
 #define nop (void)0
@@ -266,11 +270,12 @@ namespace Binaries
 
     void Compiler::CompileIfElseStatement(Language::IfElseStatement& token)
     {
+        int codeSize = PredictCodeSize(token.mTokens);
         mCodeBuilder.SCF();
         mCodeBuilder.CCV();
         CompileExpression(token.Condition);
-        int codeSize = PredictCodeSize(token.mTokens);
-        mCodeBuilder.JNQOFF(codeSize);
+        mCodeBuilder.ICV();
+        mCodeBuilder.JMPCOFF(codeSize);
         Compile(token.mTokens);
         mCodeBuilder.CCF();
         mCodeBuilder.CCV();
@@ -287,8 +292,11 @@ namespace Binaries
         uint64_t pointer = GetIP()-1;
         Compile(token.mTokens);
         CompileExpression(token.Condition);
-        mCodeBuilder.JEQ(pointer);
+        mCodeBuilder.SCF();
         mCodeBuilder.CCV();
+        mCodeBuilder.JMPC(pointer);
+        mCodeBuilder.CCV();
+        mCodeBuilder.CCF();
     }
 
     void Compiler::CompileWhileLoop(std::shared_ptr<Language::Loop> token)
@@ -296,13 +304,16 @@ namespace Binaries
 
     void Compiler::CompileWhileLoop(Language::Loop& token)
     {
-        int offset = PredictCodeSize(token.mTokens); // + 1;
+        int offset = PredictCodeSize(token.mTokens);
         mCodeBuilder.JMPOFF(offset);
         uint64_t pointer = GetIP()-1;
         Compile(token.mTokens);
-        CompileExpression(token.Condition);
-        mCodeBuilder.JEQ(pointer);
+        mCodeBuilder.SCF();
         mCodeBuilder.CCV();
+        CompileExpression(token.Condition);
+        mCodeBuilder.JMPC(pointer);
+        mCodeBuilder.CCV();
+        mCodeBuilder.CCF();
     }
 
     void Compiler::CompileForLoop(std::shared_ptr<Language::Loop> token)
@@ -310,17 +321,17 @@ namespace Binaries
 
     void Compiler::CompileForLoop(Language::Loop& token)
     {
-        CompileVariable(token.StartVariable);
-        int offset = PredictCodeSize(token.mTokens); // + 1;
+        CompileVariable(token.StartVariable); // either a variable was declared
+        CompileExpression(token.StartExpr);   // or a starting expression
+        int offset = PredictCodeSize(token.mTokens) + PredictCodeSize(token.Iteration);
         mCodeBuilder.JMPOFF(offset);
         uint64_t pointer = GetIP()-1;
         Compile(token.mTokens);
-        CompileExpression(token.Condition);
-        mCodeBuilder.PUSHCV();
         CompileExpression(token.Iteration);
-        mCodeBuilder.POPCV();
-        mCodeBuilder.JEQ(pointer);
+        mCodeBuilder.SCF();
         mCodeBuilder.CCV();
+        CompileExpression(token.Condition);
+        mCodeBuilder.JMPC(pointer);
 
         if (token.StartVariable)
         {
@@ -460,6 +471,15 @@ namespace Binaries
                 mCodeBuilder.PushIntValue(value);
             }
         }
+        else if (token.mType == SourceToken::Type::Keyword && !isRoot)
+        {
+            if (token.KeywordIndex == KeywordIndex_false)
+                mCodeBuilder.PushBoolValue(false);
+            else if (token.KeywordIndex == KeywordIndex_true)
+                mCodeBuilder.PushBoolValue(true);
+            else
+                Logging::LogErrorExit(stringf("Line %d: Invalid keyword '%s'", token.LineNumber, token.Contents.c_str()));
+        }
         else if (token.mType == SourceToken::Type::Null && !isRoot)
             mCodeBuilder.PushUintValue(0);
         else if (token.mType == SourceToken::Type::Text && !isRoot)
@@ -482,8 +502,10 @@ namespace Binaries
             token.mType == SourceToken::Type::XorEqual)
             CompileAssignment(node);
 
-        if (token.mType == SourceToken::Type::EqualTo   || token.mType == SourceToken::Type::NotEqual ||
-            token.mType == SourceToken::Type::LessEqual || token.mType == SourceToken::Type::GreaterEqual)
+        if (token.mType == SourceToken::Type::EqualTo   || token.mType == SourceToken::Type::NotEqual       ||
+            token.mType == SourceToken::Type::LessEqual || token.mType == SourceToken::Type::GreaterEqual   ||
+            token.mType == SourceToken::Type::LessThan  || token.mType == SourceToken::Type::GreaterThan    ||
+            token.mType == SourceToken::Type::AndAnd    || token.mType == SourceToken::Type::OrOr)
         {
             CompileCondition(node);
             mCodeBuilder.PUSHCV();
@@ -647,7 +669,12 @@ namespace Binaries
         else
             mCodeBuilder.PushIntValue(0);
 
-        mCodeBuilder.CMP();
+        if (root->contents.mType == SourceToken::Type::AndAnd)
+            mCodeBuilder.CMPC(CMP_AND);
+        else if (root->contents.mType == SourceToken::Type::OrOr)
+            mCodeBuilder.CMPC(CMP_OR);
+        else
+            mCodeBuilder.CMP(GetCompareMethod(root->contents.mType));
     }
 
     void Compiler::CompileKeywordExpression(Language::Expression& expression)
@@ -661,7 +688,7 @@ namespace Binaries
             return;
         }
         else if (expression.ReturnValue == Language::Keywords[KeywordIndex_attached].Name)
-            mCodeBuilder.PUSH(-1);
+            mCodeBuilder.PushIntValue(-1);
         else
         {
             auto id = GetID(expression.ReturnValue, expression.LineNumber);
@@ -706,6 +733,27 @@ namespace Binaries
             CompileAstNode(subNode, false);
 
         mCodeBuilder.CALL(id);
+    }
+
+    uint8_t Compiler::GetCompareMethod(SourceToken::Type type)
+    {
+        switch (type)
+        {
+            default:
+            case SourceToken::Type::EqualTo:
+                return CMP_EQUAL;
+            case SourceToken::Type::NotEqual:
+                return CMP_NOTEQUAL;
+            case SourceToken::Type::LessThan:
+                return CMP_LESS_THAN;
+            case SourceToken::Type::LessEqual:
+                return CMP_LESS_EQUAL;
+            case SourceToken::Type::GreaterThan:
+                return CMP_GREATER_THAN;
+            case SourceToken::Type::GreaterEqual:
+                return CMP_GREATER_EQUAL;
+        }
+        return CMP_EQUAL;
     }
 
     uint8_t* GetVariableValueAsData(std::string value, Language::VariableType type)

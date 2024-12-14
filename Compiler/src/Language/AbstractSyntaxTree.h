@@ -24,6 +24,7 @@ namespace Language
         None,
         Assignment,         // variable assignment
         Comparison,         // comparisons like "==", "!=", "<=" or ">="
+        CombinedComparison, // combined comparisons like "&&" and "||"
         PrimaryOperation,   // primary as in very simple operations like + or -
         SecondaryOperation, // secondary as in more advanced/complex operations that should be calculated before the primary ones like * or /
         BitwiseOperation,   // bitwise operations almost always go first, stuff like "|", "^", "&", "~"

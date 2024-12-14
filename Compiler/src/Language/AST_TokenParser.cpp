@@ -1,6 +1,7 @@
 #include "AST_TokenParsers.h"
 #include "../StringUtil.h"
 #include "../Logging.h"
+#include "AbstractSyntaxTree.h"
 
 void Language::SetupParserHandles(AbstractSyntaxTree& ast)
 {
@@ -23,7 +24,8 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     /// String parser ///
     /////////////////////
 
-    auto stringParser = [](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
+    ast.RegisterPrefix(SourceToken::Type::DoubleQuote,
+    [](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
     {
         auto result = TreeNode::Create();
         result->contents = tokens.Current();
@@ -33,9 +35,8 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
         if (!tokens.NextMatches(SourceToken::Type::DoubleQuote))
             Logging::LogErrorExit(stringf("Line %d: missing \" at the end of string", tokens.Current().LineNumber));
         return result;
-    };
-
-    ast.RegisterPrefix(SourceToken::Type::DoubleQuote, stringParser);
+    }
+    );
 
     ////////////////////////
     /// Prefix operators ///
@@ -145,7 +146,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
         int64_t operationIndex = AbstractSyntaxTree::GetOperationIndex(tokens.Current(), type, wasSpecialOperation);
         result->operation = operationIndex;
         result->specialChar = wasSpecialOperation;
-        result->right = ast.ParseTokens(tokens, BindingPower::None);
+        result->right = ast.ParseTokens(tokens, BindingPower::CombinedComparison);
         result->left = std::make_shared<TreeNode>(*parentNode);
         return result;
     };
@@ -156,8 +157,32 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
     ast.RegisterInfix(SourceToken::Type::GreaterEqual, BindingPower::Comparison, comparisonOperatorParser);
     ast.RegisterInfix(SourceToken::Type::LessThan, BindingPower::Comparison, comparisonOperatorParser);
     ast.RegisterInfix(SourceToken::Type::GreaterThan, BindingPower::Comparison, comparisonOperatorParser);
-    ast.RegisterInfix(SourceToken::Type::AndAnd, BindingPower::Comparison, comparisonOperatorParser);
-    ast.RegisterInfix(SourceToken::Type::OrOr, BindingPower::Comparison, comparisonOperatorParser);
+
+    /////////////////////////////////////
+    /// Combined comparison operators ///
+    /////////////////////////////////////
+
+    auto combinedComparisonOperatorParser = [&ast](SourceTokenIterator& tokens, TreeNodeObject parentNode, power_t power)
+    {
+        auto result = TreeNode::Create();
+        result->contents = tokens.Current();
+        Logging::Log(stringf("Previous token: '%s'", parentNode->contents.Contents.c_str()));
+        Logging::Log(stringf("Current token: '%s'", tokens.Current().Contents.c_str()));
+        Logging::Log(stringf("Next token: '%s'", tokens.Peek().Contents.c_str()));
+        SourceToken::Type type;
+        bool wasSpecialOperation = false;
+        int64_t operationIndex = AbstractSyntaxTree::GetOperationIndex(tokens.Current(), type, wasSpecialOperation);
+        result->operation = operationIndex;
+        result->specialChar = wasSpecialOperation;
+        result->right = ast.ParseTokens(tokens, BindingPower::None);
+        result->left = std::make_shared<TreeNode>(*parentNode);
+        Logging::Log(stringf("left token: %s", result->left->contents.Contents.c_str()));
+        Logging::Log(stringf("right token: %s", result->right->contents.Contents.c_str()));
+        return result;
+    };
+
+    ast.RegisterInfix(SourceToken::Type::AndAnd, BindingPower::CombinedComparison, combinedComparisonOperatorParser);  // basically the same as normal comparisons except that they are higher priority
+    ast.RegisterInfix(SourceToken::Type::OrOr, BindingPower::CombinedComparison, combinedComparisonOperatorParser);    // basically the same as normal comparisons except that tehy are higher priority
 
     ///////////////////////
     /// Infix operators ///

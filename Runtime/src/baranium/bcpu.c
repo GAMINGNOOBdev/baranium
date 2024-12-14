@@ -8,7 +8,7 @@
 uint64_t _bcpu_fetch(bcpu* obj, int bits);
 
 // initializes the cpu with the requered function pointers and also sets the bus of the cpu
-bcpu* bcpu_init(BaraniumRuntime* runtime)
+bcpu* bcpu_init(baranium_runtime* runtime)
 {
     bcpu* obj = malloc(sizeof(bcpu));
     if (obj == NULL)

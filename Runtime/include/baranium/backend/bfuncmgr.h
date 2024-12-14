@@ -13,7 +13,7 @@ typedef struct bfuncmgr_n
 {
     struct bfuncmgr_n* prev;
     index_t id;
-    BaraniumScript* script;
+    baranium_script* script;
     struct bfuncmgr_n* next;
 } bfuncmgr_n;
 
@@ -34,10 +34,10 @@ void baranium_function_manager_dispose(baranium_function_manager* obj);
 void baranium_function_manager_clear(baranium_function_manager* obj);
 
 // allocate/create a function entry
-void baranium_function_manager_add(baranium_function_manager* obj, index_t id, BaraniumScript* script);
+void baranium_function_manager_add(baranium_function_manager* obj, index_t id, baranium_script* script);
 
 // get a function if existent
-BaraniumFunction* baranium_function_manager_get(baranium_function_manager* obj, index_t id);
+baranium_function* baranium_function_manager_get(baranium_function_manager* obj, index_t id);
 
 // get a function entry if existent
 bfuncmgr_n* baranium_function_manager_get_entry(baranium_function_manager* obj, index_t id);

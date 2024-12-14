@@ -13,6 +13,7 @@ define squared(float x)
 }
 
 field object my_super_awesome_object = attached;
+field float testFunctionResult = 10;
 string super_duper_awesome_shitstorm_object = "yo";
 
 define main()
@@ -23,18 +24,31 @@ define main()
     super_duper_awesome_shitstorm_object = "aaaa";
     super_duper_awesome_shitstorm_object = "This is a test, hopefully this won't crash it again";
 
-    float testFunctionResult = 0;
-    testFunctionResult = squared(500);
+    testFunctionResult = squared(testFunctionResult);
     squared(20);
-    # print(testFunctionResult);      # should be an internal function at this point hopefully
+    print(testFunctionResult);      # should be an internal function at this point hopefully
 
     testFunctionResult++;
     testFunctionResult = 1.0;
     testFunctionResult--;
 
-    if (testFunctionResult == 0)
+    if (squared(-1) == 1)
     {
-        testFunctionResult = 10000000;
+        testFunctionResult = squared(0);
+    }
+
+    if ((testFunctionResult == 0 && 1 >= 1) || true == false)
+    {
+        testFunctionResult = 100;
+    }
+    else if ((testFunctionResult < 0) && squared(testFunctionResult) != testFunctionResult)
+    {
+        testFunctionResult = squared(testFunctionResult);
+    }
+
+    for (testFunctionResult = 1005; testFunctionResult > 0; testFunctionResult /= 10)
+    {
+        squared(10);
     }
 
     testFunctionResult -= 40219 * 100 / (40 + 5 % 2);

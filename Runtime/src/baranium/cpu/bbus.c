@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <memory.h>
 
-bbus* bbus_init(BaraniumFunction* function)
+bbus* bbus_init(baranium_function* function)
 {
     bbus* obj = malloc(sizeof(bbus));
     if (obj == NULL) return NULL;

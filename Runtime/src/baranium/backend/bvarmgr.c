@@ -68,25 +68,25 @@ void bvarmgr_clear(bvarmgr* obj)
     obj->count = 0;
 }
 
-int bvarmgr_add(bvarmgr* obj, BaraniumVariable* var, BaraniumField* field);
+int bvarmgr_add(bvarmgr* obj, baranium_variable* var, baranium_field* field);
 
-void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, size_t size, bool isField)
+void bvarmgr_alloc(bvarmgr* obj, baranium_variable_type_t type, index_t id, size_t size, bool isField)
 {
     if (obj == NULL)
         return;
 
-    if (type == BaraniumVariableType_Invalid || type == BaraniumVariableType_Void)
+    if (type == VARIABLE_TYPE_INVALID || type == VARIABLE_TYPE_VOID)
         return;
 
-    BaraniumVariable* variable = NULL;
-    BaraniumField* field = NULL;
+    baranium_variable* variable = NULL;
+    baranium_field* field = NULL;
     if (isField == false)
     {
-        variable = malloc(sizeof(BaraniumVariable));
+        variable = malloc(sizeof(baranium_variable));
         if (variable == NULL)
             return;
 
-        memset(variable, 0, sizeof(BaraniumVariable));
+        memset(variable, 0, sizeof(baranium_variable));
         variable->ID = id;
         variable->Type = type;
         variable->Size = size;
@@ -101,11 +101,11 @@ void bvarmgr_alloc(bvarmgr* obj, enum BaraniumVariableType type, index_t id, siz
     }
     else
     {
-        field = malloc(sizeof(BaraniumField));
+        field = malloc(sizeof(baranium_field));
         if (field == NULL)
             return;
 
-        memset(field, 0, sizeof(BaraniumField));
+        memset(field, 0, sizeof(baranium_field));
         field->ID = id;
         field->Type = type;
         field->Size = size;
@@ -237,7 +237,7 @@ destroy:
     bvarmgr_n_free(foundEntry);
 }
 
-int bvarmgr_add(bvarmgr* obj, BaraniumVariable* var, BaraniumField* field)
+int bvarmgr_add(bvarmgr* obj, baranium_variable* var, baranium_field* field)
 {
     if (obj == NULL || (var == NULL && field == NULL))
         return 1;

@@ -50,6 +50,16 @@ namespace Language
     void Token::AssignID()
     {
         ID = TokenID;
+
+        if (!mName.empty())
+        {
+            uint64_t identifier = 0;
+            for (size_t i = 0; i < mName.size(); i++)
+                identifier |= (mName.at(i)-'A') << (i % 8) * 8;
+
+            ID += identifier;
+        }
+
         TokenID++;
     }
 

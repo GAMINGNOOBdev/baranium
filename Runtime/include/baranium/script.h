@@ -16,17 +16,16 @@ extern "C" {
 #define MAGIC_NUM_2 'S'
 #define MAGIC_NUM_3 'L'
 
-enum BaraniumSectionType
-{
-    BaraniumSectionType_Invalid,
-    BaraniumSectionType_Fields,
-    BaraniumSectionType_Variables,
-    BaraniumSectionType_Functions,
-};
+#define SECTION_TYPE_INVALID     (baranium_section_type_t)0x00
+#define SECTION_TYPE_FIELDS      (baranium_section_type_t)0x01
+#define SECTION_TYPE_VARIABLES   (baranium_section_type_t)0x02
+#define SECTION_TYPE_FUNCTIONS   (baranium_section_type_t)0x03
 
-typedef struct BaraniumSection
+typedef uint8_t baranium_section_type_t;
+
+typedef struct baranium_section
 {
-    struct BaraniumSection* prev;
+    struct baranium_section* prev;
 
     uint8_t Type;
     index_t ID;
@@ -34,42 +33,42 @@ typedef struct BaraniumSection
     uint64_t DataLocation; // mostly used by function sections because code size can sometimes be quite big and code should probably be dynamically loaded and unloaded when not needed
     uint8_t* Data;
 
-    struct BaraniumSection* next;
-} BaraniumSection;
+    struct baranium_section* next;
+} baranium_section;
 
-typedef struct BaraniumScriptHeader
+typedef struct
 {
     uint8_t MagicNumber[4];
     uint32_t Version;
     uint64_t SectionCount;
-} BaraniumScriptHeader;
+} baranium_script_header;
 
-typedef struct BaraniumScriptNameTableEntry
+typedef struct baranium_script_name_table_entry
 {
-    struct BaraniumScriptNameTableEntry* prev;
+    struct baranium_script_name_table_entry* prev;
 
     uint8_t NameLength;
     uint8_t* Name;
     index_t ID;
 
-    struct BaraniumScriptNameTableEntry* next;
-} BaraniumScriptNameTableEntry;
+    struct baranium_script_name_table_entry* next;
+} baranium_script_name_table_entry;
 
-typedef struct BaraniumScriptNameTable
+typedef struct
 {
     uint64_t NameCount;
-    BaraniumScriptNameTableEntry* EntriesStart;
-    BaraniumScriptNameTableEntry* EntriesEnd;
-} BaraniumScriptNameTable;
+    baranium_script_name_table_entry* EntriesStart;
+    baranium_script_name_table_entry* EntriesEnd;
+} baranium_script_name_table;
 
-typedef struct BaraniumScript
+typedef struct baranium_script
 {
-    BaraniumScriptHeader Header;
-    BaraniumSection* SectionsStart;
-    BaraniumSection* SectionsEnd;
-    BaraniumScriptNameTable NameTable;
-    BaraniumHandle* Handle;
-} BaraniumScript;
+    baranium_script_header Header;
+    baranium_section* SectionsStart;
+    baranium_section* SectionsEnd;
+    baranium_script_name_table NameTable;
+    baranium_handle* Handle;
+} baranium_script;
 
 /**
  * @brief Open a script from a loaded file
@@ -77,14 +76,14 @@ typedef struct BaraniumScript
  * @param handle The file handle containing the script data
  * @returns An instance of the loaded script, `null` if loading failed
  */
-BARANIUMAPI BaraniumScript* baranium_open_script(BaraniumHandle* handle);
+BARANIUMAPI baranium_script* baranium_open_script(baranium_handle* handle);
 
 /**
  * @brief Safely close & dispose a script and it's data
  * 
  * @param script The script that will be disposed
  */
-BARANIUMAPI void baranium_close_script(BaraniumScript* script);
+BARANIUMAPI void baranium_close_script(baranium_script* script);
 
 /**
  * @brief Get a section by it's ID and check if it has the desired type
@@ -94,7 +93,7 @@ BARANIUMAPI void baranium_close_script(BaraniumScript* script);
  * @param type Desired type of the section
  * @returns A pointer to the section
  */
-BARANIUMAPI BaraniumSection* baranium_script_get_section_by_id_and_type(BaraniumScript* script, index_t id, enum BaraniumSectionType type);
+BARANIUMAPI baranium_section* baranium_script_get_section_by_id_and_type(baranium_script* script, index_t id, baranium_section_type_t type);
 
 /**
  * @brief Get the location/index of a specific item with requested `name`
@@ -104,7 +103,7 @@ BARANIUMAPI BaraniumSection* baranium_script_get_section_by_id_and_type(Baranium
  * 
  * @returns An index to that specific item
  */
-BARANIUMAPI index_t baranium_script_get_id_of(BaraniumScript* script, const char* name);
+BARANIUMAPI index_t baranium_script_get_id_of(baranium_script* script, const char* name);
 
 /**
  * @brief Get the name of a specific item with requested `id`
@@ -114,7 +113,7 @@ BARANIUMAPI index_t baranium_script_get_id_of(BaraniumScript* script, const char
  * 
  * @returns The name of that specific item
  */
-BARANIUMAPI char* baranium_script_get_name_of(BaraniumScript* script, index_t id);
+BARANIUMAPI char* baranium_script_get_name_of(baranium_script* script, index_t id);
 
 /**
  * @brief Get a variable from a script
@@ -128,7 +127,7 @@ BARANIUMAPI char* baranium_script_get_name_of(BaraniumScript* script, index_t id
  * 
  * @returns The found variable, `NULL` if not found
  */
-BARANIUMAPI BaraniumVariable* baranium_script_get_variable(BaraniumScript* script, const char* name);
+BARANIUMAPI baranium_variable* baranium_script_get_variable(baranium_script* script, const char* name);
 
 /**
  * @brief Get a variable from a script
@@ -142,7 +141,7 @@ BARANIUMAPI BaraniumVariable* baranium_script_get_variable(BaraniumScript* scrip
  * 
  * @returns The found variable, `NULL` if not found
  */
-BARANIUMAPI BaraniumVariable* baranium_script_get_variable_by_id(BaraniumScript* script, index_t variableID);
+BARANIUMAPI baranium_variable* baranium_script_get_variable_by_id(baranium_script* script, index_t variableID);
 
 /**
  * @brief Get a field from a script
@@ -156,7 +155,7 @@ BARANIUMAPI BaraniumVariable* baranium_script_get_variable_by_id(BaraniumScript*
  * 
  * @returns The found field, `NULL` if not found
  */
-BARANIUMAPI BaraniumField* baranium_script_get_field(BaraniumScript* script, const char* name);
+BARANIUMAPI baranium_field* baranium_script_get_field(baranium_script* script, const char* name);
 
 /**
  * @brief Get a field from a script
@@ -170,7 +169,7 @@ BARANIUMAPI BaraniumField* baranium_script_get_field(BaraniumScript* script, con
  * 
  * @returns The found field, `NULL` if not found
  */
-BARANIUMAPI BaraniumField* baranium_script_get_field_by_id(BaraniumScript* script, index_t fieldID);
+BARANIUMAPI baranium_field* baranium_script_get_field_by_id(baranium_script* script, index_t fieldID);
 
 /**
  * @brief Get a function from a script
@@ -184,7 +183,7 @@ BARANIUMAPI BaraniumField* baranium_script_get_field_by_id(BaraniumScript* scrip
  * 
  * @returns The found function, `NULL` if not found
  */
-BARANIUMAPI BaraniumFunction* baranium_script_get_function(BaraniumScript* script, const char* name);
+BARANIUMAPI baranium_function* baranium_script_get_function(baranium_script* script, const char* name);
 
 /**
  * @brief Get a function from a script
@@ -194,7 +193,7 @@ BARANIUMAPI BaraniumFunction* baranium_script_get_function(BaraniumScript* scrip
  * 
  * @returns The found function, `NULL` if not found
  */
-BARANIUMAPI BaraniumFunction* baranium_script_get_function_by_id(BaraniumScript* script, index_t functionID);
+BARANIUMAPI baranium_function* baranium_script_get_function_by_id(baranium_script* script, index_t functionID);
 
 #ifdef __cplusplus
 }

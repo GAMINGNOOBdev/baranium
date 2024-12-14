@@ -70,13 +70,18 @@ namespace Language
         {
             default:
             case SourceToken::Type::Null:
+            case SourceToken::Type::OrOr:
+            case SourceToken::Type::AndAnd:
             case SourceToken::Type::Number:
             case SourceToken::Type::EqualTo:
             case SourceToken::Type::NotEqual:
+            case SourceToken::Type::LessThan:
             case SourceToken::Type::LessEqual:
+            case SourceToken::Type::GreaterThan:
             case SourceToken::Type::GreaterEqual:
             {
                 Type = ExpressionType::Condition;
+                break;
             }
 
             case SourceToken::Type::EqualSign:

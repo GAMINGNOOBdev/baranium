@@ -116,6 +116,7 @@ namespace Binaries
         void CompileKeywordExpression(Language::Expression& expression);
         void CompileFunctionCall(Language::Expression& expression);
         void CompileFunctionCall(TreeNodeObject node);
+        static uint8_t GetCompareMethod(SourceToken::Type type);
 
     private:
         uint8_t* mCode;
