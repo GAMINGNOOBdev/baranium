@@ -1,6 +1,5 @@
 #include "AbstractSyntaxTree.h"
 #include "AST_TokenParsers.h"
-#include "../TokenParser.h"
 #include "../StringUtil.h"
 #include "../Logging.h"
 #include "Language.h"
@@ -13,13 +12,11 @@
 
 #define nop (void)0
 
-extern bool g_DebugMode;
-
 namespace Language
 {
 
     TreeNode::TreeNode()
-        : left(nullptr), right(nullptr), contents(), operation(-1), specialChar(false)
+        : contents(), operation(-1), specialChar(false), left(nullptr), right(nullptr)
     {
     }
 
@@ -74,16 +71,6 @@ namespace Language
         Power = (power_t)power;
     }
 
-    void PrintNode(TreeNodeObject node, int depth, int side = 0)
-    {
-        printf("%s%s%s\n", std::string((size_t)4*depth, ' ').c_str(), side < 0 ? "left: " : ( side > 0 ? "right: " : "" ), node->contents.Contents.c_str());
-        if (node->subNodes.size() > 0)
-            printf("%shas sub-nodes!\n", std::string((size_t)4*depth, ' ').c_str());
-
-        node->left != nullptr ? PrintNode(node->left, depth+1, -1) : nop;
-        node->right != nullptr ? PrintNode(node->right, depth+1, 1) : nop;
-    }
-
     AbstractSyntaxTree::AbstractSyntaxTree()
         : mRoot(nullptr)
     {
@@ -97,9 +84,7 @@ namespace Language
 
     void AbstractSyntaxTree::Parse(SourceTokenIterator& tokens)
     {
-        int index = 0;
         mRoot = ParseTokens(tokens, 0);
-        g_DebugMode ? PrintNode(mRoot, 0) : nop;
     }
 
     TreeNodeObject AbstractSyntaxTree::ParseTokens(SourceTokenIterator& tokens, BindingPower minPower)
@@ -177,6 +162,7 @@ namespace Language
             operationType = (*specialCharIterator).TokenType;
             specialCharIndex = specialCharIterator - Language::SpecialOperationCharacters.begin();
         }
+        wasSpecialChar = specialCharIndex != -1;
 
         return std::max(operationIndex, specialCharIndex);
     }

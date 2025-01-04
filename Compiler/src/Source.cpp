@@ -18,32 +18,6 @@ void Source::AppendSource(Source& other)
     mTokens.Push(otherTokens);
 }
 
-void Source::WriteTokensToJson(std::string name)
-{
-    BgeFile outputFile = BgeFile(name, true);
-    outputFile.WriteLine("[");
-    int index = 0;
-    int tokenCount = mTokens.GetTokens().size();
-    for (auto& token : mTokens.GetTokens())
-    {
-        outputFile.WriteLine("\t{");
-        outputFile.WriteLine(stringf("\t\t\"type\": \"%s\",", SourceTokenTypeToString(token.mType)));
-        outputFile.WriteLine(stringf("\t\t\"line\": \"%d\",", token.LineNumber));
-        if (token.mType == SourceToken::Type::DoubleQuote)
-            outputFile.WriteLine(stringf("\t\t\"contents\": \"\\\"\""));
-        else
-            outputFile.WriteLine(stringf("\t\t\"contents\": \"%s\"", token.Contents.c_str()));
-
-        if (index == tokenCount-1)
-            outputFile.WriteLine("\t}");
-        else
-            outputFile.WriteLine("\t},");
-        index++;
-    }
-    outputFile.WriteLine("]\n");
-    outputFile.Close();
-}
-
 void Source::ReadSource(BgeFile& file)
 {
     if (!file.Ready())

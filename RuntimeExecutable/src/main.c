@@ -1,12 +1,20 @@
+#include "baranium/defines.h"
+#include <baranium/backend/varmath.h>
+#include <baranium/variable.h>
 #include <baranium/function.h>
+#include <baranium/callback.h>
 #include <baranium/logging.h>
 #include <baranium/runtime.h>
 #include <baranium/script.h>
 #include <argument_parser.h>
+#include <string.h>
+#include <malloc.h>
+#include <stdio.h>
 
 uint8_t debug_mode_enabled;
 
 void print_help_message();
+extern void setup_callbacks();
 
 int main(int argc, const char** argv)
 {
@@ -31,13 +39,14 @@ int main(int argc, const char** argv)
 
     if (argument_parser_has(parser, "-v"))
     {
-        printf("Baranium runtime version %d.%d %s\n", BARANIUM_VERSION_MAJOR, BARANIUM_VERSION_MINOR, BARANIUM_VERSION_PHASE);
+        printf("Baranium runtime version %d.%d.%d %s\n", BARANIUM_VERSION_YEAR, BARANIUM_VERSION_MONTH, BARANIUM_VERSION_DATE, BARANIUM_VERSION_PHASE);
         argument_parser_dispose(parser);
         return 0;
     }
 
     debug_mode_enabled = argument_parser_has(parser, "-d");
     logEnableDebugMsgs(debug_mode_enabled);
+    logEnableStdout(!debug_mode_enabled);
     FILE* logOutput = fopen("runtime.log", "wb+");
     logSetStream(logOutput);
 
@@ -59,6 +68,8 @@ int main(int argc, const char** argv)
     baranium_runtime* runtime = baranium_init();
     baranium_set_context(runtime);
 
+    setup_callbacks();
+
     baranium_handle* handle = baranium_open_handle(filePath);
     baranium_script* script = baranium_open_script(handle);
 
@@ -69,7 +80,7 @@ int main(int argc, const char** argv)
     index_t mainIndex = baranium_script_get_id_of(script, "main");
 
     baranium_function* main = baranium_script_get_function_by_id(script, mainIndex);
-    baranium_function_call(runtime, main);
+    baranium_function_call(runtime, main, NULL, NULL, 0);
     baranium_function_dispose(main);
 
     baranium_close_script(script);

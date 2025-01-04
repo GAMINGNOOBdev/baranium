@@ -2,12 +2,14 @@
 #include <baranium/cpu/bcpu_opcodes.h>
 #include <baranium/backend/bvarmgr.h>
 #include <baranium/cpu/bstack.h>
+#include <baranium/callback.h>
 #include <baranium/runtime.h>
 #include <baranium/defines.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 static baranium_runtime* current_active_runtime = NULL;
@@ -25,6 +27,7 @@ baranium_runtime* baranium_init()
     runtimeHandle->cpu = bcpu_init(runtimeHandle);
     runtimeHandle->functionStack = bstack_init();
     runtimeHandle->functionManager = baranium_function_manager_init();
+    runtimeHandle->callbacks = baranium_callback_list_init();
     runtimeHandle->varmgr = bvarmgr_init();
     return runtimeHandle;
 }
@@ -61,9 +64,22 @@ void baranium_cleanup(baranium_runtime* runtime)
 
     bcpu_dispose(runtime->cpu);
     bstack_dispose(runtime->functionStack);
+    baranium_callback_list_dispose(runtime->callbacks);
     baranium_function_manager_dispose(runtime->functionManager);
     bvarmgr_dispose(runtime->varmgr);
     free(runtime);
+}
+
+index_t baranium_get_id_of_name(const char* name)
+{
+    uint64_t identifier = 5381;
+    size_t length = strlen(name);
+    for (size_t i = 0; i < length; i++)
+    {
+        char c = name[i];
+        identifier = ((identifier << 5) + identifier) + c;
+    }
+    return (index_t)identifier;
 }
 
 baranium_handle* baranium_open_handle(const char* source)

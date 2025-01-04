@@ -13,6 +13,7 @@ namespace Language
         ReturnType = VariableType::Void;
         ReturnValue = "";
         ReturnVariableName = "";
+        OnlyDeclaration = false;
         AssignID();
     }
 

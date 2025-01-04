@@ -22,6 +22,9 @@ static const char* LOG_COLORS[] = {
 // off by default
 static uint8_t logging_debug_messages_enabled = 0;
 
+// on by default
+static uint8_t logging_stdout_messages_enabled = 1;
+
 // no output by default
 static FILE* logging_log_messages_output_stream = NULL;
 
@@ -44,9 +47,17 @@ const char* stringf(const char* formatString, ...)
     return mFormattingBuffer;
 }
 
-void logEnableDebugMsgs(uint8_t val)
+uint8_t logEnableDebugMsgs(uint8_t val)
 {
-    logging_debug_messages_enabled = val;
+    if (val != (uint8_t)-1)
+        logging_debug_messages_enabled = val;
+
+    return logging_debug_messages_enabled;
+}
+
+void logEnableStdout(uint8_t val)
+{
+    logging_stdout_messages_enabled = val;
 }
 
 void logSetStream(FILE* stream)
@@ -75,4 +86,7 @@ void logStr(loglevel_t lvl, const char* msg)
 
     if (logging_log_messages_output_stream != stdout || logging_log_messages_output_stream != stderr)
         fflush(logging_log_messages_output_stream);
+
+    if (logging_stdout_messages_enabled && logging_log_messages_output_stream != stdout)
+        fprintf(stdout, "%s%s%s%s\n", LOG_COLORS[lvl+1], LOG_LEVEL_STRINGS[lvl], msg, LOG_COLORS[0]);
 }

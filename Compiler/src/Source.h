@@ -31,15 +31,6 @@ struct Source
     void AppendSource(Source& other);
 
     /**
-     * @brief Write the source code tokens into a single json file
-     * 
-     * @note Executed then the `-d` or `--debug` flag is passed to the main executable
-     * 
-     * @param name Filename of the json file where the token data will be written to
-     */
-    void WriteTokensToJson(std::string name);
-
-    /**
      * @brief Read and parse a sources contents
      * 
      * @param file `BgeFile` object that can read the source file

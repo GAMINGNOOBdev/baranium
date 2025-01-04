@@ -1,6 +1,7 @@
 #include "../MemoryManager.h"
 #include "CompiledScript.h"
 #include "../Logging.h"
+#include "../version.h"
 #include <algorithm>
 
 namespace Binaries
@@ -153,6 +154,9 @@ namespace Binaries
 
     void CompiledScript::CreateFunctionSection(std::shared_ptr<Language::Function> function)
     {
+        if (function->OnlyDeclaration)
+            return;
+
         Section functionSection = Section();
         functionSection.ID = function->ID;
         functionSection.Type = SectionType::Function;
@@ -165,9 +169,11 @@ namespace Binaries
         mCompiler.FinalizeCompilation();
 
         // Size calculation: compiled code size
-        functionSection.DataSize = mCompiler.GetCompiledCodeSize();
+        functionSection.DataSize = 2 + mCompiler.GetCompiledCodeSize();
         functionSection.Data = (uint8_t*)MemoryManager::allocate(functionSection.DataSize);
-        memcpy(functionSection.Data, mCompiler.GetCompiledCode(), functionSection.DataSize);
+        memcpy((void*)((uint64_t)functionSection.Data + 2), mCompiler.GetCompiledCode(), functionSection.DataSize);
+        ((uint8_t*)functionSection.Data)[0] = function->mParameters.size();
+        ((uint8_t*)functionSection.Data)[1] = (uint8_t)function->ReturnType;
 
         // prepare for the next compilation + clear up duplicated memory
         mCompiler.ClearCompiledCode();

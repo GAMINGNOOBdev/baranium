@@ -15,6 +15,7 @@ namespace Language
         VariableType ReturnType;
         std::string ReturnValue;
         std::string ReturnVariableName;
+        bool OnlyDeclaration;
 
         std::vector<std::shared_ptr<Variable>> mParameters;
         SourceTokenList mInnerTokens;

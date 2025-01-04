@@ -1,0 +1,6 @@
+####################
+# STANDARD LIBRARY #
+####################
+
+define system(string command) = void;
+define exit() = void;

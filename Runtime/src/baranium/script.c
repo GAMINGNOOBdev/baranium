@@ -364,10 +364,12 @@ baranium_function* baranium_script_get_function_by_id(baranium_script* script, i
         return NULL;
 
     memset(result, 0, sizeof(baranium_function));
-    result->DataSize = foundSection->DataSize;
+    result->DataSize = foundSection->DataSize-2;
     result->Data = malloc(foundSection->DataSize);
     memset(result->Data, 0, result->DataSize);
     fseek(script->Handle->file, foundSection->DataLocation, SEEK_SET);
+    fread(&result->ParameterCount, sizeof(uint8_t), 1, script->Handle->file);
+    fread(&result->ReturnType, sizeof(uint8_t), 1, script->Handle->file);
     fread(result->Data, 1, result->DataSize, script->Handle->file);
     result->ID = functionID;
     result->Script = script;

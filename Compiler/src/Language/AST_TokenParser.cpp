@@ -129,6 +129,10 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
             if (!tokens.NextMatches(SourceToken::Type::ParenthesisClose))
                 Logging::LogErrorExit(stringf("Line %d: Missing ')'", tokens.Current().LineNumber));
         }
+        else
+        {
+            result->subNodes.push_back(nullptr);
+        }
 
         return result;
     });
@@ -223,7 +227,7 @@ void Language::SetupParserHandles(AbstractSyntaxTree& ast)
             Logging::LogErrorExit("whar");
 
         if (parentNode->contents.mType != SourceToken::Type::Text)
-            Logging::LogErrorExit(stringf("Line %d: Invalid assignment, expected variable name, got '%s'", parentNode->contents.LineNumber, parentNode->contents.Contents.c_str()));
+            Logging::LogErrorExit(stringf("Line %d: Invalid assignment, expected variable/field name, got '%s'", parentNode->contents.LineNumber, parentNode->contents.Contents.c_str()));
 
         auto result = TreeNode::Create();
         result->contents = tokens.Current();

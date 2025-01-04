@@ -15,7 +15,7 @@ namespace Binaries
 {
 
     Compiler::Compiler(CompiledScript& script)
-        : mCode(nullptr), mCodeLength(0), mCodeBuilder(), mScript(script), mVarTable()
+        : mCode(nullptr), mCodeLength(0), mVarTable(), mScript(script), mCodeBuilder()
     {
     }
 
@@ -187,7 +187,8 @@ namespace Binaries
             free(mCode);
 
         mCodeLength = mCodeBuilder.Size();
-        mCode = (uint8_t*)MemoryManager::allocate(sizeof(uint8_t)*mCodeLength);
+        mCode = (uint8_t*)MemoryManager::allocate(mCodeLength+1);
+        memset(mCode, 0, mCodeLength+1);
         memcpy(mCode, mCodeBuilder.Data(), mCodeLength);
 
         mVarTable.Clear();
@@ -224,7 +225,7 @@ namespace Binaries
 
     uint64_t Compiler::GetIP()
     {
-        return mCodeBuilder.Size() + 1;
+        return mCodeBuilder.Size();
     }
 
     void Compiler::CompileVariable(std::shared_ptr<Language::Variable> token)
@@ -272,16 +273,52 @@ namespace Binaries
     {
         int codeSize = PredictCodeSize(token.mTokens);
         mCodeBuilder.SCF();
-        mCodeBuilder.CCV();
         CompileExpression(token.Condition);
+        mCodeBuilder.PUSHCV();
         mCodeBuilder.ICV();
         mCodeBuilder.JMPCOFF(codeSize);
         Compile(token.mTokens);
-        mCodeBuilder.CCF();
-        mCodeBuilder.CCV();
 
         for (auto& otherStatement : token.ChainedStatements)
-            CompileIfElseStatement(otherStatement);
+            CompileIfElseSubStatement(otherStatement);
+
+        mCodeBuilder.POPCV();
+        mCodeBuilder.CCF();
+    }
+
+    void Compiler::CompileIfElseSubStatement(Language::IfElseStatement& token)
+    {
+        if (token.Condition == nullptr)
+        {
+            CompileElseStatement(token);
+            return;
+        }
+
+        int codeSize = PredictCodeSize(token.mTokens);
+        int conditionSize = PredictCodeSize(token.Condition) + 3; // + 3 because POPCV, PUSHCV and ICV are one byte instructions each
+        mCodeBuilder.SCF();
+        mCodeBuilder.POPCV();
+        mCodeBuilder.PUSHCV();
+        mCodeBuilder.JMPCOFF(conditionSize);
+        mCodeBuilder.POPCV();
+        CompileExpression(token.Condition);
+        mCodeBuilder.PUSHCV();
+        mCodeBuilder.ICV();
+        mCodeBuilder.JMPCOFF(codeSize);
+        Compile(token.mTokens);
+    }
+
+    void Compiler::CompileElseStatement(Language::IfElseStatement& token)
+    {
+        if (token.Condition != nullptr)
+            return;
+
+        int codeSize = PredictCodeSize(token.mTokens);
+        mCodeBuilder.SCF();
+        mCodeBuilder.POPCV();
+        mCodeBuilder.PUSHCV();
+        mCodeBuilder.JMPCOFF(codeSize);
+        Compile(token.mTokens);
     }
 
     void Compiler::CompileDoWhileLoop(std::shared_ptr<Language::Loop> token)
@@ -289,7 +326,7 @@ namespace Binaries
 
     void Compiler::CompileDoWhileLoop(Language::Loop& token)
     {
-        uint64_t pointer = GetIP()-1;
+        uint64_t pointer = GetIP();
         Compile(token.mTokens);
         CompileExpression(token.Condition);
         mCodeBuilder.SCF();
@@ -306,7 +343,7 @@ namespace Binaries
     {
         int offset = PredictCodeSize(token.mTokens);
         mCodeBuilder.JMPOFF(offset);
-        uint64_t pointer = GetIP()-1;
+        uint64_t pointer = GetIP();
         Compile(token.mTokens);
         mCodeBuilder.SCF();
         mCodeBuilder.CCV();
@@ -325,7 +362,7 @@ namespace Binaries
         CompileExpression(token.StartExpr);   // or a starting expression
         int offset = PredictCodeSize(token.mTokens) + PredictCodeSize(token.Iteration);
         mCodeBuilder.JMPOFF(offset);
-        uint64_t pointer = GetIP()-1;
+        uint64_t pointer = GetIP();
         Compile(token.mTokens);
         CompileExpression(token.Iteration);
         mCodeBuilder.SCF();

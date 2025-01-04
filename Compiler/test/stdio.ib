@@ -1,0 +1,6 @@
+#################################
+# STANDARD INPUT OUTPUT LIBRARY #
+#################################
+
+define print(string str) = void;
+define input() = string;

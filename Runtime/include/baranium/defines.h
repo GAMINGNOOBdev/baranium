@@ -5,13 +5,10 @@
 extern "C" {
 #endif
 
+#include "../version.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
-
-#define BARANIUM_VERSION_MAJOR       0
-#define BARANIUM_VERSION_MINOR       1
-#define BARANIUM_VERSION_PHASE       "pre-alpha"
 
 #define BARANIUM_PLATFORM_UNDEFINED  0
 #define BARANIUM_PLATFORM_WINDOWS    1
@@ -57,11 +54,6 @@ extern "C" {
 #   define BARANIUMAPI
 #endif
 
-#define VERSION_CREATE(year, month, day) ((year << 16) | (month << 8) | day)
-
-#define VERSION_FIRST VERSION_CREATE(2024, 2, 10)
-#define VERSION_CURRENT VERSION_FIRST
-
 /////////////
 /// Types ///
 /////////////
@@ -77,6 +69,7 @@ typedef struct baranium_handle
 struct bstack;
 struct bcpu;
 struct bvarmgr;
+struct baranium_callback_list;
 struct baranium_function_manager;
 
 typedef struct
@@ -85,6 +78,7 @@ typedef struct
     baranium_handle* end;
     uint64_t openHandles;
     struct baranium_function_manager* functionManager;
+    struct baranium_callback_list* callbacks;
     struct bstack* functionStack;
     struct bvarmgr* varmgr;
     struct bcpu* cpu;

@@ -14,7 +14,7 @@ struct baranium_script;
 typedef struct baranium_function
 {
     size_t DataSize;
-    size_t ParameterCount;
+    uint8_t ParameterCount;
 
     index_t ID;
 
@@ -22,7 +22,6 @@ typedef struct baranium_function
     void* ReturnValue;
 
     void* Data;
-    baranium_variable* Parameters;
 
     struct baranium_script* Script;
 } baranium_function;
@@ -34,7 +33,12 @@ typedef struct baranium_function
  */
 BARANIUMAPI void baranium_function_dispose(baranium_function* var);
 
-BARANIUMAPI void baranium_function_call(baranium_runtime* runtime, baranium_function* function, ...);
+/**
+ * @brief Call a function
+ *
+ * @param 
+ */
+BARANIUMAPI void baranium_function_call(baranium_runtime* runtime, baranium_function* function, void** dataptr, baranium_variable_type_t* datatypes, int numData);
 
 #ifdef __cplusplus
 }

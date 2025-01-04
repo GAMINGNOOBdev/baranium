@@ -53,11 +53,14 @@ namespace Language
 
         if (!mName.empty())
         {
-            uint64_t identifier = 0;
+            uint64_t identifier = 5381;
             for (size_t i = 0; i < mName.size(); i++)
-                identifier |= (mName.at(i)-'A') << (i % 8) * 8;
+            {
+                char c = mName.at(i);
+                identifier = ((identifier << 5) + identifier) + c;
+            }
 
-            ID += identifier;
+            ID = identifier;
         }
 
         TokenID++;

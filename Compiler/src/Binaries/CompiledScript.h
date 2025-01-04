@@ -14,11 +14,6 @@
 #define MAGIC_NUM_2 'S'
 #define MAGIC_NUM_3 'L'
 
-#define VERSION_CREATE(year, month, day) ((year << 16) | (month << 8) | day)
-
-#define VERSION_FIRST VERSION_CREATE(2024, 2, 10)
-#define VERSION_CURRENT VERSION_FIRST
-
 typedef int64_t index_t;
 
 namespace Binaries

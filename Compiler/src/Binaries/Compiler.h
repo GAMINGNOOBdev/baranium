@@ -1,11 +1,9 @@
 #ifndef __BINARIES__COMPILER_H_
 #define __BINARIES__COMPILER_H_ 1
 
-#include "../Language/Types.h"
 #include "VariableTable.h"
 #include "CodeBuilder.h"
 #include <stdint.h>
-#include <vector>
 
 namespace Binaries
 {
@@ -87,6 +85,8 @@ namespace Binaries
         void CompileExpression(Language::Expression& token);
         void CompileIfElseStatement(std::shared_ptr<Language::IfElseStatement> token);
         void CompileIfElseStatement(Language::IfElseStatement& token);
+        void CompileIfElseSubStatement(Language::IfElseStatement& token);
+        void CompileElseStatement(Language::IfElseStatement& token);
         void CompileDoWhileLoop(std::shared_ptr<Language::Loop> token);
         void CompileDoWhileLoop(Language::Loop& token);
         void CompileWhileLoop(std::shared_ptr<Language::Loop> token);

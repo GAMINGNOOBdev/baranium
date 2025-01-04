@@ -58,5 +58,8 @@ void baranium_field_dispose(baranium_field* field)
     if (field == NULL)
         return;
 
+    if (field->Value != NULL)
+        free(field->Value);
+
     free(field);
 }

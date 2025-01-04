@@ -1,20 +1,11 @@
 #include "Language/Language.h"
 #include "TokenParser.h"
+#include "SourceToken.h"
 #include "StringUtil.h"
 #include "Logging.h"
-#include <algorithm>
 
 TokenParser::TokenParser()
 {
-}
-
-void TokenParser::WriteTokensToJson(std::string name)
-{
-    BgeFile outputFile = BgeFile(name, true);
-    outputFile.WriteLine("[");
-    WriteTokens(outputFile, mPublicTokens);
-    outputFile.WriteLine("]");
-    outputFile.Close();
 }
 
 void TokenParser::ParseTokens(SourceTokenIterator& tokenIterator)
@@ -130,7 +121,7 @@ void TokenParser::ReadField(int& index, SourceToken& current, SourceTokenList to
 
     field->mName = std::string(nameToken.Contents);
     field->AssignID();
-    
+
     index++;
     auto& nextToken = tokens.at(index);
     if (nextToken.mType == SourceToken::Type::Semicolon)
@@ -191,6 +182,7 @@ void TokenParser::ReadFunction(int& index, SourceToken& current, SourceTokenList
 
     index++;
     auto& parametersStart = tokens.at(index);
+
     if (parametersStart.mType != SourceToken::Type::ParenthesisOpen)
         Logging::LogErrorExit(stringf("Line %d: Invalid function syntax", parametersStart.LineNumber));
 
@@ -212,6 +204,21 @@ functionReadContents:
 
     index++;
     auto& functionContents = tokens.at(index);
+    if (functionContents.mType == SourceToken::Type::EqualSign)
+    {
+        index++;
+        functionContents = tokens.at(index);
+        function->ReturnType = Language::Variable::TypeFromToken(functionContents);
+        index++;
+        functionContents = tokens.at(index);
+    }
+    if (functionContents.mType == SourceToken::Type::Semicolon)
+    {
+        function->OnlyDeclaration = true;
+        output.push_back(function);
+        return;
+    }
+    
     if (functionContents.mType != SourceToken::Type::CurlyBracketOpen)
         Logging::LogErrorExit(stringf("Line %d: Invalid function syntax", functionContents.LineNumber));
 
@@ -228,7 +235,7 @@ void TokenParser::ReadIfStatement(int& index, SourceToken& current, SourceTokenL
     index++;
     auto& conditionStart = tokens.at(index);
     if (conditionStart.mType != SourceToken::Type::ParenthesisOpen)
-        Logging::LogErrorExit(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart.LineNumber, conditionStart.Contents));
+        Logging::LogErrorExit(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart.LineNumber, conditionStart.Contents.c_str()));
     std::shared_ptr<Language::IfElseStatement> ifElseStatement = std::make_shared<Language::IfElseStatement>();
     Language::IfElseStatement alternativeCondition = Language::IfElseStatement();
     Language::IfElseStatement elseStatement = Language::IfElseStatement();
@@ -284,7 +291,7 @@ readAlternativeConditions:
     index++;
     nextToken = tokens.at(index);
     if (nextToken.mType != SourceToken::Type::ParenthesisOpen)
-        Logging::LogErrorExit(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart.LineNumber, conditionStart.Contents));
+        Logging::LogErrorExit(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart.LineNumber, conditionStart.Contents.c_str()));
 
     alternativeCondition = Language::IfElseStatement();
     if (!ReadContentUsingDepth(index, SourceToken::Type::ParenthesisOpen, SourceToken::Type::ParenthesisClose, tokens, alternativeCondition.Condition->mInnerTokens))
@@ -368,7 +375,6 @@ void ReadWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken
 
 void TokenParser::ReadLoop(int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)
 {
-    Language::TokenType type;
     auto loop = std::make_shared<Language::Loop>();
     Language::LoopTypeFromToken(current, loop);
     index++;
@@ -616,137 +622,6 @@ bool TokenParser::ReadContentUsingDepth(int& index, SourceToken::Type startType,
         output.Pop();
     
     return depth == 0;
-}
-
-void TokenParser::WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::string indentation)
-{
-    int index = 0;
-    int tokenCount = tokenList.size();
-    for (auto& token : tokenList)
-    {
-        outputFile.WriteLine(stringf("%s\t{", indentation.c_str()));
-        outputFile.WriteLine(stringf("%s\t\t\"token-type\": \"%s\",", indentation.c_str(), Language::TokenTypeToString(token->mTokenType)));
-
-        switch (token->mTokenType)
-        {
-            case Language::TokenType::Expression:
-            {
-                auto tokenObject = std::static_pointer_cast<Language::Expression>(token);
-                outputFile.WriteLine(stringf("%s\t\t\"name\": \"%s\",", indentation.c_str(), tokenObject->mName.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"expression-type\": \"%s\"", indentation.c_str(), Language::ExpressionTypeToString(tokenObject->Type)));
-                break;
-            }
-
-            case Language::TokenType::Field:
-            {
-                auto tokenObject = std::static_pointer_cast<Language::Field>(token);
-                outputFile.WriteLine(stringf("%s\t\t\"name\": \"%s\",", indentation.c_str(), tokenObject->mName.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"type\": \"%s\",", indentation.c_str(), Language::VariableTypeToString(tokenObject->Type)));
-                outputFile.WriteLine(stringf("%s\t\t\"value\": \"%s\"", indentation.c_str(), tokenObject->Value.c_str()));
-                break;
-            }
-
-            case Language::TokenType::Function:
-            {
-                auto tokenObject = std::static_pointer_cast<Language::Function>(token);
-                outputFile.WriteLine(stringf("%s\t\t\"name\": \"%s\",", indentation.c_str(), tokenObject->mName.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"return-type\": \"%s\",", indentation.c_str(), Language::VariableTypeToString(tokenObject->ReturnType)));
-                outputFile.WriteLine(stringf("%s\t\t\"return-value\": \"%s\",", indentation.c_str(), tokenObject->ReturnValue.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"return-variable-name\": \"%s\",", indentation.c_str(), tokenObject->ReturnVariableName.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"parameters\":", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
-                int paramIndex = 0;
-                int paramCount = tokenObject->mParameters.size();
-                for (auto& parameter : tokenObject->mParameters)
-                {
-                    outputFile.WriteLine(stringf("%s\t\t\t{", indentation.c_str()));
-                    outputFile.WriteLine(stringf("%s\t\t\t\t\"type\": \"%s\",", indentation.c_str(), Language::VariableTypeToString(parameter->Type)));
-                    outputFile.WriteLine(stringf("%s\t\t\t\t\"name\": \"%s\"", indentation.c_str(), parameter->mName.c_str()));
-
-                    if (paramIndex == paramCount-1)
-                        outputFile.WriteLine(stringf("%s\t\t\t}", indentation.c_str()));
-                    else
-                        outputFile.WriteLine(stringf("%s\t\t\t},", indentation.c_str()));
-                    
-                    paramIndex++;
-                }
-                outputFile.WriteLine(stringf("%s\t\t],", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
-                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
-                break;
-            }
-
-            case Language::TokenType::ForLoop:
-            {
-                auto tokenObject = std::static_pointer_cast<Language::Loop>(token);
-                outputFile.WriteLine(stringf("%s\t\t\"iteration\": \"idk\",", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"condition\": \"idk\",", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"variable\": \"idk\",", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
-                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
-                break;
-            }
-
-            case Language::TokenType::DoWhileLoop:
-            {
-                auto tokenObject = std::static_pointer_cast<Language::Loop>(token);
-                outputFile.WriteLine(stringf("%s\t\t\"condition\": \"idk\",", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
-                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
-                break;
-            }
-
-            case Language::TokenType::WhileLoop:
-            {
-                auto tokenObject = std::static_pointer_cast<Language::Loop>(token);
-                outputFile.WriteLine(stringf("%s\t\t\"condition\": \"idk\",", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
-                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
-                break;
-            }
-
-            case Language::TokenType::Variable:
-            {
-                auto tokenObject = std::static_pointer_cast<Language::Variable>(token);
-                outputFile.WriteLine(stringf("%s\t\t\"name\": \"%s\",", indentation.c_str(), tokenObject->mName.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t\"type\": \"%s\",", indentation.c_str(), Language::VariableTypeToString(tokenObject->Type)));
-                outputFile.WriteLine(stringf("%s\t\t\"value\": \"%s\"", indentation.c_str(), tokenObject->Value.c_str()));
-                break;
-            }
-
-            case Language::TokenType::IfElseStatement:
-            {
-                auto tokenObject = std::static_pointer_cast<Language::IfElseStatement>(token);
-                outputFile.WriteLine(stringf("%s\t\t\"hasElseStatement\": \"%s\",", indentation.c_str(), tokenObject->HasElseStatement ? "true" : "false"));
-                outputFile.WriteLine(stringf("%s\t\t\"chainedStatementCount\": %d,", indentation.c_str(), tokenObject->ChainedStatements.size()));
-                outputFile.WriteLine(stringf("%s\t\t\"tokens\":", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t[", indentation.c_str()));
-                WriteTokens(outputFile, tokenObject->mTokens, stringf("%s\t\t", indentation.c_str()));
-                outputFile.WriteLine(stringf("%s\t\t]", indentation.c_str()));
-                break;
-            }
-
-            default:
-            case Language::TokenType::Invalid:
-                outputFile.WriteLine(stringf("%s\t\t\"invalid\": true", indentation.c_str()));
-                break;
-        }
-
-        if (index == tokenCount-1)
-            outputFile.WriteLine(stringf("%s\t}", indentation.c_str()));
-        else
-            outputFile.WriteLine(stringf("%s\t},", indentation.c_str()));
-
-        index++;
-    }
 }
 
 void ReadDoWhileLoop(std::shared_ptr<Language::Loop> loop, int& index, SourceToken& current, SourceTokenList tokens, TokenList& output, TokenList& globalTokens)

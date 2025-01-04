@@ -4,6 +4,8 @@
 #
 
 +define EXIT_SUCCESS 0
++include stdio.ib
++include stdlib.ib
 
 define squared(float x)
 {
@@ -20,7 +22,6 @@ define main()
 {
     string testString = "3";
 
-    super_duper_awesome_shitstorm_object = testString;
     super_duper_awesome_shitstorm_object = "aaaa";
     super_duper_awesome_shitstorm_object = "This is a test, hopefully this won't crash it again";
 
@@ -37,13 +38,24 @@ define main()
         testFunctionResult = squared(0);
     }
 
-    if ((testFunctionResult == 0 && 1 >= 1) || true == false)
+    print("What's 9+10?");
+    string myResponseToNinePlusTen = "";
+    myResponseToNinePlusTen = input();
+
+    if (myResponseToNinePlusTen == "21")
     {
-        testFunctionResult = 100;
+        testFunctionResult = 21;
+        print("You stoopid");
     }
-    else if ((testFunctionResult < 0) && squared(testFunctionResult) != testFunctionResult)
+    else if (myResponseToNinePlusTen == "19")
     {
-        testFunctionResult = squared(testFunctionResult);
+        testFunctionResult = 19;
+        print("wow you actually got it damn");
+    }
+    else
+    {
+        testFunctionResult = testFunctionResult * squared(testFunctionResult);
+        print("okay wtf are you doing man");
     }
 
     for (testFunctionResult = 1005; testFunctionResult > 0; testFunctionResult /= 10)

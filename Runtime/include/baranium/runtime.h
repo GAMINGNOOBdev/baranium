@@ -36,6 +36,13 @@ BARANIUMAPI baranium_runtime* baranium_get_context();
 BARANIUMAPI void baranium_cleanup(baranium_runtime* runtime);
 
 /**
+ * @brief Get the ID of a named object or function
+ *
+ * @param name Name of the object
+ */
+BARANIUMAPI index_t baranium_get_id_of_name(const char* name);
+
+/**
  * @brief Open a file handle
  * 
  * @param source Path to the file

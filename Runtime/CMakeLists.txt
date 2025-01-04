@@ -7,6 +7,7 @@ include_directories(../BGE-File include)
 
 set(baraniumSources
     src/baranium/logging.c
+    src/baranium/callback.c
     src/baranium/runtime.c
     src/baranium/script.c
     src/baranium/bcpu.c

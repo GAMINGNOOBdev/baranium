@@ -36,9 +36,20 @@ BARANIUMAPI const char* stringf(const char* formatString, ...);
  * 
  * @note By default debug messages are off
  * 
- * @param val "Boolean" value, 1 = debug messages show up, 0 = no debug messages
+ * @param val "Boolean" value, 1 = debug messages show up, 0 = no debug messages, -1 = no change
+ *
+ * @returns The current log state
  */
-BARANIUMAPI void logEnableDebugMsgs(uint8_t val);
+BARANIUMAPI uint8_t logEnableDebugMsgs(uint8_t val);
+
+/**
+ * @brief En-/Disable messages showing up in stdout
+ * 
+ * @note By default stdout messages are on
+ * 
+ * @param val "Boolean" value, 1 = messages show up on stdout, 0 = they do not show up on stdout
+ */
+BARANIUMAPI void logEnableStdout(uint8_t val);
 
 /**
  * @brief Set an output stream for log messages

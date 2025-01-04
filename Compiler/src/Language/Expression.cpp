@@ -2,7 +2,6 @@
 #include "../StringUtil.h"
 #include "../Logging.h"
 #include "Expression.h"
-#include <algorithm>
 
 namespace Language
 {

@@ -2,6 +2,8 @@
 #include <baranium/backend/bvarmgr.h>
 #include <baranium/backend/varmath.h>
 #include <baranium/backend/errors.h>
+#include <baranium/variable.h>
+#include <baranium/callback.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
@@ -28,7 +30,7 @@ void INVALID_OPCODE(bcpu* cpu)
     LOGERROR("invalid opcode, quitting...");
 }
 
-void NOP(bcpu* cpu) {}
+void NOP(bcpu* cpu) {if(!cpu) return;}
 
 void CCF(bcpu* cpu)
 {
@@ -66,8 +68,8 @@ void PUSHCV(bcpu* cpu)
     if (!cpu) return;
 
     baranium_compiled_variable var;
-    var.size = sizeof(int32_t);
-    var.type = VARIABLE_TYPE_INT;
+    var.size = sizeof(uint8_t);
+    var.type = VARIABLE_TYPE_BOOL;
     var.value = &cpu->cv;
     baranium_compiled_variable_push_to_stack(cpu, &var);
 }
@@ -77,7 +79,8 @@ void POPCV(bcpu* cpu)
     if (!cpu) return;
 
     baranium_compiled_variable* var = baranium_compiled_variable_pop_from_stack(cpu);
-    cpu->cv = *((int32_t*)var->value);
+    cpu->cv = *((uint8_t*)var->value);
+    free(var->value);
     baranium_compiled_variable_dispose(var);
 }
 
@@ -205,7 +208,7 @@ void POPVAR(bcpu* cpu)
         free(value);
 
     // instead of overwriting (and potentially
-    // having to reallocate memory andways) just
+    // having to reallocate memory anyways) just
     // allocate a new value pointer
 
     if (type == VARIABLE_TYPE_STRING && newvar->type != VARIABLE_TYPE_STRING)
@@ -254,14 +257,48 @@ void CALL(bcpu* cpu)
     uint64_t id = cpu->fetch(cpu, 64);
     bstack_push(cpu->ip_stack, cpu->IP);
 
-    LOGINFO(stringf("calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
+    LOGDEBUG(stringf("calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
 
     baranium_runtime* runtime = baranium_get_context();
+    baranium_callback_list_entry* callback = baranium_callback_find_by_id(runtime, id);
+    LOGDEBUG(stringf("callback id: %lld callback ptr: 0x%16.16x", id, (uint64_t)callback));
     baranium_function* func = baranium_function_manager_get(runtime->functionManager, id);
-    baranium_function_call(runtime, func);
+
+    if (callback != NULL)
+    {
+        int numParams = callback->numParams;
+        void** dataptr = NULL;
+        baranium_variable_type_t* datatypes = NULL;
+        if (numParams > 0 && numParams != -1)
+        {
+            dataptr = malloc(sizeof(void*)*numParams);
+            datatypes = malloc(sizeof(baranium_variable_type_t));
+
+            for (int i = 0; i < numParams; i++)
+            {
+                baranium_compiled_variable* tmp = baranium_compiled_variable_pop_from_stack(cpu);
+                dataptr[i] = tmp->value;
+                datatypes[i] = tmp->type;
+                baranium_compiled_variable_dispose(tmp);
+            }
+        }
+        LOGDEBUG(stringf("callback call: dataptr{0x%16.16x} datatypes{0x%16.16x} numParams=%d", (uint64_t)dataptr, (uint64_t)datatypes, numParams));
+        callback->callback(dataptr, datatypes, numParams);
+        if (numParams > 0 && numParams != -1)
+        {
+            for (int i = 0; i < numParams; i++)
+                free(dataptr[i]);
+            free(dataptr);
+            free(datatypes);
+        }
+    }
+    else
+        baranium_function_call(runtime, func, NULL, NULL, -1);
+
     baranium_function_dispose(func);
+
     cpu->IP = bstack_pop(cpu->ip_stack);
-    LOGINFO(stringf("finished calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
+    LOGDEBUG(stringf("finished calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
 }
 
 void RET(bcpu* cpu)
@@ -482,7 +519,30 @@ void CMP(bcpu* cpu)
     baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
 
     // yes this is a somewhat lazy way but hey, it's somewhat logical as well so shut up
-    if (val1->type == VARIABLE_TYPE_FLOAT || val0->type == VARIABLE_TYPE_FLOAT)
+    if (val1->type == VARIABLE_TYPE_STRING || val0->type == VARIABLE_TYPE_STRING)
+    {
+        baranium_compiled_variable_convert_to_type(val0, VARIABLE_TYPE_STRING);
+        char* value0 = (char*)val0->value;
+        baranium_compiled_variable_convert_to_type(val1, VARIABLE_TYPE_STRING);
+        char* value1 = (char*)val1->value;
+
+        if (operation != CMP_EQUAL || operation == CMP_NOTEQUAL)
+        {
+            LOGWARNING(stringf("comparing '%s' and '%s' for something that is not == or !=, WTF ARE YOU DOING, ima just default to result 0 just for the operation to still succeed but i highly suggest checking your code please" ));
+        }
+
+        if (operation == CMP_EQUAL)
+        {
+            cpu->cv = (strcmp(value0, value1) == 0) ? 1 : 0;
+            LOGDEBUG(stringf("comparing '%s' and '%s' for CMP_EQUAL", value0, value1));
+        }
+        if (operation == CMP_NOTEQUAL)
+        {
+            cpu->cv = (strcmp(value0, value1) == 0) ? 1 : 0;
+            LOGDEBUG(stringf("comparing '%s' and '%s' for CMP_NOTEQUAL", value0, value1));
+        }
+    }
+    else if (val1->type == VARIABLE_TYPE_FLOAT || val0->type == VARIABLE_TYPE_FLOAT)
     {
         baranium_compiled_variable_convert_to_type(val0, VARIABLE_TYPE_FLOAT);
         float value0 = *(float*)val0->value;
@@ -492,32 +552,32 @@ void CMP(bcpu* cpu)
         if (operation == CMP_EQUAL)
         {
             cpu->cv = (value0 == value1) ? 1 : 0;
-            LOGDEBUG(stringf("comparing %lld and %lld for CMP_EQUAL", value0, value1));
+            LOGDEBUG(stringf("comparing %f and %f for CMP_EQUAL", value0, value1));
         }
         if (operation == CMP_NOTEQUAL)
         {
             cpu->cv = (value0 != value1) ? 1 : 0;
-            LOGDEBUG(stringf("comparing %lld and %lld for CMP_NOTEQUAL", value0, value1));
+            LOGDEBUG(stringf("comparing %f and %f for CMP_NOTEQUAL", value0, value1));
         }
         if (operation == CMP_LESS_THAN)
         {
             cpu->cv = (value0 < value1) ? 1 : 0;
-            LOGDEBUG(stringf("comparing %lld and %lld for CMP_LESS_THAN", value0, value1));
+            LOGDEBUG(stringf("comparing %f and %f for CMP_LESS_THAN", value0, value1));
         }
         if (operation == CMP_LESS_EQUAL)
         {
             cpu->cv = (value0 <= value1) ? 1 : 0;
-            LOGDEBUG(stringf("comparing %lld and %lld for CMP_LESS_EQUAL", value0, value1));
+            LOGDEBUG(stringf("comparing %f and %f for CMP_LESS_EQUAL", value0, value1));
         }
         if (operation == CMP_GREATER_THAN)
         {
             cpu->cv = (value0 > value1) ? 1 : 0;
-            LOGDEBUG(stringf("comparing %lld and %lld for CMP_GREATER_THAN", value0, value1));
+            LOGDEBUG(stringf("comparing %f and %f for CMP_GREATER_THAN", value0, value1));
         }
         if (operation == CMP_GREATER_EQUAL)
         {
             cpu->cv = (value0 >= value1) ? 1 : 0;
-            LOGDEBUG(stringf("comparing %lld and %lld for CMP_GREATER_EQUAL", value0, value1));
+            LOGDEBUG(stringf("comparing %f and %f for CMP_GREATER_EQUAL", value0, value1));
         }
     }
     else
@@ -561,6 +621,8 @@ void CMP(bcpu* cpu)
 
     LOGDEBUG(stringf("comparison result: %s", cpu->cv ? "true" : "false"));
 
+    free(val0->value);
+    free(val1->value);
     baranium_compiled_variable_dispose(val0);
     baranium_compiled_variable_dispose(val1);
 }
@@ -573,9 +635,11 @@ void CMPC(bcpu* cpu)
     uint8_t operation = cpu->fetch(cpu, 8);
 
     POPCV(cpu);
-    int64_t val0 = cpu->cv;
+    uint8_t val0 = cpu->cv;
     POPCV(cpu);
-    int64_t val1 = cpu->cv;
+    uint8_t val1 = cpu->cv;
+
+    LOGDEBUG(stringf("comparing CV{%d} and CV{%d} using %s", val0, val1, operation == CMP_AND ? "CMP_AND" : "CMP_OR"));
 
     if (operation == CMP_AND && val0 == val1 && val1 == 1)
         cpu->cv = 1;

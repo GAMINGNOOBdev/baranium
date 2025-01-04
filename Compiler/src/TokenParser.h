@@ -17,15 +17,6 @@ struct TokenParser
     TokenParser();
 
     /**
-     * @brief Write the source code tokens into a single json file
-     * 
-     * @note Executed then the `-d` or `--debug` flag is passed to the main executable
-     * 
-     * @param name Filename of the json file where the token data will be written to
-     */
-    void WriteTokensToJson(std::string name);
-
-    /**
      * @brief Parse the incoming tokens
      * 
      * @param tokenIterator Token iterator that contains the tokens that will be parsed
@@ -177,9 +168,6 @@ struct TokenParser
      *          otherwise `false`
      */
     static bool ReadContentUsingDepth(int& index, SourceToken::Type startType, SourceToken::Type endType, SourceTokenList tokens, SourceTokenIterator& output);
-
-private:
-    static void WriteTokens(BgeFile& outputFile, TokenList& tokenList, std::string indentation = std::string());
 
 private:
     TokenList mPublicTokens;

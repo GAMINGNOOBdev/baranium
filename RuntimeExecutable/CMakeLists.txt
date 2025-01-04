@@ -6,6 +6,7 @@ include_directories(../BGE-File ../Runtime/include include)
 
 set(barSources
     src/argument_parser.c
+    src/callbacks.c
     src/main.c
     )
 
