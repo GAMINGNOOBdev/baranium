@@ -1,0 +1,86 @@
+name: Build project
+
+on:
+    push:
+      branches: [ "master" ]
+    pull_request:
+      branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+
+      # matrix  configurations:
+      # 1. Windows, Release, MSVC compiler
+      # 2. Linux, Release, GCC compiler
+      # 3. MacOS, Release, GCC compiler
+      # 4. Windows, Debug, MSVC compiler
+      # 5. Linux, Debug, GCC compiler
+      # 6. MacOS, Debug, GCC compiler
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        build_type: [Release, Debug]
+        c_compiler: [gcc, cl]
+        include:
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: macos-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+        exclude:
+          - os: windows-latest
+            c_compiler: gcc
+          - os: ubuntu-latest
+            c_compiler: cl
+          - os: macos-latest
+            c_compiler: cl
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -S ${{ github.workspace }}
+    - name: Build ${{ matrix.build_type }} Version
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+    - name: Create Artifacts for ${{ matrix.os }}-${{ matrix.build_type }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: baranium-${{ matrix.os }}-${{ matrix.build_type }}
+        path: ${{ steps.strings.outputs.build-output-dir }}
+    - name: Test
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ctest --build-config ${{ matrix.build_type }}
+
+  download:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: baranium
+        pattern: baranium-*
+        merge-multiple: false
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
+    - name: Upload to a single artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: baranium-${{ steps.date.outputs.date }}
+        path: baranium
