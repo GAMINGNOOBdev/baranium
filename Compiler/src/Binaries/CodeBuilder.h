@@ -15,6 +15,9 @@
 #define CMP_AND 0
 #define CMP_OR  1
 
+/**
+ * @brief Binary output producing specific classes
+ */
 namespace Binaries
 {
 

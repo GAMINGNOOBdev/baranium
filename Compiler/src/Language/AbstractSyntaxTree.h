@@ -10,6 +10,9 @@
 // quick and dirty name shortcut
 #define TreeNodeObject std::shared_ptr<Language::TreeNode>
 
+/**
+ * @brief Language specific classes
+ */
 namespace Language
 {
 
