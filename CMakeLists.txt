@@ -15,7 +15,7 @@ endif()
 
 if (APPLE)
     add_compile_options(
-        "-std=c++0x"
+        "-std=c++17"
     )
 endif()
 
