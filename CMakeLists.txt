@@ -2,13 +2,15 @@ cmake_minimum_required(VERSION 3.0)
 
 project(BaraniumProgrammingLanguage)
 
-if (CMAKE_BUILD_TYPE MATCHES DEBUG)
 if (UNIX)
     add_compile_options(
-    "-Wall" "-Wpedantic" "-Wextra" "-fexceptions"
-    "$<$<CONFIG:DEBUG>:-O0;-g3;-ggdb>"
+        "-Wall" "-Wextra" "-Wpedantic" "-Wno-discarded-qualifiers" "-fexceptions"
     )
-endif()
+
+    set(CMAKE_C_FLAGS_DEBUG "-O0 -g3 -ggdb")
+    set(CMAKE_C_FLAGS_RELEASE "-O3")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -ggdb")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 endif()
 
 add_subdirectory(Compiler)

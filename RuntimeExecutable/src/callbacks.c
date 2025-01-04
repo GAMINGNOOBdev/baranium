@@ -24,11 +24,11 @@ void print_baranium(void** dataptr, baranium_variable_type_t* datatypes, int num
     baranium_compiled_variable var = {*datatypes, data, dataSize};
     baranium_compiled_variable_convert_to_type(&var, VARIABLE_TYPE_STRING);
     if (var.value != data)
-        free(var.value);
+        free(data);
 
     printf("%s\n", (const char*)var.value);
 
-    free(data);
+    free(var.value);
 }
 
 void input_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData)
@@ -44,9 +44,12 @@ void input_baranium(void** dataptr, baranium_variable_type_t* datatypes, int num
     char* buffer = malloc(length+1);
     memset(buffer, 0, length+1);
     memcpy(buffer, line, length);
+    free(line);
 
     baranium_compiled_variable var = {VARIABLE_TYPE_STRING, buffer, length};
     baranium_compiled_variable_push_to_stack(baranium_get_context()->cpu, &var);
+
+    free(buffer);
 }
 
 void system_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData)

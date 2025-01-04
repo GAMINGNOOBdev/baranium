@@ -87,6 +87,6 @@ void logStr(loglevel_t lvl, const char* msg)
     if (logging_log_messages_output_stream != stdout || logging_log_messages_output_stream != stderr)
         fflush(logging_log_messages_output_stream);
 
-    if (logging_stdout_messages_enabled && logging_log_messages_output_stream != stdout)
+    if (logging_stdout_messages_enabled && logging_log_messages_output_stream != stdout && lvl != LOGLEVEL_DEBUG)
         fprintf(stdout, "%s%s%s%s\n", LOG_COLORS[lvl+1], LOG_LEVEL_STRINGS[lvl], msg, LOG_COLORS[0]);
 }

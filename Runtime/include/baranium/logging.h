@@ -10,10 +10,10 @@ extern "C" {
 
 typedef unsigned char loglevel_t;
 
-#define LOGLEVEL_INFO       0
-#define LOGLEVEL_DEBUG      1
-#define LOGLEVEL_ERROR      2
-#define LOGLEVEL_WARNING    3
+#define LOGLEVEL_INFO       (loglevel_t)0
+#define LOGLEVEL_DEBUG      (loglevel_t)1
+#define LOGLEVEL_ERROR      (loglevel_t)2
+#define LOGLEVEL_WARNING    (loglevel_t)3
 
 #define LOG logStr
 #define LOGINFO(msg) logStr(LOGLEVEL_INFO, msg)
