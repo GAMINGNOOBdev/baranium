@@ -60,21 +60,12 @@ like every other compiler on this planet.
 ## Using the provided runtime executable
 The provided runtime executable doesn't put a focus on advanced
 functionality that you would expect from languages like Python or Java.
-Instead it has just a few standard mathematical and console output
+Instead it has just a few standard libraries and console output
 functions. This can and will probably change with either future updates
 or if enough people want a feature to be added.
 <br/>
-To use the provided runtime, just provide a compiled script and it
-should run, hopefully.
+To use the provided runtime, just provide a compiled script to the runtime executable and it
+should run.
 
 ## Embedding the runtime
-don't, it no work rn <br/>
-After building (or downloading the releases) you will find the library files
-for the runtime in the `Runtime` directory. Just copy the library files to
-somewhere you use as a library directory and link against the selected/desired
-library version, either the normal one (filename without the `-dll`) or the
-dynamic library (filename with the `-dll`).<br/>
-Note that you have to define `BARANIUM_DYNAMIC` before including any files if
-using the dynamic library.<br/>
-On Windows it is advised to copy the .dll file to the final executable while on
-linux you should copy the .so file.
+For further information please consider reading the [wiki](../../wiki).
