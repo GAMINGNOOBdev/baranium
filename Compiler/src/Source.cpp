@@ -85,8 +85,16 @@ void Source::ReadLine(std::string line, int lineNumber)
 
     for (int index = 0; index < line.length(); index++)
     {
-        tmpStr[0] = line.at(index);
-        chr = tmpStr[0];
+        chr = line.at(index);
+        tmpStr[0] = chr;
+
+        if (chr == '\\' && inString && index < line.length()-1)
+        {
+            index++;
+            end = index;
+            continue;
+        }
+
         if (isspace(chr) && !inString)
         {
             end++;
@@ -109,13 +117,13 @@ void Source::ReadLine(std::string line, int lineNumber)
                     lastStringChar = chr;
                 }
 
-                if (!inString && chr == '"' && lastStringChar != 0)
-                    lastStringChar = 0;
-
                 end++;
                 if (line.substr(start, end - start) != tmpStr)
-                    ReadBuffer(line.substr(start, end - start), lineNumber);
-                start = index+1;
+                    ReadBuffer(line.substr(start, end - start), lineNumber, (!inString && chr == '"' && lastStringChar != 0));
+                start = index + 1;
+
+                if (!inString && chr == '"' && lastStringChar != 0)
+                    lastStringChar = 0;
 
                 int specialOperatorIndex = -1;
                 if (mLineTokens.size() > 0)
@@ -157,9 +165,10 @@ validate:
     mLineTokens.clear();
 }
 
-void Source::ReadBuffer(std::string buffer, int lineNumber)
+void Source::ReadBuffer(std::string buffer, int lineNumber, bool isString)
 {
-    buffer = StrTrimLeading(buffer);
+    if (!isString)
+        buffer = StrTrimLeading(buffer);
 
     if (buffer.empty())
         return;
@@ -188,6 +197,10 @@ void Source::ReadBuffer(std::string buffer, int lineNumber)
         auto& keyword = Language::Keywords[keywordIndex];
         token.Contents = std::string(keyword.Name);
         token.mType = keyword.TokenType;
+    }
+    else
+    {
+        token.Contents = StrConnectEscapeSequences(token.Contents);
     }
 
     mLineTokens.push_back(token);

@@ -359,6 +359,7 @@ void baranium_compiled_variable_convert_to_type(baranium_compiled_variable* var,
         var->value = malloc(stringSize+1);
         memset(var->value, 0, stringSize+1);
         memcpy(var->value, stringifiedVersion, stringSize);
+        var->size = strlen(var->value);
         return;
     }
 }

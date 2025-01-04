@@ -27,7 +27,9 @@ define main()
 
     testFunctionResult = squared(testFunctionResult);
     squared(20);
+    print("current result: ");
     print(testFunctionResult);      # should be an internal function at this point hopefully
+    print("\n");
 
     testFunctionResult++;
     testFunctionResult = 1.0;
@@ -38,9 +40,13 @@ define main()
         testFunctionResult = squared(0);
     }
 
-    print("What's 9+10?");
+    print("9+10 >> ");
     string myResponseToNinePlusTen = "";
     myResponseToNinePlusTen = input();
+
+    print("Your response was \"");
+    print(myResponseToNinePlusTen);
+    print("\"\n");
 
     if (myResponseToNinePlusTen == "21")
     {

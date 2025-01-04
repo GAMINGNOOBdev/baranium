@@ -22,7 +22,7 @@ namespace Binaries
     void Compiler::ClearCompiledCode()
     {
         if (mCode != nullptr)
-            free(mCode);
+            MemoryManager::deallocate(mCode);
 
         mCode = nullptr;
         mCodeLength = 0;
@@ -184,7 +184,7 @@ namespace Binaries
     void Compiler::FinalizeCompilation()
     {
         if (mCode != nullptr)
-            free(mCode);
+            MemoryManager::deallocate(mCode);
 
         mCodeLength = mCodeBuilder.Size();
         mCode = (uint8_t*)MemoryManager::allocate(mCodeLength+1);
@@ -244,7 +244,7 @@ namespace Binaries
         {
             uint8_t* data = GetVariableValueAsData(token.Value, token.Type);
             mCodeBuilder.SET(token.ID, size, data);
-            free(data);
+            MemoryManager::deallocate(data);
         }
         else
         {

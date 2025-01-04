@@ -24,6 +24,15 @@ std::string GetExtension(std::string str);
 std::string to_hex_string(size_t num);
 
 /**
+ * Identifies and return the corresponding escape sequence character
+ * 
+ * @param[in] c Escape sequence character
+ * 
+ * @returns The escape sequence character as just one char
+*/
+char IdentifyEscapeSequence(char c);
+
+/**
  * Checks and counts how many times `c` comes up in `str`
  * 
  * @param[in] str input string
@@ -32,6 +41,15 @@ std::string to_hex_string(size_t num);
  * @returns the number of times `c` comes up
 */
 uint8_t StrContains(std::string str, char c);
+
+/**
+ * Checks if there are any escape sequences (e.g. \n, \t or similar) inside the given string and connects them into a singular character
+ * 
+ * @param[in] str Input string
+ * 
+ * @return The string with connected escape sequences
+*/
+std::string StrConnectEscapeSequences(std::string str);
 
 /**
  * Removes all whitespaces from a string

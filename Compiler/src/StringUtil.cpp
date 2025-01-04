@@ -36,6 +36,38 @@ std::string to_hex_string(size_t num)
     return result.str();
 }
 
+char IdentifyEscapeSequence(char c)
+{
+    switch (c)
+    {
+    case 'a':
+        return '\a';
+    case 'b':
+        return '\b';
+    case 'f':
+        return '\f';
+    case 'n':
+        return '\n';
+    case 'r':
+        return '\r';
+    case 't':
+        return '\t';
+    case 'v':
+        return '\v';
+    case '\\':
+        return '\\';
+    case '\'':
+        return '\'';
+    case '"':
+        return '"';
+    case '?':
+        return '\?';
+    case '0':
+        return 0;
+    }
+    return 0;
+}
+
 uint8_t StrContains(std::string str, char c)
 {
     uint8_t count = 0;
@@ -48,14 +80,36 @@ uint8_t StrContains(std::string str, char c)
     return count;
 }
 
+std::string StrConnectEscapeSequences(std::string str)
+{
+    std::stringstream res = std::stringstream();
+
+    for (size_t i = 0; i < str.size(); i++)
+    {
+        if (str.at(i) == '\\' && i < str.size() - 1)
+        {
+            i++;
+            char c = str.at(i);
+            c = IdentifyEscapeSequence(c);
+            res << c;
+            continue;
+        }
+        
+        res << str.at(i);
+    }
+
+    return res.str();
+}
 
 std::string StrTrim(std::string str)
 {
     std::stringstream res = std::stringstream();
     for (size_t i = 0; i < str.size(); i++)
     {
-        if (str.at(i) != '\t' && str.at(i) != '\n' && str.at(i) != ' ')
-            res << str.at(i);
+        if (str.at(i) == '\t' || str.at(i) == '\n' || str.at(i) == ' ')
+            continue;
+
+        res << str.at(i);
     }
     return res.str();
 }

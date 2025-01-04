@@ -40,7 +40,7 @@ void CodeBuilder::PushStringValue(std::string str)
     int index = 0;
     for (index = 0; index * 8 < strLength; index++)
     {
-        if (leftOverSize < 8)
+        if (leftOverSize <= 8)
             break;
 
         valPtr = (void*)((uint64_t)value + index*8);

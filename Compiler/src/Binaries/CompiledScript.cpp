@@ -76,7 +76,7 @@ namespace Binaries
 
             // there will always be memory allocated by sections
             if (section.Data != nullptr)
-                free(section.Data);
+                MemoryManager::deallocate(section.Data);
         }
 
         mLookupTable.Write(file);
@@ -171,7 +171,7 @@ namespace Binaries
         // Size calculation: compiled code size
         functionSection.DataSize = 2 + mCompiler.GetCompiledCodeSize();
         functionSection.Data = (uint8_t*)MemoryManager::allocate(functionSection.DataSize);
-        memcpy((void*)((uint64_t)functionSection.Data + 2), mCompiler.GetCompiledCode(), functionSection.DataSize);
+        memcpy((void*)((uint64_t)functionSection.Data + 2), mCompiler.GetCompiledCode(), functionSection.DataSize-2);
         ((uint8_t*)functionSection.Data)[0] = function->mParameters.size();
         ((uint8_t*)functionSection.Data)[1] = (uint8_t)function->ReturnType;
 

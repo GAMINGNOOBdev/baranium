@@ -68,8 +68,9 @@ private:
      * 
      * @param buffer The buffer that will be analyzed/lexed
      * @param lineNumber The line number
+     * @param isString The buffer was read inbetween string literals
      */
-    void ReadBuffer(std::string buffer, int lineNumber);
+    void ReadBuffer(std::string buffer, int lineNumber, bool isString = false);
 
     /**
      * @brief Read and interpret a single letter

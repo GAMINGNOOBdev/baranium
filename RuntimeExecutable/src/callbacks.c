@@ -79,14 +79,22 @@ void print_baranium(void** dataptr, baranium_variable_type_t* datatypes, int num
     if (dataSize == (size_t)-1)
         dataSize = strlen(*dataptr);
 
-    void* data = malloc(dataSize);
+    void* data = malloc(dataSize+1);
+    if (data == NULL)
+        return;
+
+    memset(data, 0, dataSize + 1);
     memcpy(data, *dataptr, dataSize);
     baranium_compiled_variable var = {*datatypes, data, dataSize};
     baranium_compiled_variable_convert_to_type(&var, VARIABLE_TYPE_STRING);
-    if (var.value != data)
-        free(data);
+    size_t length = strlen((const char*)var.value);
+    if (length != var.size)
+    {
+        free(var.value);
+        return;
+    }
 
-    printf("%s\n", (const char*)var.value);
+    printf("%s", (const char*)var.value);
 
     free(var.value);
 }
@@ -102,6 +110,11 @@ void input_baranium(void** dataptr, baranium_variable_type_t* datatypes, int num
     size_t length = strlen(line) - 1;
 
     char* buffer = malloc(length+1);
+    if (buffer == NULL)
+    {
+        free(line);
+        return;
+    }
     memset(buffer, 0, length+1);
     memcpy(buffer, line, length);
     free(line);
@@ -125,11 +138,19 @@ void system_baranium(void** dataptr, baranium_variable_type_t* datatypes, int nu
         dataSize = strlen(*dataptr);
 
     void* data = malloc(dataSize);
+    if (data == NULL)
+        return;
+
+    memset(data, 0, dataSize + 1);
     memcpy(data, *dataptr, dataSize);
     baranium_compiled_variable var = {*datatypes, data, dataSize};
     baranium_compiled_variable_convert_to_type(&var, VARIABLE_TYPE_STRING);
-    if (var.value != data)
+    size_t length = strlen((const char*)var.value);
+    if (length != var.size)
+    {
         free(var.value);
+        return;
+    }
 
     system((const char*)var.value);
 
