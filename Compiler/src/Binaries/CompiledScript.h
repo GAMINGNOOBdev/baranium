@@ -3,7 +3,7 @@
 
 #include "../Language/Types.h"
 #include "NameLookupTable.h"
-#include <BgeFile.hpp>
+#include "BgeFile.hpp"
 #include "Compiler.h"
 #include "Section.h"
 #include <stdint.h>

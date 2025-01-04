@@ -1,7 +1,7 @@
 #ifndef __BINARIES__NAMELOOKUPTABLE_H_
 #define __BINARIES__NAMELOOKUPTABLE_H_ 1
 
-#include <BgeFile.hpp>
+#include "BgeFile.hpp"
 #include <stdint.h>
 #include <string>
 #include <vector>

@@ -2,7 +2,7 @@
 #define __BINARIES__VARIABLETABLE_H_ 1
 
 #include "../Language/Variable.h"
-#include <BgeFile.hpp>
+#include "BgeFile.hpp"
 #include <stdint.h>
 #include <string>
 #include <vector>
