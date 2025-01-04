@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 
 project(barc)
 
-include_directories(../BGE-File)
-
 set(barcSources
     src/Language/AbstractSyntaxTree.cpp
     src/Language/AST_TokenParser.cpp

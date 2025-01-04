@@ -3,10 +3,15 @@
 #include <baranium/callback.h>
 #include <baranium/runtime.h>
 #include <string.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_APPLE
+#   include <stdlib.h>
+#else
+#   include <malloc.h>
+#endif
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
 size_t getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim) {

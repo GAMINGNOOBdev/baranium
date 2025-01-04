@@ -8,8 +8,13 @@
 #include <baranium/script.h>
 #include <argument_parser.h>
 #include <string.h>
-#include <malloc.h>
 #include <stdio.h>
+
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_APPLE
+#   include <stdlib.h>
+#else
+#   include <malloc.h>
+#endif
 
 uint8_t debug_mode_enabled;
 

@@ -6,8 +6,13 @@
 #include <baranium/logging.h>
 #include <string.h>
 #include <memory.h>
-#include <malloc.h>
 #include <stdlib.h>
+
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_APPLE
+#   include <stdlib.h>
+#else
+#   include <malloc.h>
+#endif
 
 baranium_compiled_variable* baranium_compiled_variable_pop_from_stack(bcpu* cpu)
 {

@@ -1,6 +1,10 @@
 #include <baranium/callback.h>
 #include <baranium/logging.h>
-#include <malloc.h>
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_APPLE
+#   include <stdlib.h>
+#else
+#   include <malloc.h>
+#endif
 #include <memory.h>
 
 baranium_callback_list* baranium_callback_list_init(void)
