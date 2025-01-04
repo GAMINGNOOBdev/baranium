@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(bar)
 
-include_directories(../BGE-File ../Runtime/include include)
+include_directories(../Runtime/include include)
 
 set(barSources
     src/argument_parser.c
@@ -12,6 +12,10 @@ set(barSources
 
 add_executable(bar ${barSources})
 target_link_libraries(bar baranium)
+
+if (UNIX)
+    target_link_libraries(bar m)
+endif()
 
 if( MSVC )
     if(${CMAKE_VERSION} VERSION_LESS "3.6.0")

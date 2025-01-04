@@ -4,8 +4,9 @@
 #include <baranium/runtime.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <math.h>
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_APPLE
 #   include <stdlib.h>
@@ -171,10 +172,55 @@ void exit_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numD
     baranium_get_context()->cpu->killTriggered = 1;
 }
 
+void math_function_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData, float(*funcptr)(float))
+{
+    if (dataptr == NULL || datatypes == NULL || numData == 0 || numData > 1 || funcptr == NULL)
+        return;
+
+    if (*datatypes == VARIABLE_TYPE_VOID || *datatypes == VARIABLE_TYPE_INVALID)
+        return;
+
+    size_t dataSize = baranium_variable_get_size_of_type(*datatypes);
+    if (dataSize == (size_t)-1)
+        return;
+
+    void* data = malloc(dataSize);
+    if (data == NULL)
+        return;
+
+    memcpy(data, *dataptr, dataSize);
+
+    baranium_compiled_variable var = {*datatypes, data, dataSize};
+    baranium_compiled_variable_convert_to_type(&var, VARIABLE_TYPE_FLOAT);
+
+    *((float*)var.value) = funcptr(*((float*)var.value));
+
+    baranium_compiled_variable_push_to_stack(baranium_get_context()->cpu, &var);
+
+    free(var.value);
+}
+
+void sin_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, sinf); }
+void cos_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, cosf); }
+void tan_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, tanf); }
+void asin_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, asinf); }
+void acos_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, acosf); }
+void atan_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, atanf); }
+void log_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, logf); }
+void log10_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, log10f); }
+
 void setup_callbacks(void)
 {
     baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("print"), print_baranium, 1);
     baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("input"), input_baranium, 0);
     baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("system"), system_baranium, 1);
     baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("exit"), exit_baranium, 1);
+    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("sin"), sin_baranium, 1);
+    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("cos"), cos_baranium, 1);
+    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("tan"), tan_baranium, 1);
+    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("asin"), asin_baranium, 1);
+    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("acos"), acos_baranium, 1);
+    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("atan"), atan_baranium, 1);
+    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("log"), log_baranium, 1);
+    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("log10"), log10_baranium, 1);
 }

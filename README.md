@@ -7,12 +7,9 @@ and redesigned for use as an actual programming language.<br/>
 It's design allows easy expansion of the available functions in the runtime
 and easy embedding into other C(++) projects for various purposes.
 
-## Info
-THIS PROJECT IS STILL INCOMPLETE AT THE MOMENT!!! <br/>
-Expect somewhat regular updates but don't expect a fully finished
-release in a short time. <br/>
-To see more indepth stuff and ask questions, join the newly created discord server that
-will be as inactive as every other server you may know. https://discord.gg/8R5YyM3MEn
+## Discord
+To see more indepth stuff and ask questions, join the [discord server](https://discord.gg/8R5YyM3MEn) that
+will be as inactive as every other server you may know.
 
 ## Language specifications
 baranium was originally designed to be used with a game engine and

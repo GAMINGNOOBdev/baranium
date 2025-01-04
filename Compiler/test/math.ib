@@ -1,0 +1,15 @@
+#########################
+# STANDARD MATH LIBRARY #
+#########################
+
++define MATH_PI 3.14159265359
+
+define sin(float f) = float;
+define cos(float f) = float;
+define tan(float f) = float;
+define asin(float f) = float;
+define acos(float f) = float;
+define atan(float f) = float;
+define log(float f) = float;
+define log10(float f) = float;
+
