@@ -13,6 +13,12 @@ if (UNIX)
     set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 endif()
 
+if (APPLE)
+    add_compile_options(
+        "-std=c++0x"
+    )
+endif()
+
 add_subdirectory(Compiler)
 add_subdirectory(Runtime)
 add_subdirectory(RuntimeExecutable)
