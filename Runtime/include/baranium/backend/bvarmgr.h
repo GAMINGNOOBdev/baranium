@@ -32,7 +32,7 @@ typedef struct bvarmgr
 } bvarmgr;
 
 // create and initialize a variable manager
-bvarmgr* bvarmgr_init();
+bvarmgr* bvarmgr_init(void);
 
 // dispose a variable manager
 void bvarmgr_dispose(bvarmgr* obj);

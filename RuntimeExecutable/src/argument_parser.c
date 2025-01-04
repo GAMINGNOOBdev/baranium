@@ -28,7 +28,7 @@ void DisposeArgument(Argument* obj)
 /// Argument List ///
 /////////////////////
 
-struct ArgumentList* argument_list_init()
+struct ArgumentList* argument_list_init(void)
 {
     struct ArgumentList* obj = malloc(sizeof(struct ArgumentList));
     if (!obj) return NULL;
@@ -148,7 +148,7 @@ void argument_list_remove(struct ArgumentList* obj, Argument* arg)
 /// Argument Parser ///
 ///////////////////////
 
-ArgumentParser* argument_parser_init()
+ArgumentParser* argument_parser_init(void)
 {
     ArgumentParser* obj = malloc(sizeof(ArgumentParser));
     if (!obj) return NULL;

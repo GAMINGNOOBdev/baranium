@@ -28,8 +28,8 @@ void bbus_dispose(bbus* obj);
 // read from a bus
 uint8_t bbus_read(bbus* obj, uint64_t addr);
 
-// write to a bus
-void bbus_write(bbus* obj, uint64_t addr, uint8_t value);
+// write to a bus // keep commented out until needed one day maybe
+// void bbus_write(bbus* obj, uint64_t addr, uint8_t value);
 
 // check if the end of the bus has been reached
 uint8_t bbus_eof(bbus* obj, uint64_t addr);

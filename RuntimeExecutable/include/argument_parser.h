@@ -38,7 +38,7 @@ typedef struct ArgumentParser
 /**
  * @brief Create a new argument parser
  */
-ArgumentParser* argument_parser_init();
+ArgumentParser* argument_parser_init(void);
 
 /**
  * @brief Dispose an argument parser object

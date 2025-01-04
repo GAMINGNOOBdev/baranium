@@ -33,7 +33,7 @@ void print_baranium(void** dataptr, baranium_variable_type_t* datatypes, int num
 
 void input_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData)
 {
-    if (numData > 0)
+    if (numData > 0 || dataptr != NULL || datatypes != NULL)
         return;
 
     size_t bufferSize = 0;
@@ -85,7 +85,7 @@ void exit_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numD
     baranium_get_context()->cpu->killTriggered = 1;
 }
 
-void setup_callbacks()
+void setup_callbacks(void)
 {
     baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("print"), print_baranium, 1);
     baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("input"), input_baranium, 0);

@@ -1,7 +1,6 @@
 #include <baranium/cpu/bcpu_opcodes.h>
 #include "instructions.c"
 #include <memory.h>
-#include <stdio.h>
 
 bcpu_opcode opcodes[MAX_OPCODE_AMOUNT];
 bool opcodesInitialized = false;
@@ -17,7 +16,7 @@ bcpu_opcode createOpcode(const char* name, OPCODE_HANDLE opHandle)
     return opcode;
 }
 
-void bcpu_opcodes_init()
+void bcpu_opcodes_init(void)
 {
     if (opcodesInitialized)
         return;

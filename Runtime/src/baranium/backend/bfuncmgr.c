@@ -11,7 +11,7 @@ void bfuncmgr_n_free(bfuncmgr_n* obj)
     free(obj);
 }
 
-baranium_function_manager* baranium_function_manager_init()
+baranium_function_manager* baranium_function_manager_init(void)
 {
     baranium_function_manager* obj = malloc(sizeof(baranium_function_manager));
     if (obj == NULL) return NULL;

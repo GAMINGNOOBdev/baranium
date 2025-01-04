@@ -31,7 +31,7 @@ typedef struct baranium_function_manager
 } baranium_function_manager;
 
 // create and initialize a function manager
-baranium_function_manager* baranium_function_manager_init();
+baranium_function_manager* baranium_function_manager_init(void);
 
 // dispose a function manager
 void baranium_function_manager_dispose(baranium_function_manager* obj);

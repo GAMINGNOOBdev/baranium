@@ -24,7 +24,7 @@ typedef struct
     OPCODE_HANDLE handle;
 } bcpu_opcode;
 
-void bcpu_opcodes_init();
+void bcpu_opcodes_init(void);
 
 extern bcpu_opcode opcodes[];
 

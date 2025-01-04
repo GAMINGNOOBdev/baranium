@@ -14,7 +14,7 @@
 
 static baranium_runtime* current_active_runtime = NULL;
 
-baranium_runtime* baranium_init()
+baranium_runtime* baranium_init(void)
 {
     bcpu_opcodes_init();
 
@@ -37,7 +37,7 @@ void baranium_set_context(baranium_runtime* runtimeContext)
     current_active_runtime = runtimeContext;
 }
 
-baranium_runtime* baranium_get_context()
+baranium_runtime* baranium_get_context(void)
 {
     return current_active_runtime;
 }

@@ -21,7 +21,7 @@ void bvarmgr_n_free(bvarmgr_n* obj)
     free(obj);
 }
 
-bvarmgr* bvarmgr_init()
+bvarmgr* bvarmgr_init(void)
 {
     bvarmgr* obj = malloc(sizeof(bvarmgr));
     if (obj == NULL) return NULL;

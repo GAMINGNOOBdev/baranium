@@ -3,7 +3,7 @@
 #include <malloc.h>
 #include <memory.h>
 
-baranium_callback_list* baranium_callback_list_init()
+baranium_callback_list* baranium_callback_list_init(void)
 {
     baranium_callback_list* list = malloc(sizeof(baranium_callback_list));
     if (list == NULL) return NULL;

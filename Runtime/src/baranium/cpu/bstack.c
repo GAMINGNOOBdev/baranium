@@ -2,7 +2,7 @@
 #include <memory.h>
 #include <stdlib.h>
 
-bstack* bstack_init()
+bstack* bstack_init(void)
 {
     bstack* obj = malloc(sizeof(bstack));
     if (obj == NULL) return NULL;

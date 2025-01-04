@@ -27,7 +27,7 @@ typedef struct bstack
 } bstack;
 
 // create and initialize a stack
-bstack* bstack_init();
+bstack* bstack_init(void);
 
 // dispose a stack
 void bstack_dispose(bstack* obj);

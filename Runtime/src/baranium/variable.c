@@ -93,26 +93,26 @@ char* baranium_variable_stringify(baranium_variable_type_t type, void* value)
     if (type == VARIABLE_TYPE_OBJECT)
     {
         int64_t val = *((uint64_t*)value);
-        return stringf("%lld", val);
+        return (char*)stringf("%lld", val);
     }
 
     if (type == VARIABLE_TYPE_FLOAT)
     {
         uint32_t valInt = *((uint64_t*)value);
         float val = *((float*)&valInt);
-        return stringf("%f", val);
+        return (char*)stringf("%f", val);
     }
 
     if (type == VARIABLE_TYPE_INT)
     {
         int32_t val = *((uint64_t*)value);
-        return stringf("%d", val);
+        return (char*)stringf("%d", val);
     }
 
     if (type == VARIABLE_TYPE_UINT)
     {
         uint32_t val = *((uint64_t*)value);
-        return stringf("%u", val);
+        return (char*)stringf("%u", val);
     }
 
     return NULL;

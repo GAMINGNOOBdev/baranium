@@ -1,4 +1,6 @@
-#pragma warning(disable: 4996)
+#ifdef _WIN32
+#   pragma warning(disable: 4996)
+#endif
 
 #include <baranium/backend/bfuncmgr.h>
 #include <baranium/backend/bvarmgr.h>

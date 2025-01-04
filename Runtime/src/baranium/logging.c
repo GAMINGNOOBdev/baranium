@@ -41,7 +41,7 @@ const char* stringf(const char* formatString, ...)
 
     va_list args;
     va_start(args, formatString);
-    int result = vsnprintf(mFormattingBuffer, 4096, formatString, args);
+    vsnprintf(mFormattingBuffer, 4096, formatString, args);
     va_end(args);
 
     return mFormattingBuffer;

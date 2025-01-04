@@ -29,7 +29,7 @@ typedef struct baranium_callback_list
 /**
  * @brief Create a new callback list
  */
-BARANIUMAPI baranium_callback_list* baranium_callback_list_init();
+BARANIUMAPI baranium_callback_list* baranium_callback_list_init(void);
 
 /**
  * @brief Dispose a callback list

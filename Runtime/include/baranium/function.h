@@ -36,7 +36,11 @@ BARANIUMAPI void baranium_function_dispose(baranium_function* var);
 /**
  * @brief Call a function
  *
- * @param 
+ * @param runtime Runtime handle
+ * @param function Function handle
+ * @param dataptr An array of pointers pointing to variable values
+ * @param datatypes An array of variable types
+ * @param numData The number of input parameters
  */
 BARANIUMAPI void baranium_function_call(baranium_runtime* runtime, baranium_function* function, void** dataptr, baranium_variable_type_t* datatypes, int numData);
 

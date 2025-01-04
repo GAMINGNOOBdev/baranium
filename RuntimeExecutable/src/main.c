@@ -13,8 +13,8 @@
 
 uint8_t debug_mode_enabled;
 
-void print_help_message();
-extern void setup_callbacks();
+void print_help_message(void);
+extern void setup_callbacks(void);
 
 int main(int argc, const char** argv)
 {
@@ -92,7 +92,7 @@ int main(int argc, const char** argv)
     return 0;
 }
 
-void print_help_message()
+void print_help_message(void)
 {
     printf("bar [options] <filepath>\n");
     printf("Options:\n");

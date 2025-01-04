@@ -12,7 +12,7 @@ extern "C" {
  * 
  * @returns An instance of the runtime and it's data
  */
-BARANIUMAPI baranium_runtime* baranium_init();
+BARANIUMAPI baranium_runtime* baranium_init(void);
 
 /**
  * @brief Set the current global runtime context
@@ -24,7 +24,7 @@ BARANIUMAPI void baranium_set_context(baranium_runtime* runtimeContext);
 /**
  * @brief Get the current global runtime context
  */
-BARANIUMAPI baranium_runtime* baranium_get_context();
+BARANIUMAPI baranium_runtime* baranium_get_context(void);
 
 /**
  * @brief Safely dispose a runtime instance
