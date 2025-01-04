@@ -26,10 +26,10 @@
 #   define BGE_LOG(text, ...)
 #endif
 
-#ifdef _WIN32
-#   include <sstream>
-#else
+#ifndef _WIN32
 #   include <iomanip>
+#else
+#   include <sstream>
 #endif
 
 /**
