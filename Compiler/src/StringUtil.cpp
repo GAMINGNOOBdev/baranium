@@ -14,6 +14,7 @@
 #   include <memory.h>
 #else
 #   include <sstream>
+#   include <iostream>
 #endif
 
 std::string GetExtension(std::string str)
@@ -30,10 +31,17 @@ std::string GetExtension(std::string str)
 
 std::string to_hex_string(size_t num)
 {
+    #ifdef __APPLE__
+    std::string build = "";
+    build += "0x";
+    build += stringf("%16.16x", num);
+    return std::string(build);
+    #else
     std::stringstream result = std::stringstream();
     result << "0x";
     result << std::hex << num;
     return result.str();
+    #endif
 }
 
 char IdentifyEscapeSequence(char c)
@@ -82,36 +90,70 @@ uint8_t StrContains(std::string str, char c)
 
 std::string StrConnectEscapeSequences(std::string str)
 {
+    #ifdef __APPLE__
+    std::string res = "";
+    #else
     std::stringstream res = std::stringstream();
+    #endif
 
     for (size_t i = 0; i < str.size(); i++)
     {
-        if (str.at(i) == '\\' && i < str.size() - 1)
+        char c = str.at(i);
+
+        if (c == '\\' && i < str.size() - 1)
         {
             i++;
-            char c = str.at(i);
+            c = str.at(i);
             c = IdentifyEscapeSequence(c);
+
+            #ifdef __APPLE__
+            res += {c, 0};
+            #else
             res << c;
+            #endif
             continue;
         }
-        
-        res << str.at(i);
+
+        #ifdef __APPLE__
+            res += {c, 0};
+        #else
+            res << c;
+        #endif
     }
 
+    #ifdef __APPLE__
+    return std::string(res);
+    #else
     return res.str();
+    #endif
 }
 
 std::string StrTrim(std::string str)
 {
+    #ifdef __APPLE__
+    std::string res = "";
+    #else
     std::stringstream res = std::stringstream();
+    #endif
     for (size_t i = 0; i < str.size(); i++)
     {
-        if (str.at(i) == '\t' || str.at(i) == '\n' || str.at(i) == ' ')
+        char c = str.at(i);
+
+        if (c == '\t' || c == '\n' || c == ' ')
             continue;
 
-        res << str.at(i);
+        #ifdef __APPLE__
+        res += {c, 0};
+        #else
+        res << c;
+        #endif
     }
+
+    #ifdef __APPLE__
+    return std::string(res);
+    #else
     return res.str();
+    #endif
 }
 
 std::string StrTrimLeading(std::string str)
@@ -144,24 +186,30 @@ bool IsCommentBegin(std::string str)
 
 std::string StrTrimComment(std::string str)
 {
+    #ifdef __APPLE__
+    std::string res = "";
+    #else
     std::stringstream res = std::stringstream();
+    #endif
     bool inString = false;
     char lastStrChar = 0;
     for (size_t i = 0; i < str.size(); i++)
     {
-        if (lastStrChar != 0 && str.at(i) == lastStrChar)
+        char c = str.at(i);
+
+        if (lastStrChar != 0 && c == lastStrChar)
         {
             inString = false;
             lastStrChar = 0;
         }
 
-        if (str.at(i) == '"' && lastStrChar == 0)
+        if (c == '"' && lastStrChar == 0)
         {
             inString = true;
             lastStrChar = '"';
         }
 
-        if (str.at(i) == '\'' && lastStrChar == 0)
+        if (c == '\'' && lastStrChar == 0)
         {
             inString = true;
             lastStrChar = '\'';
@@ -170,9 +218,18 @@ std::string StrTrimComment(std::string str)
         if (!inString && IsCommentBegin(str.substr(i)))
             break;
 
-        res << str.at(i);
+        #ifdef __APPLE__
+        res += {c, 0};
+        #else
+        res << c;
+        #endif
     }
+
+    #ifdef __APPLE__
+    return std::string(res);
+    #else
     return res.str();
+    #endif
 }
 
 std::string StrLowercase(std::string str)

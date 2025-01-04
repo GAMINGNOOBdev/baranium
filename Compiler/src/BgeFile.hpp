@@ -204,7 +204,12 @@ struct BgeFile
     */
     std::string ReadString()
     {
-        std::stringstream build = std::stringstream();
+        #ifdef __APPLE__
+            std::string build = "";
+        #else
+            std::stringstream build = std::stringstream();
+        #endif
+
         char c = 1;
 
         while (c != 0)
@@ -214,10 +219,18 @@ struct BgeFile
             if (mEOF || c == 0)
                 break;
 
-            build << c;
+            #ifdef __APPLE__
+                build.append({c, 0});
+            #else
+                build << c;
+            #endif
         }
 
-        return build.str();
+        #ifdef __APPLE__
+            return std::string(build);
+        #else
+            return build.str();
+        #endif
     }
 
     /**
@@ -226,7 +239,11 @@ struct BgeFile
     */
     std::string ReadLine()
     {
+        #ifdef __APPLE__
+        std::string build = "";
+        #else
         std::stringstream build = std::stringstream();
+        #endif
         char c;
 
         while (true)
@@ -236,10 +253,18 @@ struct BgeFile
             if (mEOF || c == '\n' || c == 0)
                 break;
 
+            #ifdef __APPLE__
+            build += {c, 0};
+            #else
             build << c;
+            #endif
         }
 
+        #ifdef __APPLE__
+        return std::string(build);
+        #else
         return build.str();
+        #endif
     }
 
     /**
