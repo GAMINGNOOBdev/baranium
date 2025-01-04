@@ -1,7 +1,7 @@
 #include "../MemoryManager.h"
 #include "CompiledScript.h"
 #include "../Logging.h"
-#include "../version.h"
+#include "../../../version.h"
 #include <algorithm>
 
 namespace Binaries
