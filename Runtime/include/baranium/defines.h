@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "../version.h"
+#include "../../../version.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>

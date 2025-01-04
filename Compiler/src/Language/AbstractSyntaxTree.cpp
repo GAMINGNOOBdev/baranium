@@ -104,14 +104,16 @@ namespace Language
         prefixIterator == mPrefixLookup.end() ? Logging::LogErrorExit(stringf("Invalid prefix '%s'", token.Contents.c_str())) : nop;
 
         auto tokenParser = prefixIterator->second;
-        left = tokenParser.Handle(tokens, left, tokenParser.Power);
+        if (tokenParser.Handle != nullptr)
+            left = tokenParser.Handle(tokens, left, tokenParser.Power);
 
         while (minPower < GetNextPrecedence(tokens))
         {
             token = tokens.Next();
 
             tokenParser = mInfixLookup[token.mType];
-            left = tokenParser.Handle(tokens, left, tokenParser.Power);
+            if (tokenParser.Handle != nullptr)
+                left = tokenParser.Handle(tokens, left, tokenParser.Power);
         }
 
         return left;

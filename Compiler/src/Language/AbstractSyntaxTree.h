@@ -2,7 +2,6 @@
 #define __LANGUAGE__ABSTRACTSYNTAXTREE_H_ 1
 
 #include "../SourceToken.h"
-#include <functional>
 #include <unordered_map>
 #include <stdint.h>
 #include <memory>
@@ -104,7 +103,7 @@ namespace Language
         static TreeNodeObject Create(SourceToken& token, int opIdx = -1, bool spChr = false);
     };
 
-    using PreInPostFixHandle = std::function<TreeNodeObject(SourceTokenIterator&, TreeNodeObject, power_t power)>;
+    typedef TreeNodeObject(*PreInPostFixHandle)(SourceTokenIterator&, TreeNodeObject, power_t power);
 
     /**
      * @brief Small utility class for storing pre-/in-/postfix token parsers
