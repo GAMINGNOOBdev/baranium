@@ -14,7 +14,7 @@ if (UNIX)
 endif()
 
 if (APPLE)
-    set(CMAKE_CXX_FLAGS "-std=c++0x")
+    set(CMAKE_CXX_FLAGS "-std=c++17")
 endif()
 
 add_subdirectory(Compiler)
