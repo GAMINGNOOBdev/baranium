@@ -3,7 +3,7 @@
 
 #define BARANIUM_VERSION_YEAR        2025
 #define BARANIUM_VERSION_MONTH       1
-#define BARANIUM_VERSION_DATE        4
+#define BARANIUM_VERSION_DATE        5
 #define BARANIUM_VERSION_PHASE       "release"
 
 #define VERSION_CREATE(year, month, day) ((year << 16) | (month << 8) | day)
