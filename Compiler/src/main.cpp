@@ -10,6 +10,7 @@
 #include "FileUtil.h"
 #include "Logging.h"
 #include "Source.h"
+#include <stdlib.h>
 
 #ifdef _WIN32
 #   include <Windows.h>
@@ -25,6 +26,27 @@ extern void PrintUsage();
 extern void CreatePathDirectory(std::string path);
 
 bool g_debug_mode = false;
+
+void readIncludesFile(std::string path)
+{
+    if (!FileUtil::Exists(path))
+        return;
+
+    BgeFile includePathsFile = BgeFile(path, false);
+    if (!includePathsFile.Ready())
+        Logging::LogErrorExit("how in the f*ck did this error occur?!?!?!?");
+
+    std::string line;
+    while (!includePathsFile.EndOfFile())
+    {
+        line = includePathsFile.ReadLine();
+        if (line.empty())
+            continue;
+
+        Preprocessor::AddIncludePath(line);
+    }
+    includePathsFile.Close();
+}
 
 int main(const int argc, const char** argv)
 {
@@ -54,26 +76,20 @@ int main(const int argc, const char** argv)
     if (executableFilePathLastSeperatorIndex != std::string::npos)
         executableFilePath = executableFilePath.substr(0, executableFilePathLastSeperatorIndex+1); // index + 1 to include the delimiter
 
+    char* baraniumInclude = getenv("BARANIUM_INCLUDE");
+    if (baraniumInclude != NULL)
+        Preprocessor::AddIncludePath(baraniumInclude);
     Preprocessor::AddIncludePath(std::string(executableFilePath).append("../include"));
+    Preprocessor::AddIncludePath(std::string(executableFilePath).append("include"));
+    Preprocessor::AddIncludePath(std::string(executableFilePath));
 
-    std::string includePathsFilePath = std::string(executableFilePath).append("../etc/include.paths");
-    if (FileUtil::Exists(includePathsFilePath))
-    {
-        BgeFile includePathsFile = BgeFile(includePathsFilePath, false);
-        if (!includePathsFile.Ready())
-            Logging::LogErrorExit("how in the f*ck did this error occur?!?!?!?");
-
-        std::string line;
-        while (!includePathsFile.EndOfFile())
-        {
-            line = includePathsFile.ReadLine();
-            if (line.empty())
-                continue;
-
-            Preprocessor::AddIncludePath(line);
-        }
-        includePathsFile.Close();
-    }
+    char* baraniumIncludeFile = getenv("BARANIUM_INCLUDE_CONFIG");
+    if (baraniumIncludeFile != NULL)
+        readIncludesFile(baraniumIncludeFile);
+    readIncludesFile(std::string(executableFilePath).append("../etc/include.paths"));
+    readIncludesFile(std::string(executableFilePath).append("../include.paths"));
+    readIncludesFile(std::string(executableFilePath).append("etc/include.paths"));
+    readIncludesFile(std::string(executableFilePath).append("include.paths"));
 
     if (userIncludes != Argument::empty)
     {
