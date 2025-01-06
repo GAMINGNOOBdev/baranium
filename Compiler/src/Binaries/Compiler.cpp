@@ -62,7 +62,7 @@ namespace Binaries
                 else if (__src == Language::Keywords[KeywordIndex_attached].Name)
                     objID = -1;
                 else
-                    objID = std::stoll(__src);
+                    objID = StrGetNumber(__src);
                 memcpy(dest, &objID, sizeof(int64_t));
                 break;
             }
@@ -95,7 +95,7 @@ namespace Binaries
             {
                 int32_t iValue = 0;
                 if (!__src.empty())
-                    iValue = std::stoi(__src);
+                    iValue = (int32_t)StrGetNumber(__src);
                 memcpy(dest, &iValue, sizeof(int32_t));
                 break;
             }
@@ -104,7 +104,7 @@ namespace Binaries
             {
                 uint32_t uValue = 0;
                 if (!__src.empty())
-                    uValue = (uint32_t)std::stoi(__src);
+                    uValue = (uint32_t)StrGetNumber(__src);
                 memcpy(dest, &uValue, sizeof(uint32_t));
                 break;
             }
@@ -253,7 +253,7 @@ namespace Binaries
             else if (token.Value == Language::Keywords[KeywordIndex_null].Name)
                 mCodeBuilder.PUSH(0);
             else if (StrIsNumber(token.Value))
-                mCodeBuilder.PUSH(std::stoll(token.Value));
+                mCodeBuilder.PUSH(StrGetNumber(token.Value));
             else
             {
                 auto varID = GetID(token.Value);
@@ -504,7 +504,7 @@ namespace Binaries
             }
             else
             {
-                value = std::stoi(token.Contents);
+                value = StrGetNumber(token.Contents);
                 mCodeBuilder.PushIntValue(value);
             }
         }
@@ -823,7 +823,7 @@ namespace Binaries
             int64_t dataValue = 0;
 
             if (!value.empty())
-                dataValue = std::stoll(value);
+                dataValue = StrGetNumber(value);
 
             data = (uint8_t*)MemoryManager::allocate(sizeof(int64_t));
             memcpy(data, &dataValue, sizeof(int64_t));

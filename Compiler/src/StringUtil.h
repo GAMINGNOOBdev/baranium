@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef __STRINGUTIL_H_
 #define __STRINGUTIL_H_ 1
 
@@ -97,7 +98,20 @@ std::string StrLowercase(std::string str);
 std::string StrUppercase(std::string str);
 
 /**
+ * Get integer value from a string
+ *
+ * @note Hex and binary numbers supported
+ * 
+ * @param[in] str input string
+ * 
+ * @returns the number value
+*/
+uint64_t StrGetNumber(std::string str);
+
+/**
  * Checks if given string is a number
+ *
+ * @note Hex and binary numbers supported
  * 
  * @param[in] str input string
  * 

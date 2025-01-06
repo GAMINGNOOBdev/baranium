@@ -2,5 +2,13 @@
 # STANDARD INPUT OUTPUT LIBRARY #
 #################################
 
+# file operations
+# define fopen(string path, string mode) = object;
+# define fread(object fileptr, ) = byte[];
+# define fwrite(object fileptr, ) = void;
+# define fseek(object fileptr, int cur, int off) = void;
+#  define fclose(object fileptr) = void;
+
+# stdin/stdout operations
 define print(string str) = void;
 define input() = string;

@@ -41,26 +41,24 @@ define main()
     }
 
     print("9+10 >> ");
-    string myResponseToNinePlusTen = "";
+    int myResponseToNinePlusTen = 0xFF;
+    myResponseToNinePlusTen += 0b0101;
     myResponseToNinePlusTen = input();
 
     print("Your response was \"");
     print(myResponseToNinePlusTen);
     print("\"\n");
 
-    if (myResponseToNinePlusTen == "21")
+    if (myResponseToNinePlusTen == 21)
     {
-        testFunctionResult = 21;
         print("You stoopid");
     }
-    else if (myResponseToNinePlusTen == "19")
+    else if (myResponseToNinePlusTen == 19)
     {
-        testFunctionResult = 19;
         print("wow you actually got it damn");
     }
     else
     {
-        testFunctionResult = testFunctionResult * squared(testFunctionResult);
         print("okay wtf are you doing man");
     }
 

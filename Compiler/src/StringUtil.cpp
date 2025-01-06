@@ -1,4 +1,5 @@
 #include "StringUtil.h"
+#include <cstdint>
 #include <regex>
 
 #include <stdlib.h>
@@ -246,18 +247,136 @@ std::string StrUppercase(std::string str)
     return res;
 }
 
+uint64_t StrGetNumber(std::string str)
+{
+    uint64_t result = 0;
+    int index = 0;
+    char c = 0;
+
+    // check for hex/binary formats beforehand
+    if (str.length() > 2)
+    {
+        c = str.at(1);
+        if (c == 'x' || c == 'X')
+            goto parseHex;
+
+        if (c == 'b' || c == 'B')
+            goto parseBinary;
+    }
+
+    return std::stoll(str);
+
+parseHex:
+
+    index = 0;
+    c = str.at(index);
+    if (c != '0')
+        return result;
+    index = 2;
+
+    for (; index < str.length(); index++)
+    {
+        result <<= 4;
+
+        c = str.at(index);
+
+        if ((c > '0' && c < '9'))
+            result |= c-'0';
+
+        if((c > 'a' && c < 'f'))
+            result |= 10 + c - 'a';
+
+        if((c > 'A' || c < 'F'))
+            result |= 10 + c - 'A';
+    }
+
+    return result;
+
+parseBinary:
+
+    index = 0;
+    c = str.at(index);
+    if (c != '0')
+        return result;
+    index = 2;
+
+    for (; index < str.length(); index++)
+    {
+        result <<= 1;
+
+        c = str.at(index);
+
+        if (c == '0')
+            continue;
+
+        result |= 1;
+    }
+
+    return result;
+}
+
 bool StrIsNumber(std::string str)
 {
     int index = 0;
-    char chr = str.at(index);
-    if (chr == '+' || chr == '-')
+    char c = 0;
+
+    // check for hex/binary formats beforehand
+    if (str.length() > 2)
+    {
+        c = str.at(1);
+        if (c == 'x' || c == 'X')
+            goto checkHex;
+
+        if (c == 'b' || c == 'B')
+            goto checkBinary;
+    }
+
+    index = 0;
+    c = str.at(index);
+    if (c == '+' || c == '-')
         index++;
 
     for (; index < str.length(); index++)
     {
-        chr = str.at(index);
+        c = str.at(index);
 
-        if (chr < '0' || chr > '9')
+        if (c < '0' || c > '9')
+            return false;
+    }
+
+    return true;
+
+checkHex:
+
+    index = 0;
+    c = str.at(index);
+    if (c != '0')
+        return false;
+    index = 2;
+
+    for (; index < str.length(); index++)
+    {
+        c = str.at(index);
+
+        if ((c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F'))
+            return false;
+    }
+
+    return true;
+
+checkBinary:
+
+    index = 0;
+    c = str.at(index);
+    if (c != '0')
+        return false;
+    index = 2;
+
+    for (; index < str.length(); index++)
+    {
+        c = str.at(index);
+
+        if (c < '0' || c > '1')
             return false;
     }
 
