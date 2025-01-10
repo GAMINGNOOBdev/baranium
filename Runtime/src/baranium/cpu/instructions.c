@@ -199,6 +199,8 @@ void POPVAR(bcpu* cpu)
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be assigned: Non-matching types of variable and assign value", id));
         bstack_push(cpu->stack, ERR_VAR_INVALID_TYPE);
+        free(newvar->value);
+        baranium_compiled_variable_dispose(newvar);
         cpu->flags.FORCED_KILL = true;
         cpu->killTriggered = true;
         return;

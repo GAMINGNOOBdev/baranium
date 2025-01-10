@@ -5,6 +5,7 @@
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
+#include <stdint.h>
 #include <string.h>
 #include <memory.h>
 #include <stdlib.h>
@@ -90,7 +91,7 @@ void baranium_compiled_variable_push_to_stack(bcpu* cpu, baranium_compiled_varia
     else
     {
         size_t leftOverSize = size;
-        int index = 0;
+        size_t index = 0;
         void* valPtr;
         for (index = 0; index * 8 < size; index++)
         {
@@ -202,6 +203,153 @@ void baranium_compiled_variable_perform_arithmetic_operation(void* dataLeft, voi
     }
 }
 
+static const char* string_ptr_tmp = NULL;
+static uint64_t string_to_num_tmp = 0;
+static double string_to_num_float_tmp = 0.0;
+static uint8_t string_to_num_is_float = 0;
+
+uint8_t string_is_number(const char* str)
+{
+    string_to_num_float_tmp = 0;
+    string_to_num_is_float = 0;
+    string_to_num_tmp = 0;
+    string_ptr_tmp = str;
+
+    size_t len = strlen(str);
+    size_t index = 0;
+    char c = str[index];
+    uint16_t decimalPlaces = 1;
+
+    if (c == '+' || c == '-')
+        index++;
+
+    // check for hex/binary formats beforehand
+    if (len > 2)
+    {
+        c = str[1];
+        if (c == 'x' || c == 'X')
+            goto parseHex;
+
+        if (c == 'b' || c == 'B')
+            goto parseBinary;
+    }
+
+    // check for '.' aka a floating point
+    for (size_t i = index; i < len && !string_to_num_is_float; i++)
+        string_to_num_is_float = str[index] == '.';
+
+    if (!string_to_num_is_float)
+        goto parseInteger;
+
+    for (; index < len; index++)
+    {
+        string_to_num_tmp *= 10;
+
+        c = str[index];
+        if (c == '.')
+        {
+            index++;
+            break;
+        }
+
+        if ((c > '0' && c < '9'))
+            string_to_num_tmp += c-'0';
+        else return 0;
+    }
+    for (; index < len; index++)
+    {
+        decimalPlaces*=10;
+        string_to_num_float_tmp*=10;
+        string_to_num_float_tmp += c-'0'; 
+    }
+    string_to_num_float_tmp /= decimalPlaces;
+    string_to_num_float_tmp += string_to_num_tmp;
+    return 1;
+
+parseInteger:
+    for (; index < len; index++)
+    {
+        string_to_num_tmp *= 10;
+
+        c = str[index];
+
+        if (c >= '0' && c <= '9')
+            string_to_num_tmp += c-'0';
+        else return 0;
+    }
+    string_to_num_float_tmp = string_to_num_tmp;
+
+    return 1;
+
+parseHex:
+
+    index = 0;
+    c = str[index];
+    if (c != '0')
+        return 0;
+    index = 2;
+
+    for (; index < len; index++)
+    {
+        string_to_num_tmp <<= 4;
+
+        c = str[index];
+
+        if ((c >= '0' && c <= '9'))
+            string_to_num_tmp |= c-'0';
+        else if((c >= 'a' && c <= 'f'))
+            string_to_num_tmp |= 10 + c - 'a';
+        else if((c >= 'A' || c <= 'F'))
+            string_to_num_tmp |= 10 + c - 'A';
+        else return 0;
+    }
+    string_to_num_float_tmp = string_to_num_tmp;
+
+    return 1;
+
+parseBinary:
+
+    index = 0;
+    c = str[index];
+    if (c != '0')
+        return 0;
+    index = 2;
+
+    for (; index < len; index++)
+    {
+        string_to_num_tmp <<= 1;
+
+        c = str[index];
+
+        if (c != '0' && c != '1')
+            return 0;
+
+        if (c == '0')
+            continue;
+
+        string_to_num_tmp |= 1;
+    }
+    string_to_num_float_tmp = string_to_num_tmp;
+
+    return 1;
+}
+
+uint64_t string_to_number(const char* str)
+{
+    if (str != string_ptr_tmp)
+        string_is_number(str);
+
+    return string_to_num_tmp;
+}
+
+float string_to_float(const char* str)
+{
+    if (str != string_ptr_tmp)
+        string_is_number(str);
+
+    return string_to_num_float_tmp;
+}
+
 int baranium_compiled_variable_as_object(baranium_compiled_variable* var)
 {
     size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_OBJECT);
@@ -217,6 +365,8 @@ int baranium_compiled_variable_as_object(baranium_compiled_variable* var)
         (*newVal) = (int64_t)*((int32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_UINT)
         (*newVal) = (int64_t)*((uint32_t*)var->value);
+    else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
+        (*newVal) = (int64_t)string_to_number((const char*)var->value);
     else result = 0;
 
     free(var->value);
@@ -240,6 +390,8 @@ int baranium_compiled_variable_as_float(baranium_compiled_variable* var)
         (*newVal) = (float)*((int32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_UINT)
         (*newVal) = (float)*((uint32_t*)var->value);
+    else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
+        (*newVal) = (float)string_to_float((const char*)var->value);
     else result = 0;
 
     free(var->value);
@@ -263,6 +415,8 @@ int baranium_compiled_variable_as_bool(baranium_compiled_variable* var)
         (*newVal) = 0 < *((int32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_UINT)
         (*newVal) = 0 < *((uint32_t*)var->value);
+    else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
+        (*newVal) = 0 < string_to_number((const char*)var->value);
     else result = 0;
 
     free(var->value);
@@ -286,6 +440,8 @@ int baranium_compiled_variable_as_int(baranium_compiled_variable* var)
         (*newVal) = (int32_t)*((float*)var->value);
     else if (var->type == VARIABLE_TYPE_UINT)
         (*newVal) = (int32_t)*((uint32_t*)var->value);
+    else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
+        (*newVal) = (int32_t)string_to_number((const char*)var->value);
     else result = 0;
 
     free(var->value);
@@ -309,6 +465,8 @@ int baranium_compiled_variable_as_uint(baranium_compiled_variable* var)
         (*newVal) = (uint32_t)*((float*)var->value);    
     else if (var->type == VARIABLE_TYPE_INT)
         (*newVal) = (uint32_t)*((int32_t*)var->value);
+    else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
+        (*newVal) = (uint32_t)string_to_number((const char*)var->value);
     else result = 0;
 
     free(var->value);
@@ -376,7 +534,7 @@ void baranium_compiled_variable_combine(baranium_compiled_variable* lhs, baraniu
 
     if (operation == BARANIUM_VARIABLE_OPERATION_ADD && resultType == VARIABLE_TYPE_STRING) // very special case
     {
-        void* value = stringf("%s%s", baranium_variable_stringify(lhs->type, lhs->value), baranium_variable_stringify(rhs->type, rhs->value));
+        void* value = (void*)stringf("%s%s", baranium_variable_stringify(lhs->type, lhs->value), baranium_variable_stringify(rhs->type, rhs->value));
         free(lhs->value);
         size_t size = strlen(value)+1;
         lhs->value = malloc(size);

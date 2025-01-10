@@ -267,7 +267,6 @@ uint64_t StrGetNumber(std::string str)
     return std::stoll(str);
 
 parseHex:
-
     index = 0;
     c = str.at(index);
     if (c != '0')
@@ -293,7 +292,6 @@ parseHex:
     return result;
 
 parseBinary:
-
     index = 0;
     c = str.at(index);
     if (c != '0')
