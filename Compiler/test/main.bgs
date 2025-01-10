@@ -51,15 +51,15 @@ define main()
 
     if (myResponseToNinePlusTen == 21)
     {
-        print("You stoopid");
+        print("You stoopid\n");
     }
     else if (myResponseToNinePlusTen == 19)
     {
-        print("wow you actually got it damn");
+        print("wow you actually got it damn\n");
     }
     else
     {
-        print("okay wtf are you doing man");
+        print("okay wtf are you doing man\n");
     }
 
     for (testFunctionResult = 1005; testFunctionResult > 0; testFunctionResult /= 10)

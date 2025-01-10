@@ -194,6 +194,7 @@ void POPVAR(bcpu* cpu)
     }
 
     baranium_compiled_variable* newvar = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable_convert_to_type(newvar, type);
     if (!baranium_variable_type_size_interchangable(type, newvar->type))
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be assigned: Non-matching types of variable and assign value", id));

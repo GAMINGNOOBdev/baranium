@@ -3,7 +3,6 @@
 
 #include "../variable.h"
 #include "../defines.h"
-#include "../bcpu.h"
 
 #define BARANIUM_VARIABLE_OPERATION_NONE    0x00
 #define BARANIUM_VARIABLE_OPERATION_MOD     0x01
@@ -28,6 +27,8 @@ typedef struct baranium_compiled_variable
     size_t size;
 } baranium_compiled_variable;
 
+struct bcpu;
+
 /**
  * @brief Pop a compiled variable from the cpu stack
  * 
@@ -35,7 +36,7 @@ typedef struct baranium_compiled_variable
  * 
  * @returns Compiled variable object
  */
-BARANIUMAPI baranium_compiled_variable* baranium_compiled_variable_pop_from_stack(bcpu* cpu);
+BARANIUMAPI baranium_compiled_variable* baranium_compiled_variable_pop_from_stack(struct bcpu* cpu);
 
 /**
  * @brief Push a compiled variable to the cpu stack
@@ -43,7 +44,7 @@ BARANIUMAPI baranium_compiled_variable* baranium_compiled_variable_pop_from_stac
  * @param cpu CPU
  * @param var Compiled variable
  */
-BARANIUMAPI void baranium_compiled_variable_push_to_stack(bcpu* cpu, baranium_compiled_variable* var);
+BARANIUMAPI void baranium_compiled_variable_push_to_stack(struct bcpu* cpu, baranium_compiled_variable* var);
 
 /**
  * @brief Disposes the created compiled variable object
@@ -57,7 +58,7 @@ BARANIUMAPI void baranium_compiled_variable_dispose(baranium_compiled_variable* 
 /**
  * @brief Convert a variable to a specific type
  * 
- * @note This will modify the values `var`
+ * @note This will modify the values of `var`
  * 
  * @param var Variable that will be converted
  * @param targetType Target type

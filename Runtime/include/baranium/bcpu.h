@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+#include "backend/varmath.h"
 #include "cpu/bstack.h"
 #include "cpu/bbus.h"
 #include <stdint.h>

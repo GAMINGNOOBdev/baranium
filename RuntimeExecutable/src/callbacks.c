@@ -2,6 +2,7 @@
 #include <baranium/variable.h>
 #include <baranium/callback.h>
 #include <baranium/runtime.h>
+#include <baranium/bcpu.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -211,16 +212,16 @@ void log10_baranium(void** dataptr, baranium_variable_type_t* datatypes, int num
 
 void setup_callbacks(void)
 {
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("print"), print_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("input"), input_baranium, 0);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("system"), system_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("exit"), exit_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("sin"), sin_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("cos"), cos_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("tan"), tan_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("asin"), asin_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("acos"), acos_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("atan"), atan_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("log"), log_baranium, 1);
-    baranium_callback_add(baranium_get_context(), baranium_get_id_of_name("log10"), log10_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("print"), print_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("input"), input_baranium, 0);
+    baranium_callback_add(baranium_get_id_of_name("system"), system_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("exit"), exit_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("sin"), sin_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("cos"), cos_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("tan"), tan_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("asin"), asin_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("acos"), acos_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("atan"), atan_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("log"), log_baranium, 1);
+    baranium_callback_add(baranium_get_id_of_name("log10"), log10_baranium, 1);
 }
