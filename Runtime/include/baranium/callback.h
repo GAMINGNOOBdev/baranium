@@ -41,48 +41,43 @@ BARANIUMAPI void baranium_callback_list_dispose(baranium_callback_list* list);
 /**
  * @brief Add a callback to a C function
  * 
- * @param runtime Current runtime
  * @param id Callback ID
  * @param cb Callback pointer
  * @param numParams Number of parameters
  */
-BARANIUMAPI void baranium_callback_add(baranium_runtime* runtime, index_t id, baranium_callback_t cb, int numParams);
+BARANIUMAPI void baranium_callback_add(index_t id, baranium_callback_t cb, int numParams);
 
 /**
  * @brief Find a callback entry
  * 
- * @param runtime Current runtime
  * @param id Callback ID
  * 
  * @returns The list entry of the callback
  */
-BARANIUMAPI baranium_callback_list_entry* baranium_callback_find_by_id(baranium_runtime* runtime, index_t id);
+BARANIUMAPI baranium_callback_list_entry* baranium_callback_find_by_id(index_t id);
 
 /**
  * @brief Find a callback entry
  * 
- * @param runtime Current runtime
  * @param cb Callback pointer
  * 
  * @returns The list entry of the callback
  */
-BARANIUMAPI baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_runtime* runtime, baranium_callback_t* cb);
+BARANIUMAPI baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_callback_t* cb);
 
 /**
  * @brief Remove a callback
  * 
- * @param runtime Current runtime
  * @param id Callback ID
  */
-BARANIUMAPI void baranium_callback_remove_by_id(baranium_runtime* runtime, index_t id);
+BARANIUMAPI void baranium_callback_remove_by_id(index_t id);
 
 /**
  * @brief Remove a callback
  * 
- * @param runtime Current runtime
  * @param cb Callback pointer
  */
-BARANIUMAPI void baranium_callback_remove_by_cb_ptr(baranium_runtime* runtime, baranium_callback_t* cb);
+BARANIUMAPI void baranium_callback_remove_by_cb_ptr(baranium_callback_t* cb);
 
 #ifdef __cplusplus
 }

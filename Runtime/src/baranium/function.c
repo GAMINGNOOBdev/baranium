@@ -2,6 +2,7 @@
 #include <baranium/cpu/bstack.h>
 #include <baranium/function.h>
 #include <baranium/variable.h>
+#include <baranium/runtime.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
 #include <string.h>
@@ -23,8 +24,10 @@ void baranium_function_dispose(baranium_function* function)
     free(function);
 }
 
-void baranium_function_call(baranium_runtime* runtime, baranium_function* function, void** dataptr, baranium_variable_type_t* datatypes, int numData)
+void baranium_function_call(baranium_function* function, void** dataptr, baranium_variable_type_t* datatypes, int numData)
 {
+    baranium_runtime* runtime = baranium_get_context();
+
     if (!runtime || !function)
         return;
     

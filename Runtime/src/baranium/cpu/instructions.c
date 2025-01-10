@@ -260,7 +260,7 @@ void CALL(bcpu* cpu)
     LOGDEBUG(stringf("calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
 
     baranium_runtime* runtime = baranium_get_context();
-    baranium_callback_list_entry* callback = baranium_callback_find_by_id(runtime, id);
+    baranium_callback_list_entry* callback = baranium_callback_find_by_id( id);
     LOGDEBUG(stringf("callback id: %lld callback ptr: 0x%16.16x", id, (uint64_t)callback));
     baranium_function* func = baranium_function_manager_get(runtime->functionManager, id);
 
@@ -293,7 +293,7 @@ void CALL(bcpu* cpu)
         }
     }
     else
-        baranium_function_call(runtime, func, NULL, NULL, -1);
+        baranium_function_call(func, NULL, NULL, -1);
 
     baranium_function_dispose(func);
 

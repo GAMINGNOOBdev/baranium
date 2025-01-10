@@ -1,3 +1,4 @@
+#include "baranium/runtime.h"
 #include <baranium/callback.h>
 #include <baranium/logging.h>
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_APPLE
@@ -42,8 +43,10 @@ void baranium_callback_list_dispose(baranium_callback_list* list)
     free(list);
 }
 
-void baranium_callback_add(baranium_runtime* runtime, index_t id, baranium_callback_t cb, int numParams)
+void baranium_callback_add(index_t id, baranium_callback_t cb, int numParams)
 {
+    baranium_runtime* runtime = baranium_get_context();
+
     if (runtime == NULL || id == INVALID_INDEX || cb == NULL)
         return;
 
@@ -78,8 +81,10 @@ void baranium_callback_add(baranium_runtime* runtime, index_t id, baranium_callb
     return;
 }
 
-baranium_callback_list_entry* baranium_callback_find_by_id(baranium_runtime* runtime, index_t id)
+baranium_callback_list_entry* baranium_callback_find_by_id(index_t id)
 {
+    baranium_runtime* runtime = baranium_get_context();
+
     if (runtime == NULL || id == INVALID_INDEX)
         return NULL;
 
@@ -99,8 +104,10 @@ baranium_callback_list_entry* baranium_callback_find_by_id(baranium_runtime* run
     return NULL;
 }
 
-baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_runtime* runtime, baranium_callback_t* cb)
+baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_callback_t* cb)
 {
+    baranium_runtime* runtime = baranium_get_context();
+
     if (runtime == NULL || cb == NULL)
         return NULL;
 
@@ -120,12 +127,14 @@ baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_runtime*
     return NULL;
 }
 
-void baranium_callback_remove_by_id(baranium_runtime* runtime, index_t id)
+void baranium_callback_remove_by_id(index_t id)
 {
+    baranium_runtime* runtime = baranium_get_context();
+
     if (runtime == NULL || id == INVALID_INDEX)
         return;
     
-    baranium_callback_list_entry* entry = baranium_callback_find_by_id(runtime, id);
+    baranium_callback_list_entry* entry = baranium_callback_find_by_id(id);
     if (entry == NULL)
         return;
 
@@ -141,12 +150,12 @@ void baranium_callback_remove_by_id(baranium_runtime* runtime, index_t id)
         next->prev = prev;
 }
 
-void baranium_callback_remove_by_cb_ptr(baranium_runtime* runtime, baranium_callback_t* cb)
+void baranium_callback_remove_by_cb_ptr(baranium_callback_t* cb)
 {
-    if (runtime == NULL || cb == NULL)
+    if (cb == NULL)
         return;
 
-    baranium_callback_list_entry* entry = baranium_callback_find_by_cb_ptr(runtime, cb);
+    baranium_callback_list_entry* entry = baranium_callback_find_by_cb_ptr(cb);
     if (entry == NULL)
         return;
 

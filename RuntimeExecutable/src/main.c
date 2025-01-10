@@ -78,14 +78,10 @@ int main(int argc, const char** argv)
     baranium_handle* handle = baranium_open_handle(filePath);
     baranium_script* script = baranium_open_script(handle);
 
-    baranium_field* testFunctionResult = baranium_script_get_field(script, "testFunctionResult");
-    float val = 100.5f;
-    baranium_field_set_value(testFunctionResult, &val, sizeof(float), VARIABLE_TYPE_FLOAT);
-
     index_t mainIndex = baranium_script_get_id_of(script, "main");
 
     baranium_function* main = baranium_script_get_function_by_id(script, mainIndex);
-    baranium_function_call(runtime, main, NULL, NULL, 0);
+    baranium_function_call(main, NULL, NULL, 0);
     baranium_function_dispose(main);
 
     baranium_close_script(script);

@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 
 project(baranium)
 
-
 include_directories(include)
 
 set(baraniumSources

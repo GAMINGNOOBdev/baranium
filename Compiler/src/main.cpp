@@ -92,26 +92,8 @@ int main(const int argc, const char** argv)
     readIncludesFile(std::string(executableFilePath).append("include.paths"));
 
     if (userIncludes != Argument::empty)
-    {
-        if (FileUtil::Exists(userIncludes.Value))
-        {
-            BgeFile userIncludePathsFile = BgeFile(userIncludes.Value, false);
+        readIncludesFile(userIncludes.Value);
 
-            if (!userIncludePathsFile.Ready())
-                Logging::LogErrorExit("again, how the f*ck did you get here?");
-
-            std::string line;
-            while (!userIncludePathsFile.EndOfFile())
-            {
-                line = userIncludePathsFile.ReadLine();
-                if (line.empty())
-                    continue;
-
-                Preprocessor::AddIncludePath(line);
-            }
-            userIncludePathsFile.Close();
-        }
-    }
 
     //////////////////////
     /// Error handling ///
