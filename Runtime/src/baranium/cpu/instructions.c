@@ -712,14 +712,18 @@ void SET(bcpu* cpu)
     }
 }
 
+extern internal_operation_t instantiate_callback;
+extern internal_operation_t delete_callback;
+extern internal_operation_t attach_callback;
+extern internal_operation_t detach_callback;
+
 void INSTANTIATE(bcpu* cpu)
 {
     if (!cpu) return;
 
     index_t id = bstack_pop(cpu->stack);
-    ///TODO: actually do some stuff for these object handles
-
-    LOGDEBUG(stringf("Object with id '%ld' created", id));
+    if (instantiate_callback) instantiate_callback(id);
+    LOGDEBUG(stringf("Object with id '%ld' instantiated", id));
 }
 
 void DELETE(bcpu* cpu)
@@ -727,8 +731,7 @@ void DELETE(bcpu* cpu)
     if (!cpu) return;
 
     index_t id = bstack_pop(cpu->stack);
-    ///TODO: actually do some stuff for these object handles
-
+    if (delete_callback) delete_callback(id);
     LOGDEBUG(stringf("Object with id '%ld' deleted", id));
 }
 
@@ -737,8 +740,7 @@ void ATTACH(bcpu* cpu)
     if (!cpu) return;
 
     index_t id = bstack_pop(cpu->stack);
-    ///TODO: actually do some stuff for these object handles
-
+    if (attach_callback) attach_callback(id);
     LOGDEBUG(stringf("Attached to object with id '%ld'", id));
 }
 
@@ -747,8 +749,7 @@ void DETACH(bcpu* cpu)
     if (!cpu) return;
 
     index_t id = bstack_pop(cpu->stack);
-    ///TODO: actually do some stuff for these object handles
-
+    if (detach_callback) detach_callback(id);
     LOGDEBUG(stringf("Detached from object with id '%ld'", id));
 }
 

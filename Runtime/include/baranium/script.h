@@ -25,8 +25,6 @@ typedef uint8_t baranium_section_type_t;
 
 typedef struct baranium_section
 {
-    struct baranium_section* prev;
-
     uint8_t Type;
     index_t ID;
     uint64_t DataSize;
@@ -45,8 +43,6 @@ typedef struct
 
 typedef struct baranium_script_name_table_entry
 {
-    struct baranium_script_name_table_entry* prev;
-
     uint8_t NameLength;
     uint8_t* Name;
     index_t ID;

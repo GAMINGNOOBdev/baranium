@@ -73,7 +73,6 @@ void baranium_script_append_section(baranium_script* script, baranium_section* s
     }
 
     script->SectionsEnd->next = section;
-    section->prev = script->SectionsEnd;
     script->SectionsEnd = section;
 }
 
@@ -90,7 +89,6 @@ void baranium_script_append_name_table_entry(baranium_script* script, baranium_s
     }
 
     script->NameTable.EntriesEnd->next = entry;
-    entry->prev = script->NameTable.EntriesEnd;
     script->NameTable.EntriesEnd = entry;
 }
 

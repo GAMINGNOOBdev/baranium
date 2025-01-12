@@ -26,6 +26,13 @@ typedef struct baranium_callback_list
     size_t count;
 } baranium_callback_list;
 
+typedef void(*internal_operation_t)(index_t id);
+
+/**
+ * @brief Set internal operation callbacks
+ */
+BARANIUMAPI void baranium_callback_set_internal_operations(internal_operation_t instantiateCB, internal_operation_t deleteCB, internal_operation_t attachCB, internal_operation_t detachCB);
+
 /**
  * @brief Create a new callback list
  */

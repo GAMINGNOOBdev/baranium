@@ -11,19 +11,16 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
+#define INITIAL_STACK_SIZE 0x8000
 
-typedef struct bstack_entry
-{
-    struct bstack_entry* prev;
-    uint64_t data;
-    struct bstack_entry* next;
-} bstack_entry;
+#include <stdint.h>
+#include <stdlib.h>
 
 typedef struct bstack
 {
-    bstack_entry* end;
-    bstack_entry* start;
+    uint64_t* stackptr;
+    size_t bufferSize;
+    size_t count;
 } bstack;
 
 // create and initialize a stack

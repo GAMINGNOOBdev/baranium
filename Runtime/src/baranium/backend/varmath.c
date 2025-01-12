@@ -353,24 +353,23 @@ float string_to_float(const char* str)
 int baranium_compiled_variable_as_object(baranium_compiled_variable* var)
 {
     size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_OBJECT);
-    int64_t* newVal = malloc(size);
-    memset(newVal, 0, size);
+    int64_t val = 0;
     int result = 1;
 
     if (var->type == VARIABLE_TYPE_FLOAT)
-        (*newVal) = (int64_t)*((float*)var->value);
+        val = (int64_t)*((float*)var->value);
     else if (var->type == VARIABLE_TYPE_BOOL)
-        (*newVal) = (int64_t)*((uint8_t*)var->value);
+        val = (int64_t)*((uint8_t*)var->value);
     else if (var->type == VARIABLE_TYPE_INT)
-        (*newVal) = (int64_t)*((int32_t*)var->value);
+        val = (int64_t)*((int32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_UINT)
-        (*newVal) = (int64_t)*((uint32_t*)var->value);
+        val = (int64_t)*((uint32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
-        (*newVal) = (int64_t)string_to_number((const char*)var->value);
+        val = (int64_t)string_to_number((const char*)var->value);
     else result = 0;
 
-    free(var->value);
-    var->value = newVal;
+    var->value = realloc(var->value, size);
+    *((int64_t*)var->value) = val;
     var->size = size;
     return result;
 }
@@ -378,24 +377,23 @@ int baranium_compiled_variable_as_object(baranium_compiled_variable* var)
 int baranium_compiled_variable_as_float(baranium_compiled_variable* var)
 {
     size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_FLOAT);
-    float* newVal = malloc(size);
-    memset(newVal, 0, size);
+    float val = 0;
     int result = 1;
 
     if (var->type == VARIABLE_TYPE_OBJECT)
-        (*newVal) = (float)*((int64_t*)var->value);
+        val = (float)*((int64_t*)var->value);
     else if (var->type == VARIABLE_TYPE_BOOL)
-        (*newVal) = (float)*((uint8_t*)var->value);
+        val = (float)*((uint8_t*)var->value);
     else if (var->type == VARIABLE_TYPE_INT)
-        (*newVal) = (float)*((int32_t*)var->value);
+        val = (float)*((int32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_UINT)
-        (*newVal) = (float)*((uint32_t*)var->value);
+        val = (float)*((uint32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
-        (*newVal) = (float)string_to_float((const char*)var->value);
+        val = (float)string_to_float((const char*)var->value);
     else result = 0;
 
-    free(var->value);
-    var->value = newVal;
+    var->value = realloc(var->value, size);
+    *((float*)var->value) = val;
     var->size = size;
     return result;
 }
@@ -403,24 +401,23 @@ int baranium_compiled_variable_as_float(baranium_compiled_variable* var)
 int baranium_compiled_variable_as_bool(baranium_compiled_variable* var)
 {
     size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_BOOL);
-    uint8_t* newVal = malloc(size);
-    memset(newVal, 0, size);
+    uint8_t val = 0;
     int result = 1;
 
     if (var->type == VARIABLE_TYPE_OBJECT)
-        (*newVal) = 0 < *((int64_t*)var->value);
+        val = 0 < *((int64_t*)var->value);
     else if (var->type == VARIABLE_TYPE_FLOAT)
-        (*newVal) = 0 < *((float*)var->value);
+        val = 0 < *((float*)var->value);
     else if (var->type == VARIABLE_TYPE_INT)
-        (*newVal) = 0 < *((int32_t*)var->value);
+        val = 0 < *((int32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_UINT)
-        (*newVal) = 0 < *((uint32_t*)var->value);
+        val = 0 < *((uint32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
-        (*newVal) = 0 < string_to_number((const char*)var->value);
+        val = 0 < string_to_number((const char*)var->value);
     else result = 0;
 
-    free(var->value);
-    var->value = newVal;
+    var->value = realloc(var->value, size);
+    *((uint8_t*)var->value) = val;
     var->size = size;
     return result;
 }
@@ -428,24 +425,23 @@ int baranium_compiled_variable_as_bool(baranium_compiled_variable* var)
 int baranium_compiled_variable_as_int(baranium_compiled_variable* var)
 {
     size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_INT);
-    int32_t* newVal = malloc(size);
-    memset(newVal, 0, size);
+    int32_t val = 0;
     int result = 1;
 
     if (var->type == VARIABLE_TYPE_OBJECT)
-        (*newVal) = (int32_t)*((int64_t*)var->value);
+        val = (int32_t)*((int64_t*)var->value);
     else if (var->type == VARIABLE_TYPE_BOOL)
-        (*newVal) = (int32_t)*((uint8_t*)var->value);
+        val = (int32_t)*((uint8_t*)var->value);
     else if (var->type == VARIABLE_TYPE_FLOAT)
-        (*newVal) = (int32_t)*((float*)var->value);
+        val = (int32_t)*((float*)var->value);
     else if (var->type == VARIABLE_TYPE_UINT)
-        (*newVal) = (int32_t)*((uint32_t*)var->value);
+        val = (int32_t)*((uint32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
-        (*newVal) = (int32_t)string_to_number((const char*)var->value);
+        val = (int32_t)string_to_number((const char*)var->value);
     else result = 0;
 
-    free(var->value);
-    var->value = newVal;
+    var->value = realloc(var->value, size);
+    *((int32_t*)var->value) = val;
     var->size = size;
     return result;
 }
@@ -453,24 +449,23 @@ int baranium_compiled_variable_as_int(baranium_compiled_variable* var)
 int baranium_compiled_variable_as_uint(baranium_compiled_variable* var)
 {
     size_t size = baranium_variable_get_size_of_type(VARIABLE_TYPE_UINT);
-    uint32_t* newVal = malloc(size);
-    memset(newVal, 0, size);
+    uint32_t val = 0;
     int result = 1;
 
     if (var->type == VARIABLE_TYPE_OBJECT)
-        (*newVal) = (uint32_t)*((int64_t*)var->value);
+        val = (uint32_t)*((int64_t*)var->value);
     else if (var->type == VARIABLE_TYPE_BOOL)
-        (*newVal) = (uint32_t)*((uint8_t*)var->value);
+        val = (uint32_t)*((uint8_t*)var->value);
     else if (var->type == VARIABLE_TYPE_FLOAT)
-        (*newVal) = (uint32_t)*((float*)var->value);    
+        val = (uint32_t)*((float*)var->value);    
     else if (var->type == VARIABLE_TYPE_INT)
-        (*newVal) = (uint32_t)*((int32_t*)var->value);
+        val = (uint32_t)*((int32_t*)var->value);
     else if (var->type == VARIABLE_TYPE_STRING && string_is_number((const char*)var->value))
-        (*newVal) = (uint32_t)string_to_number((const char*)var->value);
+        val = (uint32_t)string_to_number((const char*)var->value);
     else result = 0;
 
-    free(var->value);
-    var->value = newVal;
+    var->value = realloc(var->value, size);
+    *((uint32_t*)var->value) = val;
     var->size = size;
     return result;
 }
@@ -501,10 +496,9 @@ void baranium_compiled_variable_convert_to_type(baranium_compiled_variable* var,
         size_t stringSize = strlen(stringifiedVersion);
         if (!stringifiedVersion)
             return;
-        free(var->value);
-        var->value = malloc(stringSize+1);
-        memset(var->value, 0, stringSize+1);
+        var->value = realloc(var->value, stringSize+1);
         memcpy(var->value, stringifiedVersion, stringSize);
+        ((uint8_t*)var->value)[stringSize] = 0;
         var->size = strlen(var->value);
         var->type = targetType;
         return;

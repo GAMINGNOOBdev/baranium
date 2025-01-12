@@ -8,6 +8,19 @@
 #endif
 #include <memory.h>
 
+internal_operation_t instantiate_callback = NULL;
+internal_operation_t delete_callback = NULL;
+internal_operation_t attach_callback = NULL;
+internal_operation_t detach_callback = NULL;
+
+void baranium_callback_set_internal_operations(internal_operation_t instantiateCB, internal_operation_t deleteCB, internal_operation_t attachCB, internal_operation_t detachCB)
+{
+    instantiate_callback = instantiateCB;
+    delete_callback = deleteCB;
+    attach_callback = attachCB;
+    detach_callback = detachCB;
+}
+
 baranium_callback_list* baranium_callback_list_init(void)
 {
     baranium_callback_list* list = malloc(sizeof(baranium_callback_list));
