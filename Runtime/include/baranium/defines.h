@@ -86,7 +86,7 @@ typedef struct
 
 
 typedef int64_t index_t;
-#define INVALID_INDEX ((index_t)-1)
+#define BARANIUM_INVALID_INDEX ((index_t)-1)
 
 #ifdef __cplusplus
 }

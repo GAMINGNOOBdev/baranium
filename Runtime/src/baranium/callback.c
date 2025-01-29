@@ -60,7 +60,7 @@ void baranium_callback_add(index_t id, baranium_callback_t cb, int numParams)
 {
     baranium_runtime* runtime = baranium_get_context();
 
-    if (runtime == NULL || id == INVALID_INDEX || cb == NULL)
+    if (runtime == NULL || id == BARANIUM_INVALID_INDEX || cb == NULL)
         return;
 
     baranium_callback_list* list = runtime->callbacks;
@@ -98,7 +98,7 @@ baranium_callback_list_entry* baranium_callback_find_by_id(index_t id)
 {
     baranium_runtime* runtime = baranium_get_context();
 
-    if (runtime == NULL || id == INVALID_INDEX)
+    if (runtime == NULL || id == BARANIUM_INVALID_INDEX)
         return NULL;
 
     baranium_callback_list* list = runtime->callbacks;
@@ -144,7 +144,7 @@ void baranium_callback_remove_by_id(index_t id)
 {
     baranium_runtime* runtime = baranium_get_context();
 
-    if (runtime == NULL || id == INVALID_INDEX)
+    if (runtime == NULL || id == BARANIUM_INVALID_INDEX)
         return;
     
     baranium_callback_list_entry* entry = baranium_callback_find_by_id(id);

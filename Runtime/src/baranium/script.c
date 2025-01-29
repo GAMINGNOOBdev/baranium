@@ -232,7 +232,7 @@ void baranium_close_script(baranium_script* script)
 
 baranium_section* baranium_script_get_section_by_id_and_type(baranium_script* script, index_t id, baranium_section_type_t type)
 {
-    if (script == NULL || type == SECTION_TYPE_INVALID || id == INVALID_INDEX)
+    if (script == NULL || type == SECTION_TYPE_INVALID || id == BARANIUM_INVALID_INDEX)
         return NULL;
     
     baranium_section* current = script->SectionsStart;
@@ -249,7 +249,7 @@ baranium_section* baranium_script_get_section_by_id_and_type(baranium_script* sc
 index_t baranium_script_get_id_of(baranium_script* script, const char* name)
 {
     if (script == NULL || name == NULL)
-        return INVALID_INDEX;
+        return BARANIUM_INVALID_INDEX;
     
     baranium_script_name_table_entry* current = script->NameTable.EntriesStart;
     for (uint64_t i = 0; i < script->NameTable.NameCount && current != NULL; i++)
@@ -260,12 +260,12 @@ index_t baranium_script_get_id_of(baranium_script* script, const char* name)
         current = current->next;
     }
 
-    return INVALID_INDEX;
+    return BARANIUM_INVALID_INDEX;
 }
 
 char* baranium_script_get_name_of(baranium_script* script, index_t id)
 {
-    if (script == NULL || id == INVALID_INDEX)
+    if (script == NULL || id == BARANIUM_INVALID_INDEX)
         return NULL;
     
     baranium_script_name_table_entry* current = script->NameTable.EntriesStart;
@@ -288,7 +288,7 @@ baranium_variable* baranium_script_get_variable(baranium_script* script, const c
 
 baranium_variable* baranium_script_get_variable_by_id(baranium_script* script, index_t variableID)
 {
-    if (script == NULL || variableID == INVALID_INDEX)
+    if (script == NULL || variableID == BARANIUM_INVALID_INDEX)
         return NULL;
 
     baranium_variable* result = NULL;
@@ -321,7 +321,7 @@ baranium_field* baranium_script_get_field(baranium_script* script, const char* n
 
 baranium_field* baranium_script_get_field_by_id(baranium_script* script, index_t fieldID)
 {
-    if (script == NULL || fieldID == INVALID_INDEX)
+    if (script == NULL || fieldID == BARANIUM_INVALID_INDEX)
         return NULL;
 
     baranium_field* result = NULL;
@@ -351,7 +351,7 @@ baranium_function* baranium_script_get_function(baranium_script* script, const c
 
 baranium_function* baranium_script_get_function_by_id(baranium_script* script, index_t functionID)
 {
-    if (script == NULL || functionID == INVALID_INDEX)
+    if (script == NULL || functionID == BARANIUM_INVALID_INDEX)
         return NULL;
     
     baranium_function* result = NULL;

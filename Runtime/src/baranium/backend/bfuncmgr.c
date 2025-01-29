@@ -65,7 +65,7 @@ void baranium_function_manager_add(baranium_function_manager* obj, index_t id, b
     if (obj == NULL)
         return;
 
-    if (id == INVALID_INDEX)
+    if (id == BARANIUM_INVALID_INDEX)
         return;
 
     bfuncmgr_n* func = baranium_function_manager_get_entry(obj, id);
@@ -170,7 +170,7 @@ destroy:
 
 int baranium_function_manager_add_entry(baranium_function_manager* obj, index_t id, baranium_script* script)
 {
-    if (obj == NULL || id == INVALID_INDEX || script == NULL)
+    if (obj == NULL || id == BARANIUM_INVALID_INDEX || script == NULL)
         return 1;
 
     if (obj->start == NULL)
