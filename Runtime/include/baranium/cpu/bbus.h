@@ -16,7 +16,7 @@ extern "C" {
 
 typedef struct bbus
 {
-    baranium_function* dataHolder;
+    baranium_function* data_holder;
 } bbus;
 
 // create and initialize a bus

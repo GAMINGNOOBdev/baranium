@@ -20,8 +20,6 @@ string super_duper_awesome_shitstorm_object = "yo";
 
 define main()
 {
-    string testString = "3";
-
     super_duper_awesome_shitstorm_object = "aaaa";
     super_duper_awesome_shitstorm_object = "This is a test, hopefully this won't crash it again";
 
@@ -62,21 +60,10 @@ define main()
         print("okay wtf are you doing man\n");
     }
 
-    for (testFunctionResult = 1005; testFunctionResult > 0; testFunctionResult /= 10)
-    {
-        squared(10);
-    }
-
-    testFunctionResult -= 40219 * 100 / (40 + 5 % 2);
-    testFunctionResult /= (-10) - (-20);
-
     instantiate attached;
     attach attached;
     detach attached;
     delete attached;
 
-    testFunctionResult = EXIT_SUCCESS;
-    int result;
-    result = testFunctionResult;
-    return result;
+    return EXIT_SUCCESS;
 }

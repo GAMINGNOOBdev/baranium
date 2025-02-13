@@ -21,11 +21,11 @@ uint8_t BARANIUM_SCRIPT_HEADER_MAGIC[4] = {
 void baranium_script_dynadd_var_or_field(baranium_section* section)
 {
     bvarmgr* varmgr = baranium_get_context()->varmgr;
-    baranium_variable_type_t type = (baranium_variable_type_t)*( (uint8_t*)section->Data );
-    index_t id = section->ID;
-    size_t size = section->DataSize - 1;
-    uint8_t isField = section->Type == SECTION_TYPE_FIELDS;
-    void* data = (void*)( ((uint64_t)section->Data) + 1 );
+    baranium_variable_type_t type = (baranium_variable_type_t)*( (uint8_t*)section->data );
+    index_t id = section->id;
+    size_t size = section->data_size - 1;
+    uint8_t isField = section->type == SECTION_TYPE_FIELDS;
+    void* data = (void*)( ((uint64_t)section->data) + 1 );
 
     LOGDEBUG(stringf("Adding field/variable with id %ld", id));
 
@@ -37,11 +37,17 @@ void baranium_script_dynadd_var_or_field(baranium_section* section)
         return;
     }
 
+    baranium_value_t val = {0};
     void* dataPtr = NULL;
     if (isField)
-        dataPtr = entry->field->Value;
+        val = entry->field->value;
     else
-        dataPtr = entry->variable->Value;
+        val = entry->variable->value;
+
+    if (type == BARANIUM_VARIABLE_TYPE_STRING)
+        dataPtr = val.ptr;
+    else
+        dataPtr = &val.num64;
 
     if (!dataPtr)
     {
@@ -57,23 +63,23 @@ void baranium_script_append_section(baranium_script* script, baranium_section* s
 {
     if (script == NULL || section == NULL)
         return;
-    if (section->Type == SECTION_TYPE_INVALID)
+    if (section->type == SECTION_TYPE_INVALID)
         return;
 
-    if (section->Type == SECTION_TYPE_FIELDS || section->Type == SECTION_TYPE_VARIABLES)
+    if (section->type == SECTION_TYPE_FIELDS || section->type == SECTION_TYPE_VARIABLES)
         baranium_script_dynadd_var_or_field(section);
     else
-        baranium_function_manager_add(baranium_get_context()->functionManager, section->ID, script);
+        baranium_function_manager_add(baranium_get_context()->function_manager, section->id, script);
 
-    if (script->SectionsStart == NULL)
+    if (script->sections_start == NULL)
     {
-        script->SectionsStart = section;
-        script->SectionsEnd = section;
+        script->sections_start = section;
+        script->sections_end = section;
         return;
     }
 
-    script->SectionsEnd->next = section;
-    script->SectionsEnd = section;
+    script->sections_end->next = section;
+    script->sections_end = section;
 }
 
 void baranium_script_append_name_table_entry(baranium_script* script, baranium_script_name_table_entry* entry)
@@ -81,15 +87,15 @@ void baranium_script_append_name_table_entry(baranium_script* script, baranium_s
     if (script == NULL || entry == NULL)
         return;
     
-    if (script->NameTable.EntriesStart == NULL)
+    if (script->nametable.entries_start == NULL)
     {
-        script->NameTable.EntriesStart = entry;
-        script->NameTable.EntriesEnd = entry;
+        script->nametable.entries_start = entry;
+        script->nametable.entries_end = entry;
         return;
     }
 
-    script->NameTable.EntriesEnd->next = entry;
-    script->NameTable.EntriesEnd = entry;
+    script->nametable.entries_end->next = entry;
+    script->nametable.entries_end = entry;
 }
 
 ////////////////////////////////
@@ -113,18 +119,18 @@ baranium_script* baranium_open_script(baranium_handle* handle)
         return NULL;
 
     memset(script, 0, sizeof(baranium_script));
-    script->Handle = handle;
+    script->handle = handle;
 
-    fread(&script->Header, 1, sizeof(baranium_script_header), file);
+    fread(&script->header, 1, sizeof(baranium_script_header), file);
 
-    if (memcmp(script->Header.MagicNumber, BARANIUM_SCRIPT_HEADER_MAGIC, 4*sizeof(uint8_t)) != 0)
+    if (memcmp(script->header.magic, BARANIUM_SCRIPT_HEADER_MAGIC, 4*sizeof(uint8_t)) != 0)
         return NULL;
 
-    if (script->Header.Version != VERSION_CURRENT)
+    if (script->header.version != VERSION_CURRENT)
         LOGWARNING("Warning, script may be out of date, be sure to update your compiler and recompile the script");
 
     baranium_section* section;
-    for (uint64_t i = 0; i < script->Header.SectionCount; i++)
+    for (uint64_t i = 0; i < script->header.section_count; i++)
     {
         section = malloc(sizeof(baranium_section));
         if (!section)
@@ -132,36 +138,36 @@ baranium_script* baranium_open_script(baranium_handle* handle)
 
         memset(section, 0, sizeof(baranium_section));
 
-        fread(&section->Type, sizeof(uint8_t), 1, file);
-        fread(&section->ID, sizeof(index_t), 1, file);
-        fread(&section->DataSize, sizeof(uint64_t), 1, file);
-        if (section->Type != SECTION_TYPE_FUNCTIONS)
+        fread(&section->type, sizeof(uint8_t), 1, file);
+        fread(&section->id, sizeof(index_t), 1, file);
+        fread(&section->data_size, sizeof(uint64_t), 1, file);
+        if (section->type != SECTION_TYPE_FUNCTIONS)
         {
-            section->Data = malloc(section->DataSize);
-            if (!section->Data)
+            section->data = malloc(section->data_size);
+            if (!section->data)
             {
-                fseek(file, section->DataSize, SEEK_CUR);
+                fseek(file, section->data_size, SEEK_CUR);
                 free(section);
                 continue;
             }
             else
             {
-                memset(section->Data, 0, section->DataSize);
-                fread(section->Data, sizeof(uint8_t), section->DataSize, file);
+                memset(section->data, 0, section->data_size);
+                fread(section->data, sizeof(uint8_t), section->data_size, file);
             }
         }
         else
         {
-            section->DataLocation = ftell(file);
-            fseek(file, section->DataSize, SEEK_CUR);
+            section->data_location = ftell(file);
+            fseek(file, section->data_size, SEEK_CUR);
         }
 
         baranium_script_append_section(script, section);
     }
 
-    fread(&script->NameTable.NameCount, sizeof(uint64_t), 1, file);
+    fread(&script->nametable.name_count, sizeof(uint64_t), 1, file);
     baranium_script_name_table_entry* entry;
-    for (uint64_t i = 0; i < script->NameTable.NameCount; i++)
+    for (uint64_t i = 0; i < script->nametable.name_count; i++)
     {
         entry = malloc(sizeof(baranium_script_name_table_entry));
         if (!entry)
@@ -169,17 +175,17 @@ baranium_script* baranium_open_script(baranium_handle* handle)
 
         memset(entry, 0, sizeof(baranium_script_name_table_entry));
 
-        fread(&entry->NameLength, sizeof(uint8_t), 1, file);
-        entry->Name = malloc(entry->NameLength);
-        if (!entry->Name)
+        fread(&entry->length, sizeof(uint8_t), 1, file);
+        entry->name = malloc(entry->length);
+        if (!entry->name)
         {
             free(entry);
             continue;
         }
 
-        memset(entry->Name, 0, entry->NameLength);
-        fread(entry->Name, sizeof(uint8_t), entry->NameLength, file);
-        fread(&entry->ID, sizeof(index_t), 1, file);
+        memset(entry->name, 0, entry->length);
+        fread(entry->name, sizeof(uint8_t), entry->length, file);
+        fread(&entry->id, sizeof(index_t), 1, file);
 
         baranium_script_append_name_table_entry(script, entry);
     }
@@ -192,39 +198,39 @@ void baranium_close_script(baranium_script* script)
     if (script == NULL)
         return;
 
-    if (script->NameTable.EntriesStart != NULL)
+    if (script->nametable.entries_start != NULL)
     {
-        baranium_script_name_table_entry* current = script->NameTable.EntriesStart;
+        baranium_script_name_table_entry* current = script->nametable.entries_start;
         baranium_script_name_table_entry* next = NULL;
-        for (uint64_t i = 0; i < script->NameTable.NameCount && current != NULL; i++)
+        for (uint64_t i = 0; i < script->nametable.name_count && current != NULL; i++)
         {
-            free(current->Name);
+            free(current->name);
             next = current->next;
             free(current);
             current = next;
         }
 
-        script->NameTable.EntriesStart = script->NameTable.EntriesEnd = NULL;
-        script->NameTable.NameCount = 0;
+        script->nametable.entries_start = script->nametable.entries_end = NULL;
+        script->nametable.name_count = 0;
     }
 
-    if (script->SectionsStart != NULL)
+    if (script->sections_start != NULL)
     {
-        baranium_section* current = script->SectionsStart;
+        baranium_section* current = script->sections_start;
         baranium_section* next = NULL;
-        for (uint64_t i = 0; i < script->Header.SectionCount && current != NULL; i++)
+        for (uint64_t i = 0; i < script->header.section_count && current != NULL; i++)
         {
-            if (current->Type == SECTION_TYPE_FUNCTIONS)
-                baranium_function_manager_remove(baranium_get_context()->functionManager, current->ID);
+            if (current->type == SECTION_TYPE_FUNCTIONS)
+                baranium_function_manager_remove(baranium_get_context()->function_manager, current->id);
 
             next = current->next;
-            free(current->Data);
+            free(current->data);
             free(current);
             current = next;
         }
 
-        script->SectionsStart = script->SectionsEnd = NULL;
-        script->Header.SectionCount = 0;
+        script->sections_start = script->sections_end = NULL;
+        script->header.section_count = 0;
     }
 
     free(script);
@@ -235,10 +241,10 @@ baranium_section* baranium_script_get_section_by_id_and_type(baranium_script* sc
     if (script == NULL || type == SECTION_TYPE_INVALID || id == BARANIUM_INVALID_INDEX)
         return NULL;
     
-    baranium_section* current = script->SectionsStart;
-    for (uint64_t i = 0; i < script->Header.SectionCount && current != NULL; i++)
+    baranium_section* current = script->sections_start;
+    for (uint64_t i = 0; i < script->header.section_count && current != NULL; i++)
     {
-        if (current->ID == id && current->Type == type)
+        if (current->id == id && current->type == type)
             return current;
 
         current = current->next;
@@ -251,11 +257,11 @@ index_t baranium_script_get_id_of(baranium_script* script, const char* name)
     if (script == NULL || name == NULL)
         return BARANIUM_INVALID_INDEX;
     
-    baranium_script_name_table_entry* current = script->NameTable.EntriesStart;
-    for (uint64_t i = 0; i < script->NameTable.NameCount && current != NULL; i++)
+    baranium_script_name_table_entry* current = script->nametable.entries_start;
+    for (uint64_t i = 0; i < script->nametable.name_count && current != NULL; i++)
     {
-        if (strcmp(name, current->Name) == 0)
-            return current->ID;
+        if (strcmp(name, (const char*)current->name) == 0)
+            return current->id;
         
         current = current->next;
     }
@@ -268,11 +274,11 @@ char* baranium_script_get_name_of(baranium_script* script, index_t id)
     if (script == NULL || id == BARANIUM_INVALID_INDEX)
         return NULL;
     
-    baranium_script_name_table_entry* current = script->NameTable.EntriesStart;
-    for (uint64_t i = 0; i < script->NameTable.NameCount && current != NULL; i++)
+    baranium_script_name_table_entry* current = script->nametable.entries_start;
+    for (uint64_t i = 0; i < script->nametable.name_count && current != NULL; i++)
     {
-        if (current->ID == id)
-            return current->Name;
+        if (current->id == id)
+            return (char*)current->name;
 
         current = current->next;
     }
@@ -295,8 +301,8 @@ baranium_variable* baranium_script_get_variable_by_id(baranium_script* script, i
 
     bvarmgr_n* entry = bvarmgr_get(baranium_get_context()->varmgr, variableID);
     if (entry != NULL)
-    if (entry->isVariable)
-        return entry->variable; // early out if we can somehow find it in the var manager already
+        if (entry->isVariable)
+            return entry->variable; // early out if we can somehow find it in the var manager already
 
     baranium_section* foundSection = baranium_script_get_section_by_id_and_type(script, variableID, SECTION_TYPE_VARIABLES);
     if (foundSection == NULL)
@@ -306,9 +312,13 @@ baranium_variable* baranium_script_get_variable_by_id(baranium_script* script, i
     if (!result)
         return NULL;
     memset(result, 0, sizeof(baranium_variable));
-    result->ID = variableID;
-    result->Type = *foundSection->Data;
-    result->Value = (void*)(((uint8_t*)foundSection->Data) + 1);
+    result->id = variableID;
+    result->type = *foundSection->data;
+    result->size = foundSection->data_size-1;
+    if (result->type == BARANIUM_VARIABLE_TYPE_STRING)
+        result->value.ptr = (void*)(((uint8_t*)foundSection->data) + 1);
+    else
+        memcpy(&result->value.num64, (void*)(((uint8_t*)foundSection->data) + 1), result->size);
 
     return result;
 }
@@ -328,8 +338,8 @@ baranium_field* baranium_script_get_field_by_id(baranium_script* script, index_t
 
     bvarmgr_n* entry = bvarmgr_get(baranium_get_context()->varmgr, fieldID);
     if (entry != NULL)
-    if (!entry->isVariable)
-        return entry->field; // early out if we can somehow find it in the var manager already
+        if (!entry->isVariable)
+            return entry->field; // early out if we can somehow find it in the var manager already
 
     baranium_section* foundSection = baranium_script_get_section_by_id_and_type(script, fieldID, SECTION_TYPE_FIELDS);
     if (foundSection == NULL)
@@ -338,7 +348,6 @@ baranium_field* baranium_script_get_field_by_id(baranium_script* script, index_t
     result = malloc(sizeof(baranium_field));
     if (!result)
         return NULL;
-
 
     return result;
 }
@@ -364,15 +373,15 @@ baranium_function* baranium_script_get_function_by_id(baranium_script* script, i
         return NULL;
 
     memset(result, 0, sizeof(baranium_function));
-    result->DataSize = foundSection->DataSize-2;
-    result->Data = malloc(foundSection->DataSize);
-    memset(result->Data, 0, result->DataSize);
-    fseek(script->Handle->file, foundSection->DataLocation, SEEK_SET);
-    fread(&result->ParameterCount, sizeof(uint8_t), 1, script->Handle->file);
-    fread(&result->ReturnType, sizeof(uint8_t), 1, script->Handle->file);
-    fread(result->Data, 1, result->DataSize, script->Handle->file);
-    result->ID = functionID;
-    result->Script = script;
+    result->data_size = foundSection->data_size-2;
+    result->data = malloc(foundSection->data_size);
+    memset(result->data, 0, result->data_size);
+    fseek(script->handle->file, foundSection->data_location, SEEK_SET);
+    fread(&result->parameter_count, sizeof(uint8_t), 1, script->handle->file);
+    fread(&result->return_type, sizeof(uint8_t), 1, script->handle->file);
+    fread(result->data, 1, result->data_size, script->handle->file);
+    result->id = functionID;
+    result->script = script;
 
     return result;
 }

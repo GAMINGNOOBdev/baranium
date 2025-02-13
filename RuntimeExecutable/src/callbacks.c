@@ -3,6 +3,7 @@
 #include <baranium/callback.h>
 #include <baranium/runtime.h>
 #include <baranium/bcpu.h>
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -74,42 +75,34 @@ size_t getline(char **buffer, size_t *buffersz, FILE *stream)
 }
 #endif
 
-void print_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData)
+void print_baranium(baranium_callback_data_list_t* data)
 {
-    if (dataptr == NULL || datatypes == NULL || numData == 0 || numData > 1)
-        return;
+    BARANIUM_CALLBACK_INIT(data, 1, 1);
 
-    if (*datatypes == VARIABLE_TYPE_VOID || *datatypes == VARIABLE_TYPE_INVALID)
+    if (*datatypes == BARANIUM_VARIABLE_TYPE_VOID || *datatypes == BARANIUM_VARIABLE_TYPE_INVALID)
         return;
 
     size_t dataSize = baranium_variable_get_size_of_type(*datatypes);
     if (dataSize == (size_t)-1)
-        dataSize = strlen(*dataptr);
+        dataSize = strlen(dataptr->ptr);
 
-    void* data = malloc(dataSize+1);
-    if (data == NULL)
-        return;
-
-    memset(data, 0, dataSize + 1);
-    memcpy(data, *dataptr, dataSize);
-    baranium_compiled_variable var = {*datatypes, data, dataSize};
-    baranium_compiled_variable_convert_to_type(&var, VARIABLE_TYPE_STRING);
-    size_t length = strlen((const char*)var.value);
+    baranium_compiled_variable var = {*datatypes, *dataptr, dataSize};
+    baranium_compiled_variable_convert_to_type(&var, BARANIUM_VARIABLE_TYPE_STRING);
+    size_t length = strlen((const char*)var.value.ptr);
     if (length != var.size)
     {
-        free(var.value);
+        free(var.value.ptr);
         return;
     }
 
-    printf("%s", (const char*)var.value);
-
-    free(var.value);
+    printf("%s", (const char*)var.value.ptr);
+    *datatypes = var.type;
+    dataptr->ptr = var.value.ptr;
 }
 
-void input_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData)
+void input_baranium(baranium_callback_data_list_t* data)
 {
-    if (numData > 0 || dataptr != NULL || datatypes != NULL)
-        return;
+    BARANIUM_CALLBACK_INIT(data, 0, 0);
 
     size_t bufferSize = 0;
     char* line = NULL;
@@ -126,89 +119,72 @@ void input_baranium(void** dataptr, baranium_variable_type_t* datatypes, int num
     memcpy(buffer, line, length);
     free(line);
 
-    baranium_compiled_variable var = {VARIABLE_TYPE_STRING, buffer, length};
+    baranium_compiled_variable var = {BARANIUM_VARIABLE_TYPE_STRING, {.ptr=buffer}, length};
     baranium_compiled_variable_push_to_stack(baranium_get_context()->cpu, &var);
 
     free(buffer);
 }
 
-void system_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData)
+void system_baranium(baranium_callback_data_list_t* data)
 {
-    if (dataptr == NULL || datatypes == NULL || numData == 0 || numData > 1)
-        return;
+    BARANIUM_CALLBACK_INIT(data, 1, 1);
 
-    if (*datatypes == VARIABLE_TYPE_VOID || *datatypes == VARIABLE_TYPE_INVALID)
+    if (*datatypes == BARANIUM_VARIABLE_TYPE_VOID || *datatypes == BARANIUM_VARIABLE_TYPE_INVALID)
         return;
 
     size_t dataSize = baranium_variable_get_size_of_type(*datatypes);
     if (dataSize == (size_t)-1)
-        dataSize = strlen(*dataptr);
+        dataSize = strlen(dataptr->ptr);
 
-    void* data = malloc(dataSize);
-    if (data == NULL)
-        return;
-
-    memset(data, 0, dataSize + 1);
-    memcpy(data, *dataptr, dataSize);
-    baranium_compiled_variable var = {*datatypes, data, dataSize};
-    baranium_compiled_variable_convert_to_type(&var, VARIABLE_TYPE_STRING);
-    size_t length = strlen((const char*)var.value);
+    baranium_compiled_variable var = {*datatypes, *dataptr, dataSize};
+    baranium_compiled_variable_convert_to_type(&var, BARANIUM_VARIABLE_TYPE_STRING);
+    size_t length = strlen((const char*)var.value.ptr);
     if (length != var.size)
     {
-        free(var.value);
+        free(var.value.ptr);
         return;
     }
 
-    system((const char*)var.value);
-
-    free(data);
+    system((const char*)var.value.ptr);
 }
 
-void exit_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData)
+void exit_baranium(baranium_callback_data_list_t* data)
 {
-    if (dataptr != NULL || datatypes != NULL || numData != 0)
-        return;
+    BARANIUM_CALLBACK_INIT(data, 0, 0);
 
     baranium_get_context()->cpu->flags.FORCED_KILL = 1;
-    baranium_get_context()->cpu->killTriggered = 1;
+    baranium_get_context()->cpu->kill_triggered = 1;
 }
 
-void math_function_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData, float(*funcptr)(float))
+void math_function_baranium(baranium_callback_data_list_t* data, float(*funcptr)(float))
 {
-    if (dataptr == NULL || datatypes == NULL || numData == 0 || numData > 1 || funcptr == NULL)
+    BARANIUM_CALLBACK_INIT(data, 1, 1);
+    if (funcptr == NULL)
         return;
 
-    if (*datatypes == VARIABLE_TYPE_VOID || *datatypes == VARIABLE_TYPE_INVALID)
+    if (*datatypes == BARANIUM_VARIABLE_TYPE_VOID || *datatypes == BARANIUM_VARIABLE_TYPE_INVALID)
         return;
 
     size_t dataSize = baranium_variable_get_size_of_type(*datatypes);
     if (dataSize == (size_t)-1)
         return;
 
-    void* data = malloc(dataSize);
-    if (data == NULL)
-        return;
+    baranium_compiled_variable var = {*datatypes, *dataptr, dataSize};
+    baranium_compiled_variable_convert_to_type(&var, BARANIUM_VARIABLE_TYPE_FLOAT);
 
-    memcpy(data, *dataptr, dataSize);
-
-    baranium_compiled_variable var = {*datatypes, data, dataSize};
-    baranium_compiled_variable_convert_to_type(&var, VARIABLE_TYPE_FLOAT);
-
-    *((float*)var.value) = funcptr(*((float*)var.value));
+    var.value.numfloat = funcptr(var.value.numfloat);
 
     baranium_compiled_variable_push_to_stack(baranium_get_context()->cpu, &var);
-
-    free(var.value);
 }
 
-void sin_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, sinf); }
-void cos_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, cosf); }
-void tan_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, tanf); }
-void asin_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, asinf); }
-void acos_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, acosf); }
-void atan_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, atanf); }
-void log_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, logf); }
-void log10_baranium(void** dataptr, baranium_variable_type_t* datatypes, int numData) { math_function_baranium(dataptr, datatypes, numData, log10f); }
+void sin_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, sinf); }
+void cos_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, cosf); }
+void tan_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, tanf); }
+void asin_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, asinf); }
+void acos_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, acosf); }
+void atan_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, atanf); }
+void log_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, logf); }
+void log10_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, log10f); }
 
 void setup_callbacks(void)
 {

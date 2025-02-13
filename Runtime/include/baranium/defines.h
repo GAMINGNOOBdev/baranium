@@ -58,6 +58,19 @@ extern "C" {
 /// Types ///
 /////////////
 
+typedef union baranium_value_t
+{
+    float numfloat;
+    double numdouble;
+
+    uint8_t num8;
+    uint16_t num16;
+    uint32_t num32;
+    uint64_t num64;
+
+    void* ptr;
+} baranium_value_t;
+
 typedef struct baranium_handle
 {
     struct baranium_handle* prev;
@@ -76,10 +89,10 @@ typedef struct
 {
     baranium_handle* start;
     baranium_handle* end;
-    uint64_t openHandles;
-    struct baranium_function_manager* functionManager;
+    uint64_t open_handles;
+    struct baranium_function_manager* function_manager;
     struct baranium_callback_list* callbacks;
-    struct bstack* functionStack;
+    struct bstack* function_stack;
     struct bvarmgr* varmgr;
     struct bcpu* cpu;
 } baranium_runtime;

@@ -18,7 +18,7 @@ bcpu* bcpu_init(baranium_runtime* runtime)
     obj->fetched = 0;
     obj->fetch = _bcpu_fetch;
     obj->ticks = 0;
-    obj->killTriggered = 0;
+    obj->kill_triggered = 0;
     obj->runtime = runtime;
     bcpu_reset(obj);
 
@@ -43,16 +43,16 @@ void bcpu_tick(bcpu* obj)
     if (obj == NULL)
         return;
 
-    if (bbus_eof(obj->bus, obj->IP))
+    if (bbus_eof(obj->bus, obj->ip))
     {
-        obj->killTriggered = 1;
+        obj->kill_triggered = 1;
         return;
     }
 
-    obj->opcode = bbus_read(obj->bus, obj->IP);
+    obj->opcode = bbus_read(obj->bus, obj->ip);
     LOGDEBUG(stringf("IP: 0x%2.16x | Ticks (total): 0x%2.16x | Opcode: 0x%2.2x | Instruction: '%s'",
-               obj->IP, obj->ticks, obj->opcode, opcodes[obj->opcode].name));
-    obj->IP++;
+               obj->ip, obj->ticks, obj->opcode, opcodes[obj->opcode].name));
+    obj->ip++;
     opcodes[obj->opcode].handle(obj);
     obj->ticks++;
 }
@@ -63,7 +63,7 @@ void bcpu_reset(bcpu* obj)
     if (obj == NULL)
         return;
 
-    obj->IP = 0;
+    obj->ip = 0;
     obj->stack = bstack_init();
     obj->ip_stack = bstack_init();
     obj->flags.CMP = 1;
@@ -79,7 +79,7 @@ uint64_t _bcpu_fetch(bcpu* obj, int bits)
 
     if (bits > 64 || bits % 8 != 0)
     {
-        obj->killTriggered = 1;
+        obj->kill_triggered = 1;
         return 0;
     }
     int bytes = bits / 8;
@@ -88,10 +88,10 @@ uint64_t _bcpu_fetch(bcpu* obj, int bits)
     obj->fetched = 0;
     for (int i = 0; i < bytes; i++)
     {
-        uint64_t data = bbus_read(obj->bus, obj->IP);
+        uint64_t data = bbus_read(obj->bus, obj->ip);
         obj->fetched |= data << bitindex;
         bitindex -= 8;
-        obj->IP++;
+        obj->ip++;
     }
 
     return obj->fetched;

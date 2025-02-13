@@ -23,7 +23,7 @@ extern "C" {
 typedef struct baranium_compiled_variable
 {
     baranium_variable_type_t type;
-    void* value;
+    baranium_value_t value;
     size_t size;
 } baranium_compiled_variable;
 
@@ -37,6 +37,14 @@ struct bcpu;
  * @returns Compiled variable object
  */
 BARANIUMAPI baranium_compiled_variable* baranium_compiled_variable_pop_from_stack(struct bcpu* cpu);
+
+/**
+ * @brief Pop a compiled variable from the cpu stack
+ * 
+ * @param cpu CPU
+ * @param output Output variable
+ */
+BARANIUMAPI void baranium_compiled_variable_pop_from_stack_into_variable(struct bcpu* cpu, baranium_compiled_variable* output);
 
 /**
  * @brief Push a compiled variable to the cpu stack

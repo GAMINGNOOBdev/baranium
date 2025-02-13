@@ -9,7 +9,7 @@ bbus* bbus_init(baranium_function* function)
     if (obj == NULL) return NULL;
 
     memset(obj, 0, sizeof(bbus));
-    obj->dataHolder = function;
+    obj->data_holder = function;
 
     return obj;
 }
@@ -24,10 +24,10 @@ void bbus_dispose(bbus* obj)
 uint8_t bbus_read(struct bbus* obj, uint64_t addr)
 {
     if (obj == NULL) return 0;
-    if (!obj->dataHolder) return 0;
-    if (addr >= obj->dataHolder->DataSize) return 0;
+    if (!obj->data_holder) return 0;
+    if (addr >= obj->data_holder->data_size) return 0;
 
-    uint8_t* data = obj->dataHolder->Data;
+    uint8_t* data = obj->data_holder->data;
     return data[addr];
 }
 
@@ -47,8 +47,8 @@ uint8_t bbus_eof(bbus* obj, uint64_t addr)
     if (obj == NULL)
         return 1;
 
-    if (obj->dataHolder == NULL)
+    if (obj->data_holder == NULL)
         return 1;
 
-    return addr >= obj->dataHolder->DataSize;
+    return addr >= obj->data_holder->data_size;
 }

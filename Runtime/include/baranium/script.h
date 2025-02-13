@@ -25,45 +25,45 @@ typedef uint8_t baranium_section_type_t;
 
 typedef struct baranium_section
 {
-    uint8_t Type;
-    index_t ID;
-    uint64_t DataSize;
-    uint64_t DataLocation; // mostly used by function sections because code size can sometimes be quite big and code should probably be dynamically loaded and unloaded when not needed
-    uint8_t* Data;
+    uint8_t type;
+    index_t id;
+    uint64_t data_size;
+    uint64_t data_location; // mostly used by function sections because code size can sometimes be quite big and code should probably be dynamically loaded and unloaded when not needed
+    uint8_t* data;
 
     struct baranium_section* next;
 } baranium_section;
 
 typedef struct
 {
-    uint8_t MagicNumber[4];
-    uint32_t Version;
-    uint64_t SectionCount;
+    uint8_t magic[4];
+    uint32_t version;
+    uint64_t section_count;
 } baranium_script_header;
 
 typedef struct baranium_script_name_table_entry
 {
-    uint8_t NameLength;
-    uint8_t* Name;
-    index_t ID;
+    uint8_t length;
+    uint8_t* name;
+    index_t id;
 
     struct baranium_script_name_table_entry* next;
 } baranium_script_name_table_entry;
 
 typedef struct
 {
-    uint64_t NameCount;
-    baranium_script_name_table_entry* EntriesStart;
-    baranium_script_name_table_entry* EntriesEnd;
+    uint64_t name_count;
+    baranium_script_name_table_entry* entries_start;
+    baranium_script_name_table_entry* entries_end;
 } baranium_script_name_table;
 
 typedef struct baranium_script
 {
-    baranium_script_header Header;
-    baranium_section* SectionsStart;
-    baranium_section* SectionsEnd;
-    baranium_script_name_table NameTable;
-    baranium_handle* Handle;
+    baranium_script_header header;
+    baranium_section* sections_start;
+    baranium_section* sections_end;
+    baranium_script_name_table nametable;
+    baranium_handle* handle;
 } baranium_script;
 
 /**

@@ -1,3 +1,4 @@
+#include "baranium/defines.h"
 #include <baranium/backend/bfuncmgr.h>
 #include <baranium/backend/bvarmgr.h>
 #include <baranium/backend/varmath.h>
@@ -26,7 +27,7 @@ void INVALID_OPCODE(bcpu* cpu)
 {
     if (!cpu) return;
 
-    cpu->killTriggered = true;
+    cpu->kill_triggered = true;
     LOGERROR("invalid opcode, quitting...");
 }
 
@@ -69,8 +70,8 @@ void PUSHCV(bcpu* cpu)
 
     baranium_compiled_variable var;
     var.size = sizeof(uint8_t);
-    var.type = VARIABLE_TYPE_BOOL;
-    var.value = &cpu->cv;
+    var.type = BARANIUM_VARIABLE_TYPE_BOOL;
+    var.value.num8 = cpu->cv;
     baranium_compiled_variable_push_to_stack(cpu, &var);
 }
 
@@ -78,10 +79,9 @@ void POPCV(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* var = baranium_compiled_variable_pop_from_stack(cpu);
-    cpu->cv = *((uint8_t*)var->value);
-    free(var->value);
-    baranium_compiled_variable_dispose(var);
+    baranium_compiled_variable var = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &var);
+    cpu->cv = var.value.num8;
 }
 
 void PUSHVAR(bcpu* cpu)
@@ -96,43 +96,47 @@ void PUSHVAR(bcpu* cpu)
         LOGERROR(stringf("Variable/Field with ID '%d' not found", id));
         bstack_push(cpu->stack, ERR_VAR_NOT_FOUND);
         cpu->flags.FORCED_KILL = true;
-        cpu->killTriggered = true;
+        cpu->kill_triggered = true;
         return;
     }
 
     size_t size = 0;
-    void* value = NULL;
-    baranium_variable_type_t type = VARIABLE_TYPE_INVALID;
+    baranium_value_t value = {0};
+    baranium_variable_type_t type = BARANIUM_VARIABLE_TYPE_INVALID;
     if (var->isVariable)
     {
-        size = var->variable->Size;
-        type = var->variable->Type;
-        value = var->variable->Value;
+        size = var->variable->size;
+        type = var->variable->type;
+        value = var->variable->value;
     }
     else
     {
-        size = var->field->Size;
-        type = var->field->Type;
-        value = var->field->Value;
+        size = var->field->size;
+        type = var->field->type;
+        value = var->field->value;
     }
 
-    if (type == VARIABLE_TYPE_VOID || type == VARIABLE_TYPE_INVALID)
+    if (type == BARANIUM_VARIABLE_TYPE_VOID || type == BARANIUM_VARIABLE_TYPE_INVALID)
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be pushed: Invalid type", id));
         bstack_push(cpu->stack, ERR_VAR_INVALID_TYPE);
         cpu->flags.FORCED_KILL = true;
-        cpu->killTriggered = true;
+        cpu->kill_triggered = true;
         return;
     }
 
     uint64_t data = 0;
     if (size <= 8)
     {
-        memcpy(&data, value, size);
+        memcpy(&data, &value.num64, size);
         bstack_push(cpu->stack, data);
     }
     else
     {
+        void* basevalue = &value.num64;
+        if (type == BARANIUM_VARIABLE_TYPE_STRING)
+            basevalue = value.ptr;
+
         size_t leftOverSize = size;
         size_t index = 0;
         void* valPtr;
@@ -140,12 +144,12 @@ void PUSHVAR(bcpu* cpu)
         {
             if (leftOverSize < 8)
                 break;
-            valPtr = (void*)((uint64_t)value + index*8);
+            valPtr = (void*)((uint64_t)basevalue + index*8);
             memcpy(&data, valPtr, 8);
             leftOverSize -= 8;
             bstack_push(cpu->stack, data);
         }
-        valPtr = (void*)((uint64_t)value + index*8);
+        valPtr = (void*)((uint64_t)basevalue + index*8);
         data = 0;
         memcpy(&data, valPtr, leftOverSize);
         bstack_push(cpu->stack, data);
@@ -167,82 +171,60 @@ void POPVAR(bcpu* cpu)
         LOGERROR(stringf("Variable/Field with ID '%d' not found", id));
         bstack_push(cpu->stack, ERR_VAR_NOT_FOUND);
         cpu->flags.FORCED_KILL = true;
-        cpu->killTriggered = true;
+        cpu->kill_triggered = true;
         return;
     }
 
-    void* value = NULL;
-    baranium_variable_type_t type = VARIABLE_TYPE_INVALID;
+    baranium_value_t value = {0};
+    baranium_variable_type_t type = BARANIUM_VARIABLE_TYPE_INVALID;
+    size_t size = 0;
     if (var->isVariable)
     {
-        type = var->variable->Type;
-        value = var->variable->Value;
+        type = var->variable->type;
+        value = var->variable->value;
+        size = var->variable->size;
     }
     else
     {
-        type = var->field->Type;
-        value = var->field->Value;
+        type = var->field->type;
+        value = var->field->value;
+        size = var->field->size;
     }
 
-    if (type == VARIABLE_TYPE_VOID || type == VARIABLE_TYPE_INVALID)
+    if (type == BARANIUM_VARIABLE_TYPE_VOID || type == BARANIUM_VARIABLE_TYPE_INVALID)
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be assigned: Invalid type", id));
         bstack_push(cpu->stack, ERR_VAR_INVALID_TYPE);
         cpu->flags.FORCED_KILL = true;
-        cpu->killTriggered = true;
+        cpu->kill_triggered = true;
         return;
     }
 
-    baranium_compiled_variable* newvar = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable_convert_to_type(newvar, type);
-    if (!baranium_variable_type_size_interchangable(type, newvar->type))
+    baranium_compiled_variable newvar = {.type=type, .value=value, .size=size};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &newvar);
+    if (!baranium_variable_type_size_interchangable(type, newvar.type))
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be assigned: Non-matching types of variable and assign value", id));
         bstack_push(cpu->stack, ERR_VAR_INVALID_TYPE);
-        free(newvar->value);
-        baranium_compiled_variable_dispose(newvar);
+        if (newvar.type == BARANIUM_VARIABLE_TYPE_STRING)
+            free(newvar.value.ptr);
         cpu->flags.FORCED_KILL = true;
-        cpu->killTriggered = true;
+        cpu->kill_triggered = true;
         return;
     }
-
-    // not needed anymore since we'd overwrite the data
-    if (value)
-        free(value);
-
-    // instead of overwriting (and potentially
-    // having to reallocate memory anyways) just
-    // allocate a new value pointer
-
-    if (type == VARIABLE_TYPE_STRING && newvar->type != VARIABLE_TYPE_STRING)
-    {
-        char* stringifiedVersion = baranium_variable_stringify(newvar->type, newvar->value);
-        size_t stringSize = strlen(stringifiedVersion);
-        if (stringifiedVersion != newvar->value)
-        {
-            free(newvar->value);
-            newvar->value = malloc(stringSize+1);
-            memset(newvar->value, 0, stringSize+1);
-            memcpy(newvar->value, stringifiedVersion, stringSize);
-        }
-    }
-
-    // very important step to get an expected result
-    baranium_compiled_variable_convert_to_type(newvar, type);
+    baranium_compiled_variable_convert_to_type(&newvar, type);
 
     // assign new size and value pointers for the variable/field
     if (var->isVariable)
     {
-        var->variable->Size = newvar->size;
-        var->variable->Value = newvar->value;
+        var->variable->size = newvar.size;
+        var->variable->value = newvar.value;
     }
     else
     {
-        var->field->Size = newvar->size;
-        var->field->Value = newvar->value;
+        var->field->size = newvar.size;
+        var->field->value = newvar.value;
     }
-
-    baranium_compiled_variable_dispose(newvar);
 }
 
 void PUSH(bcpu* cpu)
@@ -258,41 +240,45 @@ void CALL(bcpu* cpu)
     if (!cpu) return;
 
     uint64_t id = cpu->fetch(cpu, 64);
-    bstack_push(cpu->ip_stack, cpu->IP);
+    bstack_push(cpu->ip_stack, cpu->ip);
 
-    LOGDEBUG(stringf("calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
+    LOGDEBUG(stringf("calling function with id '%lld' (current IP: %lld)", id, cpu->ip));
 
     baranium_runtime* runtime = baranium_get_context();
     baranium_callback_list_entry* callback = baranium_callback_find_by_id( id);
     LOGDEBUG(stringf("callback id: %lld callback ptr: 0x%16.16x", id, (uint64_t)callback));
-    baranium_function* func = baranium_function_manager_get(runtime->functionManager, id);
+    baranium_function* func = baranium_function_manager_get(runtime->function_manager, id);
 
     if (callback != NULL)
     {
-        int numParams = callback->numParams;
-        void** dataptr = NULL;
-        baranium_variable_type_t* datatypes = NULL;
-        if (numParams > 0 && numParams != -1)
+        baranium_callback_data_list_t data = {
+            .dataptr = NULL,
+            .datatypes = NULL,
+            .num_data = callback->numParams,
+        };
+        if (data.num_data > 0 && data.num_data != -1)
         {
-            dataptr = malloc(sizeof(void*)*numParams);
-            datatypes = malloc(sizeof(baranium_variable_type_t));
+            data.dataptr = malloc(sizeof(baranium_value_t)*data.num_data);
+            data.datatypes = malloc(sizeof(baranium_variable_type_t));
 
-            for (int i = 0; i < numParams; i++)
+            baranium_compiled_variable tmp;
+            for (int i = 0; i < data.num_data; i++)
             {
-                baranium_compiled_variable* tmp = baranium_compiled_variable_pop_from_stack(cpu);
-                dataptr[i] = tmp->value;
-                datatypes[i] = tmp->type;
-                baranium_compiled_variable_dispose(tmp);
+                tmp = (baranium_compiled_variable){.type=0,.value={0},.size=0};
+                baranium_compiled_variable_pop_from_stack_into_variable(cpu, &tmp);
+                data.dataptr[i] = tmp.value;
+                data.datatypes[i] = tmp.type;
             }
         }
-        LOGDEBUG(stringf("callback call: dataptr{0x%16.16x} datatypes{0x%16.16x} numParams=%d", (uint64_t)dataptr, (uint64_t)datatypes, numParams));
-        callback->callback(dataptr, datatypes, numParams);
-        if (numParams > 0 && numParams != -1)
+        LOGDEBUG(stringf("callback call: data.dataptr{0x%16.16x} data.datatypes{0x%16.16x} data.numData=%d", (uint64_t)data.dataptr, (uint64_t)data.datatypes, data.num_data));
+        callback->callback(&data);
+        if (data.num_data > 0 && data.num_data != -1)
         {
-            for (int i = 0; i < numParams; i++)
-                free(dataptr[i]);
-            free(dataptr);
-            free(datatypes);
+            for (int i = 0; i < data.num_data; i++)
+                if (data.datatypes[i] == BARANIUM_VARIABLE_TYPE_STRING)
+                    free(data.dataptr[i].ptr);
+            free(data.dataptr);
+            free(data.datatypes);
         }
     }
     else
@@ -300,15 +286,15 @@ void CALL(bcpu* cpu)
 
     baranium_function_dispose(func);
 
-    cpu->IP = bstack_pop(cpu->ip_stack);
-    LOGDEBUG(stringf("finished calling function with id '%lld' (current IP: %lld)", id, cpu->IP));
+    cpu->ip = bstack_pop(cpu->ip_stack);
+    LOGDEBUG(stringf("finished calling function with id '%lld' (current IP: %lld)", id, cpu->ip));
 }
 
 void RET(bcpu* cpu)
 {
     if (!cpu) return;
 
-    cpu->killTriggered = 1;
+    cpu->kill_triggered = 1;
 }
 
 void JMP(bcpu* cpu)
@@ -316,7 +302,7 @@ void JMP(bcpu* cpu)
     if (!cpu) return;
 
     uint64_t addr = cpu->fetch(cpu, 64);
-    cpu->IP = addr;
+    cpu->ip = addr;
 }
 
 void JMPOFF(bcpu* cpu)
@@ -324,7 +310,7 @@ void JMPOFF(bcpu* cpu)
     if (!cpu) return;
 
     int16_t offset = cpu->fetch(cpu, 16);
-    cpu->IP += offset;
+    cpu->ip += offset;
 }
 
 void JMPC(bcpu* cpu)
@@ -336,7 +322,7 @@ void JMPC(bcpu* cpu)
     if (cpu->cv == 0)
         return;
 
-    cpu->IP = addr;
+    cpu->ip = addr;
 }
 
 void JMPCOFF(bcpu* cpu)
@@ -348,167 +334,187 @@ void JMPCOFF(bcpu* cpu)
     if (cpu->cv == 0)
         return;
 
-    cpu->IP += offset;
+    cpu->ip += offset;
 }
 
 void MOD(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* divisor = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* divident = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable divisor = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &divisor);
+    baranium_compiled_variable divident = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &divident);
 
-    baranium_compiled_variable_combine(divisor, divident, BARANIUM_VARIABLE_OPERATION_MOD, divisor->type);
+    baranium_compiled_variable_combine(&divisor, &divident, BARANIUM_VARIABLE_OPERATION_MOD, divisor.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, divisor);
-    free(divident->value);
-    free(divisor->value);
-    baranium_compiled_variable_dispose(divident);
-    baranium_compiled_variable_dispose(divisor);
+    baranium_compiled_variable_push_to_stack(cpu, &divisor);
+    if (divident.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(divident.value.ptr);
+    if (divisor.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(divisor.value.ptr);
 }
 
 void DIV(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* divisor = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* divident = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable divisor = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &divisor);
+    baranium_compiled_variable divident = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &divident);
 
-    baranium_compiled_variable_combine(divisor, divident, BARANIUM_VARIABLE_OPERATION_DIV, divisor->type);
+    baranium_compiled_variable_combine(&divisor, &divident, BARANIUM_VARIABLE_OPERATION_DIV, divisor.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, divisor);
-    free(divident->value);
-    free(divisor->value);
-    baranium_compiled_variable_dispose(divident);
-    baranium_compiled_variable_dispose(divisor);
+    baranium_compiled_variable_push_to_stack(cpu, &divisor);
+    if (divident.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(divident.value.ptr);
+    if (divisor.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(divisor.value.ptr);
 }
 
 void MUL(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable val0 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val0);
+    baranium_compiled_variable val1 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val1);
 
-    baranium_compiled_variable_combine(val0, val1, BARANIUM_VARIABLE_OPERATION_MUL, val0->type);
+    baranium_compiled_variable_combine(&val0, &val1, BARANIUM_VARIABLE_OPERATION_MUL, val0.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, val0);
-    free(val1->value);
-    free(val0->value);
-    baranium_compiled_variable_dispose(val1);
-    baranium_compiled_variable_dispose(val0);
+    baranium_compiled_variable_push_to_stack(cpu, &val0);
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val1.value.ptr);
+    if (val0.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val0.value.ptr);
 }
 
 void SUB(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable val0 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val0);
+    baranium_compiled_variable val1 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val1);
 
-    baranium_compiled_variable_combine(val0, val1, BARANIUM_VARIABLE_OPERATION_SUB, val0->type);
+    baranium_compiled_variable_combine(&val0, &val1, BARANIUM_VARIABLE_OPERATION_SUB, val0.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, val0);
-    free(val1->value);
-    free(val0->value);
-    baranium_compiled_variable_dispose(val1);
-    baranium_compiled_variable_dispose(val0);
+    baranium_compiled_variable_push_to_stack(cpu, &val0);
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val1.value.ptr);
+    if (val0.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val0.value.ptr);
 }
 
 void ADD(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable val0 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val0);
+    baranium_compiled_variable val1 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val1);
 
-    baranium_compiled_variable_combine(val0, val1, BARANIUM_VARIABLE_OPERATION_ADD, val0->type);
+    baranium_compiled_variable_combine(&val0, &val1, BARANIUM_VARIABLE_OPERATION_ADD, val0.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, val0);
-    free(val1->value);
-    free(val0->value);
-    baranium_compiled_variable_dispose(val1);
-    baranium_compiled_variable_dispose(val0);
+    baranium_compiled_variable_push_to_stack(cpu, &val0);
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val1.value.ptr);
+    if (val0.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val0.value.ptr);
 }
 
 void AND(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable val0 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val0);
+    baranium_compiled_variable val1 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val1);
 
-    baranium_compiled_variable_combine(val0, val1, BARANIUM_VARIABLE_OPERATION_AND, val0->type);
+    baranium_compiled_variable_combine(&val0, &val1, BARANIUM_VARIABLE_OPERATION_AND, val0.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, val0);
-    free(val1->value);
-    free(val0->value);
-    baranium_compiled_variable_dispose(val1);
-    baranium_compiled_variable_dispose(val0);
+    baranium_compiled_variable_push_to_stack(cpu, &val0);
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val1.value.ptr);
+    if (val0.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val0.value.ptr);
 }
 
 void OR(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable val0 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val0);
+    baranium_compiled_variable val1 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val1);
 
-    baranium_compiled_variable_combine(val0, val1, BARANIUM_VARIABLE_OPERATION_OR, val0->type);
+    baranium_compiled_variable_combine(&val0, &val1, BARANIUM_VARIABLE_OPERATION_OR, val0.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, val0);
-    free(val1->value);
-    free(val0->value);
-    baranium_compiled_variable_dispose(val1);
-    baranium_compiled_variable_dispose(val0);
+    baranium_compiled_variable_push_to_stack(cpu, &val0);
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val1.value.ptr);
+    if (val0.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val0.value.ptr);
 }
 
 void XOR(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable val0 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val0);
+    baranium_compiled_variable val1 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val1);
 
-    baranium_compiled_variable_combine(val0, val1, BARANIUM_VARIABLE_OPERATION_XOR, val0->type);
+    baranium_compiled_variable_combine(&val0, &val1, BARANIUM_VARIABLE_OPERATION_XOR, val0.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, val0);
-    free(val1->value);
-    free(val0->value);
-    baranium_compiled_variable_dispose(val1);
-    baranium_compiled_variable_dispose(val0);
+    baranium_compiled_variable_push_to_stack(cpu, &val0);
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val1.value.ptr);
+    if (val0.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val0.value.ptr);
 }
 
 void SHFTL(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable val0 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val0);
+    baranium_compiled_variable val1 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val1);
 
-    baranium_compiled_variable_combine(val0, val1, BARANIUM_VARIABLE_OPERATION_SHFTL, val0->type);
+    baranium_compiled_variable_combine(&val0, &val1, BARANIUM_VARIABLE_OPERATION_SHFTL, val0.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, val0);
-    free(val1->value);
-    free(val0->value);
-    baranium_compiled_variable_dispose(val1);
-    baranium_compiled_variable_dispose(val0);
+    baranium_compiled_variable_push_to_stack(cpu, &val0);
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val1.value.ptr);
+    if (val0.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val0.value.ptr);
 }
 
 void SHFTR(bcpu* cpu)
 {
     if (!cpu) return;
 
-    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable val0 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val0);
+    baranium_compiled_variable val1 = {0,{0},0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val1);
 
-    baranium_compiled_variable_combine(val0, val1, BARANIUM_VARIABLE_OPERATION_SHFTR, val0->type);
+    baranium_compiled_variable_combine(&val0, &val1, BARANIUM_VARIABLE_OPERATION_SHFTR, val0.type);
 
-    baranium_compiled_variable_push_to_stack(cpu, val0);
-    free(val1->value);
-    free(val0->value);
-    baranium_compiled_variable_dispose(val1);
-    baranium_compiled_variable_dispose(val0);
+    baranium_compiled_variable_push_to_stack(cpu, &val0);
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val1.value.ptr);
+    if (val0.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val0.value.ptr);
 }
 
 void CMP(bcpu* cpu)
@@ -518,16 +524,18 @@ void CMP(bcpu* cpu)
 
     uint8_t operation = cpu->fetch(cpu, 8);
 
-    baranium_compiled_variable* val1 = baranium_compiled_variable_pop_from_stack(cpu);
-    baranium_compiled_variable* val0 = baranium_compiled_variable_pop_from_stack(cpu);
+    baranium_compiled_variable val1 = {0,{0}, 0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val1);
+    baranium_compiled_variable val0 = {0,{0}, 0};
+    baranium_compiled_variable_pop_from_stack_into_variable(cpu, &val0);
 
     // yes this is a somewhat lazy way but hey, it's somewhat logical as well so shut up
-    if (val1->type == VARIABLE_TYPE_STRING || val0->type == VARIABLE_TYPE_STRING)
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING || val0.type == BARANIUM_VARIABLE_TYPE_STRING)
     {
-        baranium_compiled_variable_convert_to_type(val0, VARIABLE_TYPE_STRING);
-        char* value0 = (char*)val0->value;
-        baranium_compiled_variable_convert_to_type(val1, VARIABLE_TYPE_STRING);
-        char* value1 = (char*)val1->value;
+        baranium_compiled_variable_convert_to_type(&val0, BARANIUM_VARIABLE_TYPE_STRING);
+        char* value0 = (char*)val0.value.ptr;
+        baranium_compiled_variable_convert_to_type(&val1, BARANIUM_VARIABLE_TYPE_STRING);
+        char* value1 = (char*)val1.value.ptr;
 
         if (operation != CMP_EQUAL || operation == CMP_NOTEQUAL)
         {
@@ -545,12 +553,12 @@ void CMP(bcpu* cpu)
             LOGDEBUG(stringf("comparing '%s' and '%s' for CMP_NOTEQUAL", value0, value1));
         }
     }
-    else if (val1->type == VARIABLE_TYPE_FLOAT || val0->type == VARIABLE_TYPE_FLOAT)
+    else if (val1.type == BARANIUM_VARIABLE_TYPE_FLOAT || val0.type == BARANIUM_VARIABLE_TYPE_FLOAT)
     {
-        baranium_compiled_variable_convert_to_type(val0, VARIABLE_TYPE_FLOAT);
-        float value0 = *(float*)val0->value;
-        baranium_compiled_variable_convert_to_type(val1, VARIABLE_TYPE_FLOAT);
-        float value1 = *(float*)val1->value;
+        baranium_compiled_variable_convert_to_type(&val0, BARANIUM_VARIABLE_TYPE_FLOAT);
+        float value0 = val0.value.numfloat;
+        baranium_compiled_variable_convert_to_type(&val1, BARANIUM_VARIABLE_TYPE_FLOAT);
+        float value1 = val1.value.numfloat;
 
         if (operation == CMP_EQUAL)
         {
@@ -585,10 +593,10 @@ void CMP(bcpu* cpu)
     }
     else
     {
-        baranium_compiled_variable_convert_to_type(val0, VARIABLE_TYPE_OBJECT);
-        int64_t value0 = *(int64_t*)val0->value;
-        baranium_compiled_variable_convert_to_type(val1, VARIABLE_TYPE_OBJECT);
-        int64_t value1 = *(int64_t*)val1->value;
+        baranium_compiled_variable_convert_to_type(&val0, BARANIUM_VARIABLE_TYPE_OBJECT);
+        int64_t value0 = val0.value.num64;
+        baranium_compiled_variable_convert_to_type(&val1, BARANIUM_VARIABLE_TYPE_OBJECT);
+        int64_t value1 = val1.value.num64;
 
         if (operation == CMP_EQUAL)
         {
@@ -624,10 +632,10 @@ void CMP(bcpu* cpu)
 
     LOGDEBUG(stringf("comparison result: %s", cpu->cv ? "true" : "false"));
 
-    free(val0->value);
-    free(val1->value);
-    baranium_compiled_variable_dispose(val0);
-    baranium_compiled_variable_dispose(val1);
+    if (val1.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val1.value.ptr);
+    if (val0.type == BARANIUM_VARIABLE_TYPE_STRING)
+        free(val0.value.ptr);
 }
 
 void CMPC(bcpu* cpu)
@@ -689,20 +697,22 @@ void SET(bcpu* cpu)
     {
         bstack_push(cpu->stack, ERR_VAR_NOT_FOUND);
         cpu->flags.FORCED_KILL = true;
-        cpu->killTriggered = true;
+        cpu->kill_triggered = true;
         return;
     }
     baranium_variable* var = entry->variable;
 
-    if (var->Size != size)
+    if (var->size != size)
     {
         bstack_push(cpu->stack, ERR_VAR_WRONG_SIZE);
         cpu->flags.FORCED_KILL = true;
-        cpu->killTriggered = true;
+        cpu->kill_triggered = true;
         return;
     }
 
-    uint8_t* varData = (uint8_t*)var->Value;
+    uint8_t* varData = (uint8_t*)&var->value.num64;
+    if (var->type == BARANIUM_VARIABLE_TYPE_STRING)
+        varData = var->value.ptr;
 
     for (size_t i = 0; i < size; i++)
     {
@@ -760,5 +770,5 @@ void KILL(bcpu* cpu)
     int64_t errorCode = cpu->fetch(cpu, 64);
     bstack_push(cpu->stack, errorCode);
     cpu->flags.FORCED_KILL = true;
-    cpu->killTriggered = true;
+    cpu->kill_triggered = true;
 }

@@ -9,10 +9,10 @@ extern "C" {
 
 typedef struct baranium_field
 {
-    baranium_variable_type_t Type;
-    size_t Size;
-    void* Value;
-    index_t ID;
+    baranium_variable_type_t type;
+    size_t size;
+    baranium_value_t value;
+    index_t id;
 } baranium_field;
 
 /**
@@ -33,10 +33,10 @@ BARANIUMAPI void baranium_field_set_value(baranium_field* field, void* value, si
  * @note This function converts the field's value only for the output and not for the field itself
  * 
  * @param field Field whose value will be get
- * @param _out Output pointer
  * @param outputType Type of the output, variable will be converted to the given output type unless the type is invalid, in which case the field's type is used
+ * @returns Output data
  */
-BARANIUMAPI void baranium_field_get_value(baranium_field* field, void* _out, baranium_variable_type_t outputType);
+BARANIUMAPI baranium_value_t baranium_field_get_value(baranium_field* field, baranium_variable_type_t outputType);
 
 /**
  * @brief Dispose a field

@@ -25,8 +25,8 @@ baranium_runtime* baranium_init(void)
     memset(runtimeHandle, 0, sizeof(baranium_runtime));
 
     runtimeHandle->cpu = bcpu_init(runtimeHandle);
-    runtimeHandle->functionStack = bstack_init();
-    runtimeHandle->functionManager = baranium_function_manager_init();
+    runtimeHandle->function_stack = bstack_init();
+    runtimeHandle->function_manager = baranium_function_manager_init();
     runtimeHandle->callbacks = baranium_callback_list_init();
     runtimeHandle->varmgr = bvarmgr_init();
     return runtimeHandle;
@@ -63,9 +63,9 @@ void baranium_cleanup(baranium_runtime* runtime)
     }
 
     bcpu_dispose(runtime->cpu);
-    bstack_dispose(runtime->functionStack);
+    bstack_dispose(runtime->function_stack);
     baranium_callback_list_dispose(runtime->callbacks);
-    baranium_function_manager_dispose(runtime->functionManager);
+    baranium_function_manager_dispose(runtime->function_manager);
     bvarmgr_dispose(runtime->varmgr);
     free(runtime);
 }
@@ -104,7 +104,7 @@ baranium_handle* baranium_open_handle(const char* source)
     if (current_active_runtime->start == NULL)
     {
         current_active_runtime->start = current_active_runtime->end = handle;
-        current_active_runtime->openHandles = 1;
+        current_active_runtime->open_handles = 1;
         goto end;
     }
 
@@ -112,14 +112,14 @@ baranium_handle* baranium_open_handle(const char* source)
     {
         handle->prev = current_active_runtime->start;
         current_active_runtime->start->next = current_active_runtime->end = handle;
-        current_active_runtime->openHandles++;
+        current_active_runtime->open_handles++;
         goto end;
     }
 
     handle->prev = current_active_runtime->end;
     current_active_runtime->end->next = handle;
     current_active_runtime->end = handle;
-    current_active_runtime->openHandles++;
+    current_active_runtime->open_handles++;
 
 end:
     return handle;
@@ -180,5 +180,5 @@ destroy:
 
     free(handle);
 
-    current_active_runtime->openHandles--;
+    current_active_runtime->open_handles--;
 }

@@ -8,10 +8,9 @@ void bvarmgr_n_free(bvarmgr_n* obj)
     if (!obj)
         return;
 
-    if (obj->isVariable)
+    if (obj->isVariable && obj->variable)
     {
-        if (obj->variable)
-            baranium_variable_dispose(obj->variable);
+        baranium_variable_dispose(obj->variable);
     }
     else
     {
@@ -75,8 +74,17 @@ void bvarmgr_alloc(bvarmgr* obj, baranium_variable_type_t type, index_t id, size
     if (obj == NULL)
         return;
 
-    if (type == VARIABLE_TYPE_INVALID || type == VARIABLE_TYPE_VOID)
+    if (type == BARANIUM_VARIABLE_TYPE_INVALID || type == BARANIUM_VARIABLE_TYPE_VOID)
         return;
+
+    baranium_value_t value = {0};
+    if (type == BARANIUM_VARIABLE_TYPE_STRING)
+    {
+        value.ptr = malloc(size);
+        if (value.ptr == NULL)
+            return;
+        memset(value.ptr, 0, size);
+    }
 
     baranium_variable* variable = NULL;
     baranium_field* field = NULL;
@@ -87,17 +95,10 @@ void bvarmgr_alloc(bvarmgr* obj, baranium_variable_type_t type, index_t id, size
             return;
 
         memset(variable, 0, sizeof(baranium_variable));
-        variable->ID = id;
-        variable->Type = type;
-        variable->Size = size;
-
-        variable->Value = malloc(size); // quick sidenote: even if the object is a string, the nullchar is automatically added to the size in the compilation process
-        if (!variable->Value)
-        {
-            free(variable);
-            return;
-        }
-        memset(variable->Value, 0, size);
+        variable->id= id;
+        variable->type = type;
+        variable->size = size;
+        variable->value = value;
     }
     else
     {
@@ -106,22 +107,17 @@ void bvarmgr_alloc(bvarmgr* obj, baranium_variable_type_t type, index_t id, size
             return;
 
         memset(field, 0, sizeof(baranium_field));
-        field->ID = id;
-        field->Type = type;
-        field->Size = size;
-
-        field->Value = malloc(size); // quick sidenote: even if the object is a string, the nullchar is automatically added to the size in the compilation process
-        if (!field->Value)
-        {
-            free(field);
-            return;
-        }
-        memset(field->Value, 0, size);
+        field->id = id;
+        field->type = type;
+        field->size = size;
+        field->value = value;
     }
 
     int status = bvarmgr_add(obj, variable, field);
     if (status)
     {
+        if (type == BARANIUM_VARIABLE_TYPE_STRING)
+            free(value.ptr);
         LOGERROR(stringf("Could not allocate %s with id %ld and size %ld, status code 0x%2.2x", isField ? "field" : "variable", id, size, status));
         return;
     }
@@ -141,20 +137,12 @@ bvarmgr_n* bvarmgr_get(bvarmgr* obj, index_t id)
     for (; entry != NULL; entry = entry->next)
     {
         if (entry->variable != NULL)
-        {
-            if (entry->variable->ID == id)
-            {
+            if (entry->variable->id == id)
                 break;
-            }
-        }
 
         if (entry->field != NULL)
-        {
-            if (entry->field->ID == id)
-            {
+            if (entry->field->id == id)
                 break;
-            }
-        }
     }
 
     if (!entry)
@@ -176,7 +164,7 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
     {
         if (entry->variable != NULL)
         {
-            if (entry->variable->ID == id)
+            if (entry->variable->id == id)
             {
                 foundEntry = entry;
                 break;
@@ -185,7 +173,7 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
 
         if (entry->field != NULL)
         {
-            if (entry->field->ID == id)
+            if (entry->field->id == id)
             {
                 foundEntry = entry;
                 break;

@@ -19,7 +19,7 @@ extern "C" {
 typedef struct bstack
 {
     uint64_t* stackptr;
-    size_t bufferSize;
+    size_t buffer_size;
     size_t count;
 } bstack;
 

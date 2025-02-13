@@ -15,7 +15,7 @@ bstack* bstack_init(void)
         return NULL;
     }
     memset(obj->stackptr, 0, INITIAL_STACK_SIZE);
-    obj->bufferSize = INITIAL_STACK_SIZE;
+    obj->buffer_size = INITIAL_STACK_SIZE;
     obj->count = 0;
 
     return obj;
@@ -33,7 +33,7 @@ void bstack_clear(bstack* obj)
 {
     if (obj == NULL) return;
     if (obj->stackptr == NULL) return;
-    memset(obj->stackptr, 0, obj->bufferSize);
+    memset(obj->stackptr, 0, obj->buffer_size);
     obj->count = 0;
 }
 
@@ -42,10 +42,10 @@ void bstack_push(bstack* obj, uint64_t data)
     if (obj == NULL)
         return;
 
-    if (obj->count * sizeof(uint64_t) == obj->bufferSize)
+    if (obj->count * sizeof(uint64_t) == obj->buffer_size)
     {
-        obj->bufferSize += INITIAL_STACK_SIZE;
-        obj->stackptr = realloc(obj->stackptr, INITIAL_STACK_SIZE);
+        obj->buffer_size += INITIAL_STACK_SIZE;
+        obj->stackptr = realloc(obj->stackptr, obj->buffer_size);
     }
     obj->stackptr[obj->count] = data;
     obj->count++;

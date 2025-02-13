@@ -8,7 +8,22 @@
 extern "C" {
 #endif
 
-typedef void(*baranium_callback_t)(void** dataptr, baranium_variable_type_t* datatypes, int numData);
+#define BARANIUM_CALLBACK_INIT(data, expectedVariableMinimum, expectedVariableMaximum) \
+    assert((data != NULL)); \
+    baranium_value_t* dataptr = data->dataptr; \
+    baranium_variable_type_t* datatypes = data->datatypes; \
+    int num_data = data->num_data; \
+    assert(num_data <= expectedVariableMaximum && num_data >= expectedVariableMinimum); \
+    if (expectedVariableMinimum != 0) assert((dataptr != NULL) && (datatypes != NULL))
+
+typedef struct baranium_callback_data_list_t
+{
+    baranium_value_t* dataptr;
+    baranium_variable_type_t* datatypes;
+    int num_data;
+} baranium_callback_data_list_t;
+
+typedef void(*baranium_callback_t)(baranium_callback_data_list_t* callbackdata);
 
 typedef struct baranium_callback_list_entry
 {
@@ -70,7 +85,7 @@ BARANIUMAPI baranium_callback_list_entry* baranium_callback_find_by_id(index_t i
  * 
  * @returns The list entry of the callback
  */
-BARANIUMAPI baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_callback_t* cb);
+BARANIUMAPI baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_callback_t cb);
 
 /**
  * @brief Remove a callback
@@ -84,7 +99,7 @@ BARANIUMAPI void baranium_callback_remove_by_id(index_t id);
  * 
  * @param cb Callback pointer
  */
-BARANIUMAPI void baranium_callback_remove_by_cb_ptr(baranium_callback_t* cb);
+BARANIUMAPI void baranium_callback_remove_by_cb_ptr(baranium_callback_t cb);
 
 #ifdef __cplusplus
 }

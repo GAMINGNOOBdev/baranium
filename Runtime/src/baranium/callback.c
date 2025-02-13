@@ -1,4 +1,4 @@
-#include "baranium/runtime.h"
+#include <baranium/runtime.h>
 #include <baranium/callback.h>
 #include <baranium/logging.h>
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_APPLE
@@ -117,7 +117,7 @@ baranium_callback_list_entry* baranium_callback_find_by_id(index_t id)
     return NULL;
 }
 
-baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_callback_t* cb)
+baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_callback_t cb)
 {
     baranium_runtime* runtime = baranium_get_context();
 
@@ -163,7 +163,7 @@ void baranium_callback_remove_by_id(index_t id)
         next->prev = prev;
 }
 
-void baranium_callback_remove_by_cb_ptr(baranium_callback_t* cb)
+void baranium_callback_remove_by_cb_ptr(baranium_callback_t cb)
 {
     if (cb == NULL)
         return;
