@@ -16,6 +16,8 @@
 #   include <malloc.h>
 #endif
 
+#define PRINT_VERSION printf("Baranium runtime version %d.%d.%d %s\n", BARANIUM_VERSION_YEAR, BARANIUM_VERSION_MONTH, BARANIUM_VERSION_DATE, BARANIUM_VERSION_PHASE)
+
 uint8_t debug_mode_enabled;
 
 void print_help_message(void);
@@ -44,12 +46,14 @@ int main(int argc, const char** argv)
 
     if (argument_parser_has(parser, "-v"))
     {
-        printf("Baranium runtime version %d.%d.%d %s\n", BARANIUM_VERSION_YEAR, BARANIUM_VERSION_MONTH, BARANIUM_VERSION_DATE, BARANIUM_VERSION_PHASE);
+        PRINT_VERSION;
         argument_parser_dispose(parser);
         return 0;
     }
 
     debug_mode_enabled = argument_parser_has(parser, "-d");
+    if (debug_mode_enabled)
+        PRINT_VERSION;
     logEnableDebugMsgs(debug_mode_enabled);
     logEnableStdout(!debug_mode_enabled);
     FILE* logOutput = fopen("runtime.log", "wb+");

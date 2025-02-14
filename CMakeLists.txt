@@ -1,6 +1,16 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.18)
 
 project(BaraniumProgrammingLanguage)
+
+string(TIMESTAMP NOW "%Y %m %d")
+string(REPLACE " " ";" DATE_LIST ${NOW})
+list(GET DATE_LIST 0 YEAR)
+list(GET DATE_LIST 1 MONTH)
+list(GET DATE_LIST 2 DAY)
+
+add_compile_definitions(__YEAR__=${YEAR})
+add_compile_definitions(__MONTH__=${MONTH})
+add_compile_definitions(__DAY__=${DAY})
 
 if (UNIX)
     add_compile_options(

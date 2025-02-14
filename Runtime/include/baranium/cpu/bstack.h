@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#define INITIAL_STACK_SIZE 0x8000
+#define INITIAL_STACK_SIZE 0x100
 
 #include <stdint.h>
 #include <stdlib.h>

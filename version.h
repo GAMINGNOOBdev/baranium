@@ -1,9 +1,9 @@
 #ifndef __VERSION_H_
 #define __VERSION_H_ 1
 
-#define BARANIUM_VERSION_YEAR        2025
-#define BARANIUM_VERSION_MONTH       2
-#define BARANIUM_VERSION_DATE        13
+#define BARANIUM_VERSION_YEAR        __YEAR__
+#define BARANIUM_VERSION_MONTH       __MONTH__
+#define BARANIUM_VERSION_DATE        __DAY__
 #define BARANIUM_VERSION_PHASE       "release"
 
 #define VERSION_CREATE(year, month, day) ((year << 16) | (month << 8) | day)

@@ -1,8 +1,8 @@
-#include "baranium/defines.h"
 #include <baranium/backend/varmath.h>
 #include <baranium/backend/errors.h>
 #include <baranium/cpu/bstack.h>
 #include <baranium/variable.h>
+#include <baranium/defines.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
@@ -432,7 +432,7 @@ int baranium_compiled_variable_as_bool(baranium_compiled_variable* var)
         val = 0 < string_to_number((const char*)var->value.ptr);
     else result = 0;
 
-    var->value.num8 = val;
+    var->value.num64 = val;
     var->size = size;
     return result;
 }
@@ -455,7 +455,7 @@ int baranium_compiled_variable_as_int(baranium_compiled_variable* var)
         val = (int32_t)string_to_number((const char*)var->value.ptr);
     else result = 0;
 
-    var->value.num32 = val;
+    var->value.num64 = val;
     var->size = size;
     return result;
 }
@@ -478,7 +478,7 @@ int baranium_compiled_variable_as_uint(baranium_compiled_variable* var)
         val = (uint32_t)string_to_number((const char*)var->value.ptr);
     else result = 0;
 
-    var->value.num32 = val;
+    var->value.num64 = val;
     var->size = size;
     return result;
 }
