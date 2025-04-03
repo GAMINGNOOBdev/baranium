@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include "defines.h"
-#include "variable.h"
+#include <baranium/variable.h>
+#include <baranium/defines.h>
 
 // forward declaration needed to create a pointer
 struct baranium_script;

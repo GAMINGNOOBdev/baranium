@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "defines.h"
+#include <baranium/defines.h>
 #include <stdio.h>
 
 typedef unsigned char loglevel_t;

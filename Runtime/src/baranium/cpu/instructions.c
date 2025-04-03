@@ -1,4 +1,3 @@
-#include "baranium/defines.h"
 #include <baranium/backend/bfuncmgr.h>
 #include <baranium/backend/bvarmgr.h>
 #include <baranium/backend/varmath.h>
@@ -7,6 +6,7 @@
 #include <baranium/callback.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
+#include <baranium/defines.h>
 #include <baranium/bcpu.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -94,7 +94,7 @@ void PUSHVAR(bcpu* cpu)
     if (var == NULL)
     {
         LOGERROR(stringf("Variable/Field with ID '%d' not found", id));
-        bstack_push(cpu->stack, ERR_VAR_NOT_FOUND);
+        bstack_push(cpu->stack, BARANIUM_ERROR_VAR_NOT_FOUND);
         cpu->flags.FORCED_KILL = true;
         cpu->kill_triggered = true;
         return;
@@ -119,7 +119,7 @@ void PUSHVAR(bcpu* cpu)
     if (type == BARANIUM_VARIABLE_TYPE_VOID || type == BARANIUM_VARIABLE_TYPE_INVALID)
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be pushed: Invalid type", id));
-        bstack_push(cpu->stack, ERR_VAR_INVALID_TYPE);
+        bstack_push(cpu->stack, BARANIUM_ERROR_VAR_INVALID_TYPE);
         cpu->flags.FORCED_KILL = true;
         cpu->kill_triggered = true;
         return;
@@ -169,7 +169,7 @@ void POPVAR(bcpu* cpu)
     if (var == NULL)
     {
         LOGERROR(stringf("Variable/Field with ID '%d' not found", id));
-        bstack_push(cpu->stack, ERR_VAR_NOT_FOUND);
+        bstack_push(cpu->stack, BARANIUM_ERROR_VAR_NOT_FOUND);
         cpu->flags.FORCED_KILL = true;
         cpu->kill_triggered = true;
         return;
@@ -194,7 +194,7 @@ void POPVAR(bcpu* cpu)
     if (type == BARANIUM_VARIABLE_TYPE_VOID || type == BARANIUM_VARIABLE_TYPE_INVALID)
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be assigned: Invalid type", id));
-        bstack_push(cpu->stack, ERR_VAR_INVALID_TYPE);
+        bstack_push(cpu->stack, BARANIUM_ERROR_VAR_INVALID_TYPE);
         cpu->flags.FORCED_KILL = true;
         cpu->kill_triggered = true;
         return;
@@ -205,7 +205,7 @@ void POPVAR(bcpu* cpu)
     if (!baranium_variable_type_size_interchangable(type, newvar.type))
     {
         LOGERROR(stringf("Variable/Field with ID '%d' cannot be assigned: Non-matching types of variable and assign value", id));
-        bstack_push(cpu->stack, ERR_VAR_INVALID_TYPE);
+        bstack_push(cpu->stack, BARANIUM_ERROR_VAR_INVALID_TYPE);
         if (newvar.type == BARANIUM_VARIABLE_TYPE_STRING)
             free(newvar.value.ptr);
         cpu->flags.FORCED_KILL = true;
@@ -695,7 +695,7 @@ void SET(bcpu* cpu)
     bvarmgr_n* entry = bvarmgr_get(varmgr, id);
     if (!entry)
     {
-        bstack_push(cpu->stack, ERR_VAR_NOT_FOUND);
+        bstack_push(cpu->stack, BARANIUM_ERROR_VAR_NOT_FOUND);
         cpu->flags.FORCED_KILL = true;
         cpu->kill_triggered = true;
         return;
@@ -704,7 +704,7 @@ void SET(bcpu* cpu)
 
     if (var->size != size)
     {
-        bstack_push(cpu->stack, ERR_VAR_WRONG_SIZE);
+        bstack_push(cpu->stack, BARANIUM_ERROR_VAR_WRONG_SIZE);
         cpu->flags.FORCED_KILL = true;
         cpu->kill_triggered = true;
         return;

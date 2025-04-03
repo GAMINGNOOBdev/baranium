@@ -72,20 +72,25 @@ void baranium_compiled_variable_pop_from_stack_into_variable(bcpu* cpu, baranium
     else
     {
         size_t leftOverSize = size - size % 8;
-        data = bstack_pop(cpu->stack);
         void* valPtr = (void*)(((uint64_t)basevalue) + leftOverSize);
+        if (size % 8 != 0)
+        {
+            data = bstack_pop(cpu->stack);
+            memcpy(valPtr, &data, size % 8);
+        }
+        size_t count = leftOverSize/8;
         leftOverSize-=8;
-        memcpy(valPtr, &data, size % 8);
-        for (; leftOverSize >= 0; leftOverSize-=8)
+        for (size_t i = 0; i < count; i++)
         {
             data = bstack_pop(cpu->stack);
             valPtr = (void*)(((uint64_t)basevalue) + leftOverSize);
             memcpy(valPtr, &data, 8);
-            if (leftOverSize == 0)
-                break;
+            leftOverSize-=8;
         }
         leftOverSize=0;
     }
+
+    ///TODO: fix invalid indexes and stuff
 
     if (output->type == BARANIUM_VARIABLE_TYPE_STRING)
         output->size++;
@@ -144,14 +149,14 @@ void baranium_compiled_variable_dispose(baranium_compiled_variable* varptr)
                                                          {\
                                                             baranium_get_context()->cpu->kill_triggered = 1;\
                                                             baranium_get_context()->cpu->flags.FORCED_KILL = 1;\
-                                                            bstack_push(baranium_get_context()->cpu->stack, ERR_DIV_BY_ZERO);\
+                                                            bstack_push(baranium_get_context()->cpu->stack, BARANIUM_ERROR_DIV_BY_ZERO);\
                                                          } \
                                                          else PerformOperation(out, exprl, exprr, %); } \
         if(operation == BARANIUM_VARIABLE_OPERATION_DIV) { if (exprr == 0 && baranium_get_context() != NULL) \
                                                          {\
                                                             baranium_get_context()->cpu->kill_triggered = 1;\
                                                             baranium_get_context()->cpu->flags.FORCED_KILL = 1;\
-                                                            bstack_push(baranium_get_context()->cpu->stack, ERR_DIV_BY_ZERO);\
+                                                            bstack_push(baranium_get_context()->cpu->stack, BARANIUM_ERROR_DIV_BY_ZERO);\
                                                          } \
                                                          else PerformOperation(out, exprl, exprr, /); } \
         if(operation == BARANIUM_VARIABLE_OPERATION_MUL) PerformOperation(out, exprl, exprr, *); \

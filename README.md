@@ -8,8 +8,7 @@ It's design allows easy expansion of the available functions in the runtime
 and easy embedding into other C(++) projects for various purposes.
 
 ## Discord
-To see more indepth stuff and ask questions, join the [discord server](https://discord.gg/8R5YyM3MEn) that
-will be as inactive as every other server you may know.
+To see more indepth stuff and ask questions, join the [baranium discord server](https://discord.gg/8R5YyM3MEn).
 
 ## Language specifications
 baranium was originally designed to be used with a game engine and
@@ -19,6 +18,7 @@ being that fields can be changed by the user using the runtime.
 However the current runtime executable may not support this at the
 moment because of this feature being oriented towards integration of
 the language in other projects.
+More information can be found in the [syntax section of the wiki](../../wiki/Syntax).
 
 ## Examples
 Under `Compiler/test` there are test scripts that demonstrate the language.
@@ -46,17 +46,18 @@ Note: The generated binaries are under the subfolders `Compiler`, `Runtime`
 
 ## Using the compiler
 Compiler flags/options:<br/>
--o `path`:  Specify output file<br/>
--h:         Show the help message<br/>
--I `file`:  Specify file containing all custom user include directories<br/>
--d:         Print debug messages (only useful for debugging the compiler itself!)<br/>
+| Flag | Description |
+|------|-------------|
+| -o `path` | Specify output file |
+| -h | Show the help message |
+| -I `file` | Specify file containing all custom user include directories |
+| -d | Print debug messages (only useful for debugging the compiler itself!) |
 
-As for source files, just add the paths to the source files to the command,
-like every other compiler on this planet.
+As for specifying source files, just list the paths to the files like every other compiler on this planet.
 
 ## Using the provided runtime executable
 The provided runtime executable doesn't put a focus on advanced
-functionality that you would expect from languages like Python or Java.
+functionality and library flexibility that you would see in languages like Python or Java.
 Instead it has just a few standard libraries and console output
 functions. This can and will probably change with either future updates
 or if enough people want a feature to be added.

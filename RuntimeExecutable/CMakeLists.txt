@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 
 project(bar)
 
@@ -11,7 +11,7 @@ set(barSources
     )
 
 add_executable(bar ${barSources})
-target_link_libraries(bar baranium)
+target_link_libraries(bar baranium-s)
 
 if (UNIX)
     target_link_libraries(bar m)

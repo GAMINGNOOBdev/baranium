@@ -61,7 +61,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: baranium-${{ matrix.os }}-${{ matrix.build_type }}
-        path: ${{ steps.strings.outputs.build-output-dir }}
+        path: ${{ steps.strings.outputs.build-output-dir }}/bin
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ctest --build-config ${{ matrix.build_type }}
@@ -69,6 +69,8 @@ jobs:
   download:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
     - name: Download All Artifacts
       uses: actions/download-artifact@v4
@@ -79,6 +81,16 @@ jobs:
     - name: Get current date
       id: date
       run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
+    - name: Sign outputs
+      uses: sigstore/gh-action-sigstore-python@v3.0.0
+      with:
+        inputs: |
+                "${{ github.workspace }}/baranium/baranium-ubuntu-latest-Debug/*"
+                "${{ github.workspace }}/baranium/baranium-ubuntu-latest-Release/*"
+                "${{ github.workspace }}/baranium/baranium-macos-latest-Debug/*"
+                "${{ github.workspace }}/baranium/baranium-macos-latest-Release/*"
+                "${{ github.workspace }}/baranium/baranium-windows-latest-Debug/*/*"
+                "${{ github.workspace }}/baranium/baranium-windows-latest-Release/*/*"
     - name: Upload to a single artifact
       uses: actions/upload-artifact@v4
       with:

@@ -12,9 +12,9 @@
 extern "C" {
 #endif
 
-#include "backend/varmath.h"
-#include "cpu/bstack.h"
-#include "cpu/bbus.h"
+#include <baranium/backend/varmath.h>
+#include <baranium/cpu/bstack.h>
+#include <baranium/cpu/bbus.h>
 #include <stdint.h>
 
 typedef struct{

@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "variable.h"
+#include <baranium/variable.h>
 
 typedef struct baranium_field
 {

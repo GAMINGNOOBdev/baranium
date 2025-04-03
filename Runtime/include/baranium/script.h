@@ -5,34 +5,35 @@
 extern "C" {
 #endif
 
+#include <baranium/variable.h>
+#include <baranium/function.h>
+#include <baranium/defines.h>
+#include <baranium/field.h>
 #include <stdint.h>
-#include "defines.h"
-#include "field.h"
-#include "variable.h"
-#include "function.h"
 
-#define MAGIC_NUM_0 'B'
-#define MAGIC_NUM_1 'G'
-#define MAGIC_NUM_2 'S'
-#define MAGIC_NUM_3 'L'
+#define BARANIUM_MAGIC_NUM0 'B'
+#define BARANIUM_MAGIC_NUM1 'G'
+#define BARANIUM_MAGIC_NUM2 'S'
+#define BARANIUM_MAGIC_NUM3 'L'
 
-#define SECTION_TYPE_INVALID     (baranium_section_type_t)0x00
-#define SECTION_TYPE_FIELDS      (baranium_section_type_t)0x01
-#define SECTION_TYPE_VARIABLES   (baranium_section_type_t)0x02
-#define SECTION_TYPE_FUNCTIONS   (baranium_section_type_t)0x03
+#define BARANIUM_SCRIPT_SECTION_TYPE_INVALID     (baranium_script_section_type_t)0x00
+#define BARANIUM_SCRIPT_SECTION_TYPE_FIELDS      (baranium_script_section_type_t)0x01
+#define BARANIUM_SCRIPT_SECTION_TYPE_VARIABLES   (baranium_script_section_type_t)0x02
+#define BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS   (baranium_script_section_type_t)0x03
 
-typedef uint8_t baranium_section_type_t;
+#define BARANIUM_SCRIPT_SECTION_LIST_BUFFER_SIZE 0x20
+#define BARANIUM_SCRIPT_NAME_TABLE_BUFFER_SIZE 0x20
 
-typedef struct baranium_section
+typedef uint8_t baranium_script_section_type_t;
+
+typedef struct baranium_script_section
 {
     uint8_t type;
     index_t id;
     uint64_t data_size;
     uint64_t data_location; // mostly used by function sections because code size can sometimes be quite big and code should probably be dynamically loaded and unloaded when not needed
     uint8_t* data;
-
-    struct baranium_section* next;
-} baranium_section;
+} baranium_script_section;
 
 typedef struct
 {
@@ -46,22 +47,21 @@ typedef struct baranium_script_name_table_entry
     uint8_t length;
     uint8_t* name;
     index_t id;
-
-    struct baranium_script_name_table_entry* next;
 } baranium_script_name_table_entry;
 
 typedef struct
 {
-    uint64_t name_count;
-    baranium_script_name_table_entry* entries_start;
-    baranium_script_name_table_entry* entries_end;
+    size_t name_count;
+    size_t buffer_size;
+    baranium_script_name_table_entry* entries;
 } baranium_script_name_table;
 
 typedef struct baranium_script
 {
     baranium_script_header header;
-    baranium_section* sections_start;
-    baranium_section* sections_end;
+    baranium_script_section* sections;
+    size_t section_buffer_size;
+    size_t section_count;
     baranium_script_name_table nametable;
     baranium_handle* handle;
 } baranium_script;
@@ -89,7 +89,7 @@ BARANIUMAPI void baranium_close_script(baranium_script* script);
  * @param type Desired type of the section
  * @returns A pointer to the section
  */
-BARANIUMAPI baranium_section* baranium_script_get_section_by_id_and_type(baranium_script* script, index_t id, baranium_section_type_t type);
+BARANIUMAPI baranium_script_section* baranium_script_get_section_by_id_and_type(baranium_script* script, index_t id, baranium_script_section_type_t type);
 
 /**
  * @brief Get the location/index of a specific item with requested `name`

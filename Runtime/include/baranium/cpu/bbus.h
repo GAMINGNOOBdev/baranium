@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#include "../function.h"
+#include <baranium/function.h>
 #include <stdint.h>
 
 typedef struct bbus

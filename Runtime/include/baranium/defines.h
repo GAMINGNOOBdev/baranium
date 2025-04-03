@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "../../../version.h"
+#include <baranium/version.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -67,6 +67,11 @@ typedef union baranium_value_t
     uint16_t num16;
     uint32_t num32;
     uint64_t num64;
+
+    int8_t snum8;
+    int16_t snum16;
+    int32_t snum32;
+    int64_t snum64;
 
     void* ptr;
 } baranium_value_t;
