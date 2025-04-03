@@ -76,7 +76,7 @@ char* get_executable_working_directory(void)
     char* result = (char*)malloc(0x1000);
 
     #ifdef _WIN32
-        DWORD status = GetModuleFileNameA(nullptr, &result[0], 0x1000);
+        DWORD status = GetModuleFileNameA(NULL, &result[0], 0x1000);
         if (status == ERROR)
             return "";
     #else
