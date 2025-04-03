@@ -47,6 +47,65 @@ const char* strptr(const char* src)
     return (const char*)result;
 }
 
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
+size_t getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim) {
+    char *bufptr = NULL;
+    char *p = bufptr;
+    size_t size;
+    int c;
+
+    if (buffer == NULL) {
+        return -1;
+    }
+    if (stream == NULL) {
+        return -1;
+    }
+    if (buffersz == NULL) {
+        return -1;
+    }
+    bufptr = *buffer;
+    size = *buffersz;
+
+    c = fgetc(stream);
+    if (c == EOF) {
+        return -1;
+    }
+    if (bufptr == NULL) {
+        bufptr = malloc(128);
+        if (bufptr == NULL) {
+            return -1;
+        }
+        size = 128;
+    }
+    p = bufptr;
+    while(c != EOF) {
+        if ((p - bufptr) > (size - 1)) {
+            size = size + 128;
+            bufptr = realloc(bufptr, size);
+            if (bufptr == NULL) {
+                return -1;
+            }
+        }
+        *p++ = c;
+        if (c == delim) {
+            break;
+        }
+        c = fgetc(stream);
+    }
+
+    *p++ = '\0';
+    *buffer = bufptr;
+    *buffersz = size;
+
+    return p - bufptr - 1;
+}
+
+size_t getline(char **buffer, size_t *buffersz, FILE *stream)
+{
+    return getdelim(buffer, buffersz, stream, '\n');
+}
+#endif
+
 void read_includes_file(const char* path)
 {
     FILE* includePathsFile = fopen(path, "r");
