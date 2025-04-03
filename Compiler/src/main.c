@@ -48,7 +48,7 @@ const char* strptr(const char* src)
 }
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
-size_t getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim) {
+size_t getdelimv2(char **buffer, size_t *buffersz, FILE *stream, char delim) {
     char *bufptr = NULL;
     char *p = bufptr;
     size_t size;
@@ -100,9 +100,9 @@ size_t getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim) {
     return p - bufptr - 1;
 }
 
-size_t getline(char **buffer, size_t *buffersz, FILE *stream)
+size_t getlinev2(char **buffer, size_t *buffersz, FILE *stream)
 {
-    return getdelim(buffer, buffersz, stream, '\n');
+    return getdelimv2(buffer, buffersz, stream, '\n');
 }
 #endif
 
@@ -118,7 +118,11 @@ void read_includes_file(const char* path)
 
     char* line = NULL;
     size_t linesize = 0;
+    #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
+    while (getlinev2(&line, &linesize, includePathsFile) != EOF)
+    #else
     while (getline(&line, &linesize, includePathsFile) != EOF)
+    #endif
     {
         line[linesize-1] = 0;
         linesize--;
