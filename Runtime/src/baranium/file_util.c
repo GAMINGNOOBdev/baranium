@@ -1,9 +1,16 @@
 #include <baranium/string_util.h>
 #include <baranium/file_util.h>
 #include <baranium/logging.h>
+#include <baranium/defines.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
+
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
+#   include <windows.h>
+#   include <stdlib.h>
+#else
+#   include <dirent.h>
+#endif
 
 void baranium_file_util_concat_path_vectors(baranium_string_list* output, baranium_string_list* input, const char* prefix)
 {
