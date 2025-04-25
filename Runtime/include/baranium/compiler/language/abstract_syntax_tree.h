@@ -25,7 +25,7 @@ typedef int8_t power_t;
 
 struct baranium_abstract_syntax_tree_node;
 
-#define BARANIUM_TREE_NODE_LIST_BUFFER_SIZE 0x80
+#define BARANIUM_TREE_NODE_LIST_BUFFER_SIZE 0x20
 
 typedef struct baranium_abstract_syntax_tree_node_list
 {

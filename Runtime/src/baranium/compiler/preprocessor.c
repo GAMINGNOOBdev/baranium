@@ -5,22 +5,96 @@
 #include <baranium/string_util.h>
 #include <baranium/file_util.h>
 #include <baranium/logging.h>
+#include <baranium/runtime.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-static baranium_string_map baranium_defines_map;
+#define BARANIUM_PREPROCESSOR_DEFINE_LIST_BUFFER_SIZE 0x20
+
+typedef struct baranium_preprocessor_define_list
+{
+    size_t count;
+    size_t buffer_size;
+    
+    index_t* hashes;
+    baranium_source_token_list* replacements;
+} baranium_preprocessor_define_list;
+
+void baranium_preprocessor_define_list_init(baranium_preprocessor_define_list* list)
+{
+    if (list == NULL)
+        return;
+
+    memset(list, 0, sizeof(baranium_preprocessor_define_list));
+}
+
+void baranium_preprocessor_define_list_dispose(baranium_preprocessor_define_list* list)
+{
+    if (list == NULL || list->buffer_size == 0 || list->hashes == NULL || list->replacements == NULL)
+        return;
+
+    for (size_t i = 0; i < list->count; i++)
+        baranium_source_token_list_dispose(&list->replacements[i]);
+
+    free(list->hashes);
+    free(list->replacements);
+
+    memset(list, 0, sizeof(baranium_preprocessor_define_list));
+}
+
+int baranium_preprocessor_define_list_get_index(baranium_preprocessor_define_list* list, const char* entry)
+{
+    if (list == NULL || list->hashes == NULL || list->replacements == NULL || entry == NULL)
+        return -1;
+
+    index_t hash = baranium_get_id_of_name(entry);
+    for (size_t i = 0; i < list->count; i++)
+    {
+        if (hash == list->hashes[i])
+            return i;
+    }
+
+    return -1;
+}
+
+void baranium_preprocessor_define_list_add(baranium_preprocessor_define_list* list, const char* define, const char* replacement)
+{
+    if (list == NULL || define == NULL || replacement == NULL)
+        return;
+
+    index_t hash = baranium_get_id_of_name(define);
+    if (baranium_preprocessor_define_list_get_index(list, define) != -1)
+        return;
+
+    if (list->count + 1 >= list->buffer_size)
+    {
+        list->buffer_size += BARANIUM_PREPROCESSOR_DEFINE_LIST_BUFFER_SIZE;
+        list->replacements = realloc(list->replacements, sizeof(baranium_source_token_list)*list->buffer_size);
+        list->hashes = realloc(list->hashes, sizeof(index_t)*list->buffer_size);
+    }
+
+    baranium_source_token_list replacementTokens;
+    baranium_source_token_list_init(&replacementTokens);
+    baranium_source_parse_single_line(&replacementTokens, replacement);
+
+    list->replacements[list->count] = replacementTokens;
+    list->hashes[list->count] = hash;
+    list->count++;
+}
+
 static baranium_string_list baranium_include_paths;
+static baranium_preprocessor_define_list baranium_define_list;
 
 void baranium_preprocessor_init(void)
 {
-    baranium_string_map_init(&baranium_defines_map);
+    baranium_preprocessor_define_list_init(&baranium_define_list);
     baranium_string_list_init(&baranium_include_paths);
 }
 
 void baranium_preprocessor_dispose(void)
 {
-    baranium_string_map_dispose(&baranium_defines_map);
+    baranium_preprocessor_define_list_dispose(&baranium_define_list);
     baranium_string_list_dispose(&baranium_include_paths);
 }
 
@@ -78,7 +152,7 @@ void baranium_preprocessor_parse(const char* operation, baranium_source_token_li
             baranium_source_open_from_file(&src, file);
             baranium_source_token_list_push_list(source, &src);
             fclose(file);
-            baranium_source_token_list_dispose(&src, 1);
+            baranium_source_token_list_dispose(&src);
         }
         free(path_string);
         baranium_string_list_dispose(&paths);
@@ -110,10 +184,17 @@ void baranium_preprocessor_parse(const char* operation, baranium_source_token_li
 void baranium_preprocessor_add_include_path(const char* path)
 {
     size_t len = strlen(path);
+    uint8_t modified = 0;
     if (path[len-1] == '\\' || path[len-1] == '/')
+    {
+        modified = path[len-1];
         ((char*)path)[len-1] = 0;
+    }
 
     baranium_string_list_add(&baranium_include_paths, path);
+
+    if (modified)
+        ((char*)path)[len-1] = modified;
 }
 
 void baranium_preprocessor_pop_last_include(void)
@@ -126,7 +207,7 @@ void baranium_preprocessor_add_define(const char* define, const char* replacemen
     if (define == NULL || strlen(define) < 1)
         return;
 
-    if (baranium_string_map_get_index(&baranium_defines_map, define) != -1)
+    if (baranium_preprocessor_define_list_get_index(&baranium_define_list, define) != -1)
         return;
 
     if (baranium_is_keyword(define) != -1 || strisnum(define) ||
@@ -135,7 +216,7 @@ void baranium_preprocessor_add_define(const char* define, const char* replacemen
 
     LOGDEBUG(stringf("define{'%s'} replacement{'%s'}", define, replacement));
 
-    baranium_string_map_add(&baranium_defines_map, define, replacement);
+    baranium_preprocessor_define_list_add(&baranium_define_list, define, replacement);
 }
 
 void baranium_preprocessor_assist_in_line(baranium_source_token_list* line_tokens)
@@ -143,55 +224,24 @@ void baranium_preprocessor_assist_in_line(baranium_source_token_list* line_token
     if (line_tokens == NULL || line_tokens->count == 0)
         return;
 
-    baranium_source_token_list improved_tokens;
-    baranium_source_token_list_init(&improved_tokens);
-
-    uint8_t anything_changed = 0;
     for (size_t i = 0; i < line_tokens->count; i++)
     {
         baranium_source_token token = line_tokens->data[i];
-        int index = baranium_string_map_get_index(&baranium_defines_map, token.contents);
+        int index = baranium_preprocessor_define_list_get_index(&baranium_define_list, token.contents);
         if (index == -1)
-        {
-            baranium_source_token_list_add(&improved_tokens, &token);
-            continue;
-        }
-
-        anything_changed = 1;
-        const char* replacementText = baranium_defines_map.strings[index];
-        if (strlen(replacementText) < 1)
             continue;
 
-        baranium_source_token_list replacementTokens;
-        baranium_source_token_list_init(&replacementTokens);
-        baranium_source_parse_single_line(&replacementTokens, replacementText);
-        if (replacementTokens.count == 0)
-            continue;
+        index = i;
+        baranium_source_token_list_remove(line_tokens, index);
+        index--;
 
-        if (replacementTokens.count == 1)
-        {
-            replacementTokens.data[0].line_number = token.line_number;
-            baranium_source_token_list_add(&improved_tokens, replacementTokens.data);
-            free(replacementTokens.data);
-            continue;
-        }
+        baranium_source_token_list replacementTokens = baranium_define_list.replacements[index];
 
         for (size_t i = 0; i < replacementTokens.count; i++)
             replacementTokens.data[i].line_number = token.line_number;
 
-        baranium_source_token_list_push_list(&improved_tokens, &replacementTokens);
-        free(replacementTokens.data);
-
+        baranium_source_token_list_insert_after(line_tokens, index, &replacementTokens);
     }
-    if (!anything_changed)
-    {
-        free(improved_tokens.data);
-        return;
-    }
-
-    baranium_source_token_list_clear(line_tokens);
-    baranium_source_token_list_push_list(line_tokens, &improved_tokens);
-    free(improved_tokens.data);
 }
 
 const char* baranium_preprocessor_search_include_path(const char* file)
@@ -202,7 +252,7 @@ const char* baranium_preprocessor_search_include_path(const char* file)
     {
         const char* include_path = baranium_include_paths.strings[i];
         baranium_string_list_init(&directory_contents);
-        baranium_file_util_get_directory_contents(&directory_contents, include_path, BARANIUM_FILTER_MASK_ALL_FILES);
+        baranium_file_util_get_directory_contents(&directory_contents, include_path, BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES);
         for (size_t i = 0; i < directory_contents.count; i++)
         {
             const char* filename = directory_contents.strings[i];

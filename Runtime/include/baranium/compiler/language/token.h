@@ -17,7 +17,7 @@ extern "C" {
 #define BARANIUM_TOKEN_TYPE_WHILELOOP           (baranium_token_type_t)6
 #define BARANIUM_TOKEN_TYPE_FORLOOP             (baranium_token_type_t)7
 
-#define BARANIUM_TOKEN_LIST_BUFFER_SIZE 0x100
+#define BARANIUM_TOKEN_LIST_BUFFER_SIZE 0x80
 
 typedef uint8_t baranium_token_type_t;
 

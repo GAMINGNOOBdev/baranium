@@ -54,7 +54,7 @@ void baranium_expression_token_init(baranium_expression_token* expression)
 void baranium_expression_token_dispose(baranium_expression_token* expression)
 {
     baranium_abstract_syntax_tree_node_dispose(expression->ast);
-    baranium_source_token_list_dispose(&expression->inner_tokens, 0);
+    baranium_source_token_list_dispose(&expression->inner_tokens);
 }
 
 void baranium_expression_token_parse_return_statement(baranium_expression_token* expression, baranium_token_list* local_tokens, baranium_token_list* global_tokens)
@@ -77,14 +77,14 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
     if (expression->return_type != BARANIUM_VARIABLE_TYPE_INVALID && expression->return_type != BARANIUM_VARIABLE_TYPE_VOID)
     {
         expression->return_value = baranium_token_parser_parse_variable_value(&return_value_list, expression->return_type);
-        baranium_source_token_list_dispose(&return_value_list, 0);
+        baranium_source_token_list_dispose(&return_value_list);
         return;
     }
 
     if (expression->return_type == BARANIUM_VARIABLE_TYPE_VOID)
     {
         expression->return_value = NULL;
-        baranium_source_token_list_dispose(&return_value_list, 0);
+        baranium_source_token_list_dispose(&return_value_list);
         return;
     }
 
@@ -102,7 +102,7 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
     if (token == NULL)
     {
         LOGERROR(stringf("Line %d: Invalid return value \"%s\"", valueToken->line_number, valueToken->contents));
-        baranium_source_token_list_dispose(&return_value_list, 0);
+        baranium_source_token_list_dispose(&return_value_list);
         return;
     }
 
@@ -112,7 +112,7 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
     {
         baranium_field_token* field = (baranium_field_token*)token;
         expression->return_type = field->type;
-        baranium_source_token_list_dispose(&return_value_list, 0);
+        baranium_source_token_list_dispose(&return_value_list);
         return;
     }
 
@@ -120,12 +120,12 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
     {
         baranium_variable_token* variable = (baranium_variable_token*)token;
         expression->return_type = variable->type;
-        baranium_source_token_list_dispose(&return_value_list, 0);
+        baranium_source_token_list_dispose(&return_value_list);
         return;
     }
 
     LOGERROR(stringf("Line %d: Invalid return value \"%s\"", valueToken->line_number, valueToken->contents));
-    baranium_source_token_list_dispose(&return_value_list, 0);
+    baranium_source_token_list_dispose(&return_value_list);
 }
 
 void baranium_expression_token_identify(baranium_expression_token* expression, baranium_token_list* local_tokens, baranium_token_list* global_tokens)

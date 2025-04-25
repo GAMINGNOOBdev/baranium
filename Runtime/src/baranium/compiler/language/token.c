@@ -86,6 +86,8 @@ void baranium_token_list_dispose(baranium_token_list* obj)
         if (obj->count > 0)
             free(obj->data);
     }
+
+    memset(obj, 0, sizeof(baranium_token_list));
 }
 
 void baranium_token_list_clear(baranium_token_list* obj)

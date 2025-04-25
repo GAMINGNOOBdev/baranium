@@ -1,15 +1,8 @@
 #include <baranium/backend/bfuncmgr.h>
+#include <baranium/library.h>
 #include <baranium/logging.h>
 #include <memory.h>
 #include <stdlib.h>
-
-void bfuncmgr_n_free(bfuncmgr_n* obj)
-{
-    if (!obj)
-        return;
-
-    free(obj);
-}
 
 baranium_function_manager* baranium_function_manager_init(void)
 {
@@ -18,10 +11,6 @@ baranium_function_manager* baranium_function_manager_init(void)
 
     memset(obj, 0, sizeof(baranium_function_manager));
     baranium_function_manager_clear(obj);
-
-    obj->start = NULL;
-    obj->end = NULL;
-    obj->count = 0;
 
     LOGDEBUG("Created function manager");
 
@@ -42,25 +31,17 @@ void baranium_function_manager_clear(baranium_function_manager* obj)
 {
     if (obj == NULL) return;
 
-    if (obj->start == NULL) return;
+    if (obj->buffer == NULL) return;
 
     LOGDEBUG(stringf("Cleared function manager with %ld entries", obj->count));
 
-    bfuncmgr_n* next = NULL;
-    for (bfuncmgr_n* ptr = obj->start; ptr != NULL;)
-    {
-        next = ptr->next;
-        bfuncmgr_n_free(ptr);
-        ptr = next;
-    }
-
-    obj->start = obj->end = NULL;
-    obj->count = 0;
+    free(obj->buffer);
+    memset(obj, 0, sizeof(baranium_function_manager));
 }
 
-int baranium_function_manager_add_entry(baranium_function_manager* obj, index_t id, baranium_script* script);
+int baranium_function_manager_add_entry(baranium_function_manager* obj, index_t id, baranium_script* script, baranium_library* library);
 
-void baranium_function_manager_add(baranium_function_manager* obj, index_t id, baranium_script* script)
+void baranium_function_manager_add(baranium_function_manager* obj, index_t id, baranium_script* script, baranium_library* library)
 {
     if (obj == NULL)
         return;
@@ -68,11 +49,11 @@ void baranium_function_manager_add(baranium_function_manager* obj, index_t id, b
     if (id == BARANIUM_INVALID_INDEX)
         return;
 
-    bfuncmgr_n* func = baranium_function_manager_get_entry(obj, id);
+    baranium_function_manager_entry* func = baranium_function_manager_get_entry(obj, id);
     if (func != NULL)
         return;
 
-    int status = baranium_function_manager_add_entry(obj, id, script);
+    int status = baranium_function_manager_add_entry(obj, id, script, library);
     if (status)
     {
         LOGERROR(stringf("Could not allocate entry for function with id %ld, status code 0x%2.2x", id, status));
@@ -87,32 +68,50 @@ baranium_function* baranium_function_manager_get(baranium_function_manager* obj,
     if (!obj)
         return NULL;
 
-    bfuncmgr_n* entry = baranium_function_manager_get_entry(obj, id);
+    baranium_function_manager_entry* entry = baranium_function_manager_get_entry(obj, id);
     if (entry == NULL)
         return NULL;
 
-    return baranium_script_get_function_by_id(entry->script, entry->id);
+    if (entry->script != NULL)
+        return baranium_script_get_function_by_id(entry->script, entry->id);
+    else if (entry->library != NULL)
+        return baranium_library_get_function_by_id(entry->library, entry->id);
+
+    return NULL;
 }
 
-bfuncmgr_n* baranium_function_manager_get_entry(baranium_function_manager* obj, index_t id)
+baranium_function_manager_entry* baranium_function_manager_get_entry(baranium_function_manager* obj, index_t id)
 {
     if (!obj)
         return NULL;
 
-    if (!obj->start)
+    if (obj->buffer == NULL)
         return NULL;
 
-    bfuncmgr_n* entry = obj->start;
-    for (; entry != NULL; entry = entry->next)
+    for (uint64_t i = 0; i < obj->count; i++)
     {
-        if (entry->id == id)
-            break;
+        if (obj->buffer[i].id == id)
+            return &obj->buffer[i];
     }
 
-    if (!entry)
-        return NULL;
+    return NULL;
+}
 
-    return entry;
+int baranium_function_manager_get_entry_index(baranium_function_manager* obj, index_t id)
+{
+    if (!obj)
+        return -1;
+
+    if (obj->buffer == NULL)
+        return -1;
+
+    for (uint64_t i = 0; i < obj->count; i++)
+    {
+        if (obj->buffer[i].id == id)
+            return i;
+    }
+
+    return -1;
 }
 
 void baranium_function_manager_remove(baranium_function_manager* obj, index_t id)
@@ -120,88 +119,48 @@ void baranium_function_manager_remove(baranium_function_manager* obj, index_t id
     if (obj == NULL)
         return;
 
-    if (obj->start == NULL)
+    if (obj->buffer == NULL)
         return;
 
-    bfuncmgr_n* foundEntry = baranium_function_manager_get_entry(obj, id);
-    if (foundEntry == NULL)
+    int index = baranium_function_manager_get_entry_index(obj, id);
+    if (index == -1)
     {
         LOGERROR(stringf("Could not find function with id %ld", id));
         return;
     }
 
-    bfuncmgr_n* prev = foundEntry->prev;
-    bfuncmgr_n* next = foundEntry->next;
-
-    if (foundEntry == obj->start && foundEntry == obj->end)
+    if ((size_t)index == obj->count-1)
     {
-        obj->start = obj->end = NULL;
-        goto destroy;
-    }
-    else if (foundEntry == obj->start)
-    {
-        next->prev = NULL;
-        obj->start = next;
-        foundEntry->next = NULL;
-        goto destroy;
-    }
-    else if (foundEntry == obj->end)
-    {
-        prev->next = NULL;
-        obj->end = prev;
-        foundEntry->prev = NULL;
-        goto destroy;
+        memset(&obj->buffer[index], 0, sizeof(baranium_function_manager_entry));
+        obj->count--;
+        return;
     }
 
-    if (next)
-        next->prev = prev;
-
-    if (prev)
-        prev->next = next;
-
-    foundEntry->next = NULL;
-    foundEntry->prev = NULL;
-
-destroy:
-    obj->count--;
     LOGDEBUG(stringf("Disposed function with id %ld", id));
-    bfuncmgr_n_free(foundEntry);
+    memset(&obj->buffer[index], 0, sizeof(baranium_function_manager_entry));
+    memmove(&obj->buffer[index], &obj->buffer[index+1], sizeof(baranium_function_manager_entry)*(obj->count - index - 1));
+
+    obj->count--;
 }
 
-int baranium_function_manager_add_entry(baranium_function_manager* obj, index_t id, baranium_script* script)
+int baranium_function_manager_add_entry(baranium_function_manager* obj, index_t id, baranium_script* script, baranium_library* library)
 {
-    if (obj == NULL || id == BARANIUM_INVALID_INDEX || script == NULL)
+    if (obj == NULL || id == BARANIUM_INVALID_INDEX || (script == NULL && library == NULL))
         return 1;
 
-    if (obj->start == NULL)
-    {
-        obj->start = malloc(sizeof(bfuncmgr_n));
-        if (!obj->start)
-            return 2;
+    baranium_function_manager_entry entry = {
+        .id = id,
+        .script = script,
+        .library = library,
+    };
 
-        memset(obj->start, 0, sizeof(bfuncmgr_n));
-        obj->start->prev = NULL;
-        obj->start->next = NULL;
-        obj->start->id = id;
-        obj->start->script = script;
-        obj->end = obj->start;
-        obj->count = 1;
-        return 0;
+    if (obj->buffer_size <= obj->count+1)
+    {
+        obj->buffer_size += BARANIUM_FUNCTION_MANAGER_BUFFER_SIZE;
+        obj->buffer = realloc(obj->buffer, sizeof(baranium_function_manager_entry)*obj->buffer_size);
     }
 
-    bfuncmgr_n* newEntry = malloc(sizeof(bfuncmgr_n));
-    if (!newEntry)
-        return 2;
-
-    memset(newEntry, 0, sizeof(bfuncmgr_n));
-    newEntry->prev = obj->end;
-    newEntry->id = id;
-    newEntry->script = script;
-    newEntry->next = NULL;
-
-    obj->end->next = newEntry;
-
-    obj->end = newEntry;
+    memcpy(&obj->buffer[obj->count], &entry, sizeof(baranium_function_manager_entry));
     obj->count++;
 
     return 0;

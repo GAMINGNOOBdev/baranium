@@ -1,8 +1,8 @@
-#include "baranium/defines.h"
 #include <baranium/backend/varmath.h>
 #include <baranium/cpu/bstack.h>
 #include <baranium/function.h>
 #include <baranium/variable.h>
+#include <baranium/defines.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
 #include <baranium/bcpu.h>
@@ -27,7 +27,7 @@ void baranium_function_dispose(baranium_function* function)
 
 void baranium_function_call(baranium_function* function, baranium_value_t* dataptr, baranium_variable_type_t* datatypes, int numData)
 {
-    baranium_runtime* runtime = baranium_get_context();
+    baranium_runtime* runtime = baranium_get_runtime();
 
     if (!runtime || !function)
         return;

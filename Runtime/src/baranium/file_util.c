@@ -43,7 +43,7 @@ void baranium_file_util_get_directory_contents(baranium_string_list* out, const 
             continue;
         const char* filename = (const char*)fdFile.cFileName;
 
-        if (mask == BARANIUM_FILTER_MASK_ALL_FILES_AND_FOLDERS)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES_AND_FOLDERS)
         {
             if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
@@ -58,25 +58,25 @@ void baranium_file_util_get_directory_contents(baranium_string_list* out, const 
             continue;
         }
 
-        if (mask == BARANIUM_FILTER_MASK_FILES_AND_FOLDERS)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_FILES_AND_FOLDERS)
         {
             baranium_string_list_add(out, filename);
             continue;
         }
 
-        if (mask == BARANIUM_FILTER_MASK_FILES && !(fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_FILES && !(fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
         {
             baranium_string_list_add(out, filename);
             continue;
         }
 
-        if (mask == BARANIUM_FILTER_MASK_FOLDERS && fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_FOLDERS && fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             baranium_string_list_add(out, filename);
             continue;
         }
 
-        if (mask == BARANIUM_FILTER_MASK_ALL_FILES)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES)
         {
             if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
@@ -89,7 +89,7 @@ void baranium_file_util_get_directory_contents(baranium_string_list* out, const 
                 baranium_string_list_add(out, filename);
         }
 
-        if (mask == BARANIUM_FILTER_MASK_ALL_FOLDERS)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FOLDERS)
         {
             if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
@@ -117,7 +117,7 @@ void baranium_file_util_get_directory_contents(baranium_string_list* out, const 
             strcmp(entry->d_name, "..") == 0)
             continue;
 
-        if (mask == BARANIUM_FILTER_MASK_ALL_FILES_AND_FOLDERS)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES_AND_FOLDERS)
         {
             if (entry->d_type == DT_DIR)
             {
@@ -132,25 +132,25 @@ void baranium_file_util_get_directory_contents(baranium_string_list* out, const 
             continue;
         }
 
-        if (mask == BARANIUM_FILTER_MASK_FILES_AND_FOLDERS)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_FILES_AND_FOLDERS)
         {
             baranium_string_list_add(out, entry->d_name);
             continue;
         }
 
-        if (mask == BARANIUM_FILTER_MASK_FILES && entry->d_type != DT_DIR)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_FILES && entry->d_type != DT_DIR)
         {
             baranium_string_list_add(out, entry->d_name);
             continue;
         }
 
-        if (mask == BARANIUM_FILTER_MASK_FOLDERS && entry->d_type == DT_DIR)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_FOLDERS && entry->d_type == DT_DIR)
         {
             baranium_string_list_add(out, entry->d_name);
             continue;
         }
 
-        if (mask == BARANIUM_FILTER_MASK_ALL_FILES)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES)
         {
             if (entry->d_type == DT_DIR)
             {
@@ -166,7 +166,7 @@ void baranium_file_util_get_directory_contents(baranium_string_list* out, const 
             continue;
         }
 
-        if (mask == BARANIUM_FILTER_MASK_ALL_FOLDERS)
+        if (mask == BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FOLDERS)
         {
             if (entry->d_type == DT_DIR)
             {

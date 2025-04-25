@@ -53,40 +53,40 @@ size_t baranium_variable_get_size_of_type(baranium_variable_type_t type)
 {
     switch (type)
     {
-        default:
-        case BARANIUM_VARIABLE_TYPE_VOID:
-        case BARANIUM_VARIABLE_TYPE_INVALID:
-            return 0; // zero means that nothing is being stored here
+    default:
+    case BARANIUM_VARIABLE_TYPE_VOID:
+    case BARANIUM_VARIABLE_TYPE_INVALID:
+        return 0; // zero means that nothing is being stored here
 
-        case BARANIUM_VARIABLE_TYPE_OBJECT:
-            return sizeof(int64_t); // int64_t internally
+    case BARANIUM_VARIABLE_TYPE_OBJECT:
+        return sizeof(int64_t); // int64_t internally
 
-        case BARANIUM_VARIABLE_TYPE_STRING:
-            return -1;// -1 should inform about storing a string, therefore it could have any length
+    case BARANIUM_VARIABLE_TYPE_STRING:
+        return -1;// -1 should inform about storing a string, therefore it could have any length
 
-        case BARANIUM_VARIABLE_TYPE_FLOAT:
-            return 4; // floats are still 32-bit, we can change to using double-like 64-bits later
-        case BARANIUM_VARIABLE_TYPE_DOUBLE:
-            return sizeof(double);
+    case BARANIUM_VARIABLE_TYPE_FLOAT:
+        return 4; // floats are still 32-bit, we can change to using double-like 64-bits later
+    case BARANIUM_VARIABLE_TYPE_DOUBLE:
+        return sizeof(double);
 
-        case BARANIUM_VARIABLE_TYPE_BOOL:
-            return sizeof(int8_t); // just use a simple single-byte integer
+    case BARANIUM_VARIABLE_TYPE_BOOL:
+        return sizeof(int8_t); // just use a simple single-byte integer
 
-        case BARANIUM_VARIABLE_TYPE_INT:
-        case BARANIUM_VARIABLE_TYPE_UINT:
-            return sizeof(uint32_t); // default 32-bit integer
-        
-        case BARANIUM_VARIABLE_TYPE_BYTE:
-        case BARANIUM_VARIABLE_TYPE_UBYTE:
-            return sizeof(uint8_t);
+    case BARANIUM_VARIABLE_TYPE_INT:
+    case BARANIUM_VARIABLE_TYPE_UINT:
+        return sizeof(uint32_t); // default 32-bit integer
+    
+    case BARANIUM_VARIABLE_TYPE_BYTE:
+    case BARANIUM_VARIABLE_TYPE_UBYTE:
+        return sizeof(uint8_t);
 
-        case BARANIUM_VARIABLE_TYPE_INT16:
-        case BARANIUM_VARIABLE_TYPE_UINT16:
-            return sizeof(uint16_t);
+    case BARANIUM_VARIABLE_TYPE_INT16:
+    case BARANIUM_VARIABLE_TYPE_UINT16:
+        return sizeof(uint16_t);
 
-        case BARANIUM_VARIABLE_TYPE_INT64:
-        case BARANIUM_VARIABLE_TYPE_UINT64:
-            return sizeof(uint64_t);
+    case BARANIUM_VARIABLE_TYPE_INT64:
+    case BARANIUM_VARIABLE_TYPE_UINT64:
+        return sizeof(uint64_t);
     }
 }
 

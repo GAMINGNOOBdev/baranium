@@ -11,6 +11,7 @@ void baranium_if_else_token_init(baranium_if_else_token* ifelsetoken)
 {
     ifelsetoken->base.type = BARANIUM_TOKEN_TYPE_IFELSESTATEMENT;
     ifelsetoken->base.id = BARANIUM_INVALID_INDEX;
+    ifelsetoken->base.name = NULL;
     ifelsetoken->has_else_statement = 0;
     baranium_expression_token_init(&ifelsetoken->condition);
     baranium_source_token_list_init(&ifelsetoken->inner_tokens);
@@ -21,7 +22,7 @@ void baranium_if_else_token_init(baranium_if_else_token* ifelsetoken)
 void baranium_if_else_token_dispose(baranium_if_else_token* ifelsetoken)
 {
     baranium_expression_token_dispose(&ifelsetoken->condition);
-    baranium_source_token_list_dispose(&ifelsetoken->inner_tokens, 0);
+    baranium_source_token_list_dispose(&ifelsetoken->inner_tokens);
     baranium_token_list_dispose(&ifelsetoken->tokens);
     baranium_token_list_dispose(&ifelsetoken->chained_statements);
 }

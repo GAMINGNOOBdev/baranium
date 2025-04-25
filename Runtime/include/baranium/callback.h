@@ -4,9 +4,22 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
+
+#include <baranium/backend/dynlibloader.h>
 #include <baranium/variable.h>
 #include <baranium/defines.h>
+
+#ifdef BARANIUM_DYNLIB_EXPORT
+#   define baranium_get_runtime baranium_get_runtime_dynlib
+#   define baranium_variable_get_size_of_type baranium_variable_get_size_of_type_dynlib
+#   define baranium_compiled_variable_push_to_stack baranium_compiled_variable_push_to_stack_dynlib
+#   define baranium_compiled_variable_convert_to_type baranium_compiled_variable_convert_to_type_dynlib
+#else
+#   define baranium_get_runtime baranium_get_runtime
+#   define baranium_variable_get_size_of_type baranium_variable_get_size_of_type
+#   define baranium_compiled_variable_push_to_stack baranium_compiled_variable_push_to_stack
+#   define baranium_compiled_variable_convert_to_type baranium_compiled_variable_convert_to_type
+#endif
 
 #define BARANIUM_CALLBACK_INIT(data, expectedVariableMinimum, expectedVariableMaximum) \
     assert((data != NULL)); \
@@ -49,7 +62,7 @@ extern "C" {
             name = *(type_def*)&variable_##name.value.num64;\
     }
 
-#define BARANIUM_CALLBACK_RETURN_VARIABLE(name) baranium_compiled_variable_push_to_stack(baranium_get_context()->cpu, &name);
+#define BARANIUM_CALLBACK_RETURN_VARIABLE(name) baranium_compiled_variable_push_to_stack(baranium_get_runtime()->cpu, &name)
 
 typedef struct baranium_callback_data_list_t
 {
@@ -64,7 +77,7 @@ typedef struct baranium_callback_list_entry
 {
     struct baranium_callback_list_entry* prev;
     index_t id;
-    int numParams;
+    int parameter_count;
     baranium_callback_t callback;
     struct baranium_callback_list_entry* next;
 } baranium_callback_list_entry;

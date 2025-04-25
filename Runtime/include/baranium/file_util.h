@@ -9,12 +9,12 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#define BARANIUM_FILTER_MASK_FILES                      0x00 // Only files inside the given directory
-#define BARANIUM_FILTER_MASK_ALL_FILES                  0x01 // All files including files from subfolders
-#define BARANIUM_FILTER_MASK_FOLDERS                    0x02 // Only folder inside the given directory
-#define BARANIUM_FILTER_MASK_ALL_FOLDERS                0x03 // All folders including folders from subdirectories
-#define BARANIUM_FILTER_MASK_FILES_AND_FOLDERS          0x04 // Only files and folders inside the given directory
-#define BARANIUM_FILTER_MASK_ALL_FILES_AND_FOLDERS      0x05 // All files and folders including those in subdirectories
+#define BARANIUM_FILE_UTIL_FILTER_MASK_FILES                      0x00 // Only files inside the given directory
+#define BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES                  0x01 // All files including files from subfolders
+#define BARANIUM_FILE_UTIL_FILTER_MASK_FOLDERS                    0x02 // Only folder inside the given directory
+#define BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FOLDERS                0x03 // All folders including folders from subdirectories
+#define BARANIUM_FILE_UTIL_FILTER_MASK_FILES_AND_FOLDERS          0x04 // Only files and folders inside the given directory
+#define BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES_AND_FOLDERS      0x05 // All files and folders including those in subdirectories
 
 /**
  * Gets the contents of the given directory

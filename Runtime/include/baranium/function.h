@@ -8,8 +8,14 @@ extern "C" {
 #include <baranium/variable.h>
 #include <baranium/defines.h>
 
-// forward declaration needed to create a pointer
+///////////////////////////////////////////////////////////
+///                                                     ///
+///   forward declarations needed to create a pointer   ///
+///                                                     ///
+///////////////////////////////////////////////////////////
+
 struct baranium_script;
+struct baranium_library;
 
 typedef struct baranium_function
 {
@@ -20,6 +26,7 @@ typedef struct baranium_function
     baranium_value_t return_value;
     void* data;
     struct baranium_script* script;
+    struct baranium_library* library;
 } baranium_function;
 
 /**

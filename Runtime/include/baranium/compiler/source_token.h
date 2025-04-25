@@ -8,7 +8,7 @@ extern "C" {
 #include <baranium/defines.h>
 #include <stdint.h>
 
-#define BARANIUM_SOURCE_TOKEN_LIST_BUFFER_SIZE 0x100
+#define BARANIUM_SOURCE_TOKEN_LIST_BUFFER_SIZE 0x20
 
 typedef uint8_t baranium_source_token_type_t;
 
@@ -87,17 +87,23 @@ typedef struct baranium_source_token_list
     size_t count;
 } baranium_source_token_list;
 
+// forward declaration
+struct baranium_compiler_context;
+
 // create and initialize a source token list
 BARANIUMAPI void baranium_source_token_list_init(baranium_source_token_list* obj);
 
 // dispose a source token list
-BARANIUMAPI void baranium_source_token_list_dispose(baranium_source_token_list* obj, uint8_t dispose_contents);
+BARANIUMAPI void baranium_source_token_list_dispose(baranium_source_token_list* obj);
 
 // clear a source token list
 BARANIUMAPI void baranium_source_token_list_clear(baranium_source_token_list* obj);
 
 // reset the iteration progress
 BARANIUMAPI void baranium_source_token_list_reset(baranium_source_token_list* obj);
+
+// insert another list into the list after a certain point
+BARANIUMAPI void baranium_source_token_list_insert_after(baranium_source_token_list* obj, int index, baranium_source_token_list* other);
 
 // check if we reached the end of the list
 BARANIUMAPI uint8_t baranium_source_token_list_end_of_list(baranium_source_token_list* obj);

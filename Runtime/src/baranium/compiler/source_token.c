@@ -113,29 +113,21 @@ void baranium_source_token_list_init(baranium_source_token_list* obj)
     memset(obj, 0, sizeof(baranium_source_token_list));
 }
 
-void baranium_source_token_list_dispose(baranium_source_token_list* obj, uint8_t dispose_contents)
+void baranium_source_token_list_dispose(baranium_source_token_list* obj)
 {
     if (obj == NULL) return;
 
     if (obj->data != NULL)
-    {
-        for (size_t i = 0; i < obj->count && dispose_contents; i++)
-        {
-            if (obj->data[i].special_index != -1)
-                continue;
-
-            free(obj->data[i].contents);
-        }
-
         free(obj->data);
-    }
+
+    memset(obj, 0, sizeof(baranium_source_token_list));
 }
 
 void baranium_source_token_list_clear(baranium_source_token_list* obj)
 {
     if (obj == NULL) return;
-    baranium_source_token_list_dispose(obj, 1);
-    memset(obj, 0, sizeof(baranium_source_token_list));
+
+    baranium_source_token_list_dispose(obj);
 }
 
 void baranium_source_token_list_reset(baranium_source_token_list* obj)
@@ -143,6 +135,23 @@ void baranium_source_token_list_reset(baranium_source_token_list* obj)
     if (obj == NULL) return;
     obj->current = obj->data;
     obj->index = 0;
+}
+
+void baranium_source_token_list_insert_after(baranium_source_token_list* obj, int index, baranium_source_token_list* other)
+{
+    if (obj == NULL || other == NULL || other->data == NULL)
+        return;
+
+    size_t free_space = obj->buffer_size - obj->count;
+    if (free_space < other->count)
+    {
+        obj->buffer_size += other->buffer_size;
+        obj->data = realloc(obj->data, sizeof(baranium_source_token)*obj->buffer_size);
+    }
+
+    memmove(&obj->data[index+other->count+1], &obj->data[index+1], sizeof(baranium_source_token)*(obj->count-index-1));
+    memcpy(&obj->data[index+1], other->data, sizeof(baranium_source_token)*other->count);
+    obj->count += other->count;
 }
 
 uint8_t baranium_source_token_list_end_of_list(baranium_source_token_list* obj)
@@ -154,8 +163,8 @@ uint8_t baranium_source_token_list_end_of_list(baranium_source_token_list* obj)
 
 void baranium_source_token_list_add(baranium_source_token_list* obj, baranium_source_token* data)
 {
-    if (obj == NULL) return;
-    if (data->contents == NULL) return;
+    if (obj == NULL || data == NULL || data->contents == NULL)
+        return;
 
     if (obj->buffer_size <= obj->count+1)
     {
@@ -202,12 +211,6 @@ void baranium_source_token_list_push_list(baranium_source_token_list* obj, baran
     {
         obj->buffer_size = other->buffer_size;
         obj->data = malloc(sizeof(baranium_source_token)*obj->buffer_size);
-        memcpy(obj->data, other->data, sizeof(baranium_source_token)*obj->buffer_size);
-        obj->count = other->count;
-
-        free(other->data);
-        memset(other, 0, sizeof(baranium_source_token_list));
-        return;
     }
 
     size_t free_space = obj->buffer_size - obj->count;

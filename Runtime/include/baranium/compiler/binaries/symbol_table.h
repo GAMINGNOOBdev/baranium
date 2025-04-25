@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define BARANIUM_SYMBOL_TABLE_BUFFER_SIZE 0x80
+#define BARANIUM_SYMBOL_TABLE_BUFFER_SIZE 0x20
 
 #include <baranium/compiler/language/variable_token.h>
 #include <stddef.h>

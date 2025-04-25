@@ -11,22 +11,24 @@
 extern "C" {
 #endif
 
+#include <baranium/function.h>
+#include <baranium/library.h>
+#include <baranium/script.h>
 #include <stdbool.h>
-#include "../function.h"
-#include "../script.h"
 
-typedef struct bfuncmgr_n
+#define BARANIUM_FUNCTION_MANAGER_BUFFER_SIZE 0x20
+
+typedef struct
 {
-    struct bfuncmgr_n* prev;
     index_t id;
     baranium_script* script;
-    struct bfuncmgr_n* next;
-} bfuncmgr_n;
+    baranium_library* library;
+} baranium_function_manager_entry;
 
 typedef struct baranium_function_manager
 {
-    bfuncmgr_n* start;
-    bfuncmgr_n* end;
+    baranium_function_manager_entry* buffer;
+    size_t buffer_size;
     size_t count;
 } baranium_function_manager;
 
@@ -40,13 +42,16 @@ void baranium_function_manager_dispose(baranium_function_manager* obj);
 void baranium_function_manager_clear(baranium_function_manager* obj);
 
 // allocate/create a function entry
-void baranium_function_manager_add(baranium_function_manager* obj, index_t id, baranium_script* script);
+void baranium_function_manager_add(baranium_function_manager* obj, index_t id, baranium_script* script, baranium_library* library);
 
 // get a function if existent
 baranium_function* baranium_function_manager_get(baranium_function_manager* obj, index_t id);
 
 // get a function entry if existent
-bfuncmgr_n* baranium_function_manager_get_entry(baranium_function_manager* obj, index_t id);
+baranium_function_manager_entry* baranium_function_manager_get_entry(baranium_function_manager* obj, index_t id);
+
+// get a function entry index if existent
+int baranium_function_manager_get_entry_index(baranium_function_manager* obj, index_t id);
 
 // delete and free memory used by a function entry
 void baranium_function_manager_remove(baranium_function_manager* obj, index_t id);

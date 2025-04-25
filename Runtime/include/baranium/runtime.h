@@ -7,6 +7,8 @@ extern "C" {
 
 #include <baranium/defines.h>
 
+#define BARANIUM_RUNTIME_LIBRARY_BUFFER_SIZE 0x20
+
 /**
  * @brief Initialize a runtime instance
  * 
@@ -15,25 +17,39 @@ extern "C" {
 BARANIUMAPI baranium_runtime* baranium_init(void);
 
 /**
- * @brief Set the current global runtime context
+ * @brief Set the current global runtime
  * 
- * @param runtimeContext The new runtime context
+ * @param runtimeContext The new runtime
  */
-BARANIUMAPI void baranium_set_context(baranium_runtime* runtimeContext);
+BARANIUMAPI void baranium_set_runtime(baranium_runtime* runtimeContext);
 
 /**
- * @brief Get the current global runtime context
+ * @brief Get the current global runtime
  */
-BARANIUMAPI baranium_runtime* baranium_get_context(void);
+BARANIUMAPI baranium_runtime* baranium_get_runtime(void);
+
+/**
+ * @brief Set the library path of the current runtime
+ * 
+ * @param library_path Library path
+ */
+ BARANIUMAPI void baranium_runtime_set_library_path(const char* library_path);
+
+/**
+ * @brief Load a dependency/library to the current runtime
+ * 
+ * @param dependency Dependency name
+ */
+BARANIUMAPI void baranium_runtime_load_dependency(const char* dependency);
 
 /**
  * @brief Safely dispose a runtime instance
  * 
  * @param runtime The instance of the runtime that should be disposed
  * 
- * @note `runtime` cannot be set to `null` to automatically dispose the global context
+ * @note `runtime` cannot be set to `null` to automatically dispose the global
  */
-BARANIUMAPI void baranium_cleanup(baranium_runtime* runtime);
+BARANIUMAPI void baranium_dispose_runtime(baranium_runtime* runtime);
 
 /**
  * @brief Get the ID of a named object or function

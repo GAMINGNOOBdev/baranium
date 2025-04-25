@@ -150,6 +150,18 @@ void baranium_string_map_add(baranium_string_map* map, const char* name, const c
 {
     if (map == NULL || string == NULL)
         return;
+    
+    index_t hash = baranium_get_id_of_name(name);
+    if (baranium_string_map_get_index_of_hash(map, hash) != -1)
+        return;
+
+    baranium_string_map_add_direct(map, name, strsubstr(string,0,-1));
+}
+
+void baranium_string_map_add_direct(baranium_string_map* map, const char* name, const char* string)
+{
+    if (map == NULL || string == NULL)
+        return;
 
     index_t hash = baranium_get_id_of_name(name);
     if (baranium_string_map_get_index_of_hash(map, hash) != -1)
@@ -162,7 +174,7 @@ void baranium_string_map_add(baranium_string_map* map, const char* name, const c
         map->hashes = realloc(map->hashes, sizeof(index_t)*map->buffer_size);
     }
 
-    map->strings[map->count] = strsubstr(string,0,-1);
+    map->strings[map->count] = string;
     map->hashes[map->count] = hash;
     map->count++;
 }
@@ -223,10 +235,7 @@ void baranium_string_map_dispose(baranium_string_map* map)
     free(map->hashes);
     free(map->strings);
 
-    map->count = 0;
-    map->buffer_size = 0;
-    map->hashes = NULL;
-    map->strings = NULL;
+    memset(map, 0, sizeof(baranium_string_map));
 }
 
 //////////////////////////////////////

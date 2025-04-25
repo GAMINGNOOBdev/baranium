@@ -58,7 +58,7 @@ void baranium_callback_list_dispose(baranium_callback_list* list)
 
 void baranium_callback_add(index_t id, baranium_callback_t cb, int numParams)
 {
-    baranium_runtime* runtime = baranium_get_context();
+    baranium_runtime* runtime = baranium_get_runtime();
 
     if (runtime == NULL || id == BARANIUM_INVALID_INDEX || cb == NULL)
         return;
@@ -73,7 +73,7 @@ void baranium_callback_add(index_t id, baranium_callback_t cb, int numParams)
     memset(newEntry, 0, sizeof(baranium_callback_list_entry));
     newEntry->callback = cb;
     newEntry->id = id;
-    newEntry->numParams = numParams;
+    newEntry->parameter_count = numParams;
 
     if (list->start == NULL)
     {
@@ -96,7 +96,7 @@ void baranium_callback_add(index_t id, baranium_callback_t cb, int numParams)
 
 baranium_callback_list_entry* baranium_callback_find_by_id(index_t id)
 {
-    baranium_runtime* runtime = baranium_get_context();
+    baranium_runtime* runtime = baranium_get_runtime();
 
     if (runtime == NULL || id == BARANIUM_INVALID_INDEX)
         return NULL;
@@ -119,7 +119,7 @@ baranium_callback_list_entry* baranium_callback_find_by_id(index_t id)
 
 baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_callback_t cb)
 {
-    baranium_runtime* runtime = baranium_get_context();
+    baranium_runtime* runtime = baranium_get_runtime();
 
     if (runtime == NULL || cb == NULL)
         return NULL;
@@ -142,7 +142,7 @@ baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_callback
 
 void baranium_callback_remove_by_id(index_t id)
 {
-    baranium_runtime* runtime = baranium_get_context();
+    baranium_runtime* runtime = baranium_get_runtime();
 
     if (runtime == NULL || id == BARANIUM_INVALID_INDEX)
         return;

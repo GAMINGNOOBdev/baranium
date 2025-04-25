@@ -100,7 +100,7 @@ void baranium_token_parser_parse_variable(size_t* index, baranium_source_token* 
     if (variable->type == BARANIUM_VARIABLE_TYPE_INVALID)
     {
         LOGERROR(stringf("Line %d: Inalid variable type '%s'", current->line_number, current->contents));
-        baranium_source_token_list_dispose(&valueTokens, 0);
+        baranium_source_token_list_dispose(&valueTokens);
         return;
     }
 
@@ -118,14 +118,14 @@ void baranium_token_parser_parse_variable(size_t* index, baranium_source_token* 
     else
     {
         LOGERROR(stringf("Line %d: No valid name has been prodived for variable", nameToken->line_number));
-        baranium_source_token_list_dispose(&valueTokens, 0);
+        baranium_source_token_list_dispose(&valueTokens);
         return;
     }
 
     if (baranium_token_lists_contain(nameToken->contents, output, global_tokens) != NULL)
     {
         LOGERROR(stringf("Line %d: Name \"%s\" is already occupied", nameToken->line_number, nameToken->contents));
-        baranium_source_token_list_dispose(&valueTokens, 0);
+        baranium_source_token_list_dispose(&valueTokens);
         return;
     }
 
@@ -141,7 +141,7 @@ void baranium_token_parser_parse_variable(size_t* index, baranium_source_token* 
     else if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_EQUALSIGN)
     {
         LOGERROR(stringf("Line %d: Invalid syntax for variable definition/assignment", nextToken->line_number));
-        baranium_source_token_list_dispose(&valueTokens, 0);
+        baranium_source_token_list_dispose(&valueTokens);
         return;
     }
 
@@ -158,7 +158,7 @@ void baranium_token_parser_parse_variable(size_t* index, baranium_source_token* 
     variable->value = baranium_token_parser_parse_variable_value(&valueTokens, variable->type);
 
 end:
-    baranium_source_token_list_dispose(&valueTokens, 0);
+    baranium_source_token_list_dispose(&valueTokens);
     baranium_token_list_add(output, (baranium_token*)variable);
 }
 
@@ -185,7 +185,7 @@ void baranium_token_parser_parse_field(size_t* index, baranium_source_token* cur
     else
     {
         LOGERROR(stringf("Line %d: No valid name has been prodived for field", nameToken->line_number));
-        baranium_source_token_list_dispose(&valueTokens, 0);
+        baranium_source_token_list_dispose(&valueTokens);
         return;
     }
 
@@ -201,7 +201,7 @@ void baranium_token_parser_parse_field(size_t* index, baranium_source_token* cur
     else if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_EQUALSIGN)
     {
         LOGERROR(stringf("Line %d: Invalid syntax for field definition/assignment", nextToken->line_number));
-        baranium_source_token_list_dispose(&valueTokens, 0);
+        baranium_source_token_list_dispose(&valueTokens);
         return;
     }
 
@@ -218,7 +218,7 @@ void baranium_token_parser_parse_field(size_t* index, baranium_source_token* cur
     field->value = baranium_token_parser_parse_variable_value(&valueTokens, field->type);
 
 end:
-    baranium_source_token_list_dispose(&valueTokens, 0);
+    baranium_source_token_list_dispose(&valueTokens);
     baranium_token_list_add(output, (baranium_token*)field);
 }
 

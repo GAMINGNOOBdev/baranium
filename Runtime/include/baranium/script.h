@@ -35,7 +35,7 @@ typedef struct baranium_script_section
     uint8_t* data;
 } baranium_script_section;
 
-typedef struct
+typedef struct baranium_script_header
 {
     uint8_t magic[4];
     uint32_t version;

@@ -1,3 +1,4 @@
+#include "baranium/compiler/compiler_context.h"
 #include "baranium/compiler/preprocessor.h"
 #include <baranium/compiler/language/language.h>
 #include <baranium/compiler/source_token.h>
@@ -12,49 +13,45 @@ void baranium_source_read_line(baranium_source_token_list* _out, const char* lin
 void baranium_source_read_buffer(baranium_source_token_list* _out, const char* buffer, int lineNumber, uint8_t isString);
 void baranium_source_read_letter(baranium_source_token_list* _out, char chr, int lineNumber);
 
-#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
-size_t getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim) {
+size_t baranium_getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim)
+{
+    if (buffer == NULL || stream == NULL || buffersz == NULL)
+        return -1;
+
     char *bufptr = NULL;
     char *p = bufptr;
     size_t size;
     int c;
 
-    if (buffer == NULL) {
-        return -1;
-    }
-    if (stream == NULL) {
-        return -1;
-    }
-    if (buffersz == NULL) {
-        return -1;
-    }
     bufptr = *buffer;
     size = *buffersz;
 
     c = fgetc(stream);
-    if (c == EOF) {
+    if (c == EOF)
         return -1;
-    }
-    if (bufptr == NULL) {
+
+    if (bufptr == NULL)
+    {
         bufptr = malloc(128);
-        if (bufptr == NULL) {
+        if (bufptr == NULL)
             return -1;
-        }
+
         size = 128;
     }
     p = bufptr;
-    while(c != EOF) {
-        if ((p - bufptr) > (size - 1)) {
+
+    while(c != EOF)
+    {
+        if ((size_t)(p - bufptr) > (size - 1))
+        {
             size = size + 128;
             bufptr = realloc(bufptr, size);
-            if (bufptr == NULL) {
+            if (bufptr == NULL)
                 return -1;
-            }
         }
         *p++ = c;
-        if (c == delim) {
+        if (c == delim)
             break;
-        }
         c = fgetc(stream);
     }
 
@@ -65,11 +62,10 @@ size_t getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim) {
     return p - bufptr - 1;
 }
 
-size_t getline(char **buffer, size_t *buffersz, FILE *stream)
+size_t baranium_getline(char **buffer, size_t *buffersz, FILE *stream)
 {
-    return getdelim(buffer, buffersz, stream, '\n');
+    return baranium_getdelim(buffer, buffersz, stream, '\n');
 }
-#endif
 
 void baranium_source_open_from_file(baranium_source_token_list* _out, FILE* file)
 {
@@ -80,7 +76,7 @@ void baranium_source_open_from_file(baranium_source_token_list* _out, FILE* file
     int status = 0;
     while (status != EOF)
     {
-        status = getline(&currentLine, &linesize, file);
+        status = baranium_getline(&currentLine, &linesize, file);
         if (status == EOF)
             break;
         currentLine[linesize-1] = 0;
@@ -227,7 +223,7 @@ void baranium_source_read_line(baranium_source_token_list* _out, const char* lin
 validate:
     baranium_preprocessor_assist_in_line(&line_tokens);
     baranium_source_token_list_push_list(_out, &line_tokens);
-    baranium_source_token_list_dispose(&line_tokens, 1);
+    baranium_source_token_list_dispose(&line_tokens);
     return;
 }
 
@@ -240,18 +236,6 @@ void baranium_source_read_buffer(baranium_source_token_list* _out, const char* b
         return;
     if(strlen(buffer) < 1)
         return;
-
-    if (strisnum(buffer))
-    {
-        baranium_source_token numberToken = {
-            .contents = (char*)buffer,
-            .type = BARANIUM_SOURCE_TOKEN_TYPE_NUMBER,
-            .special_index = -1,
-            .line_number = lineNumber,
-        };
-        baranium_source_token_list_add(_out, &numberToken);
-        return;
-    }
 
     int keyword_index = baranium_is_keyword(buffer);
     baranium_source_token token = {
@@ -267,9 +251,21 @@ void baranium_source_read_buffer(baranium_source_token_list* _out, const char* b
         token.contents = (char*)baranium_keywords[keyword_index].name;
         token.type = baranium_keywords[keyword_index].type;
     }
+    else if (strisnum(buffer))
+        token.type = BARANIUM_SOURCE_TOKEN_TYPE_NUMBER;
     else
+        buffer = token.contents = strconescseq(token.contents);
+
+    baranium_compiler_context* context = baranium_get_compiler_context();
+    if (context && keyword_index == -1)
     {
-        token.contents = strconescseq(token.contents);
+        if (baranium_string_map_get_index(&context->nametable, buffer) != -1)
+        {
+            token.contents = (char*)baranium_string_map_get(&context->nametable, buffer);
+            free((void*)buffer);
+        }
+        else
+            baranium_string_map_add_direct(&context->nametable, buffer, buffer);
     }
 
     baranium_source_token_list_add(_out, &token);
@@ -277,6 +273,8 @@ void baranium_source_read_buffer(baranium_source_token_list* _out, const char* b
 
 void baranium_source_read_letter(baranium_source_token_list* _out, char chr, int lineNumber)
 {
+    baranium_compiler_context* context = baranium_get_compiler_context();
+    int idx = baranium_is_special_char(chr);
     baranium_source_token token;
     token.special_index = -1;
     token.line_number = lineNumber;
@@ -292,7 +290,6 @@ void baranium_source_read_letter(baranium_source_token_list* _out, char chr, int
         goto end;
     }
 
-    int idx = baranium_is_special_char(chr);
     if (idx != -1)
     {
         token.type = baranium_special_characters[idx].type;
@@ -308,6 +305,18 @@ void baranium_source_read_letter(baranium_source_token_list* _out, char chr, int
     token.special_index = idx;
 
 end:
+
+    if (context && idx == -1)
+    {
+        if (baranium_string_map_get_index(&context->nametable, token.contents) != -1)
+        {
+            void* oldcontents = token.contents;
+            token.contents = (char*)baranium_string_map_get(&context->nametable, token.contents);
+            free(oldcontents);
+        }
+        else
+            baranium_string_map_add_direct(&context->nametable, token.contents, token.contents);
+    }
 
     baranium_source_token_list_add(_out, &token);
 }

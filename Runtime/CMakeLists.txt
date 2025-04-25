@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(baranium)
 
@@ -7,6 +7,7 @@ include_directories(include)
 set(baraniumSources
     src/baranium/backend/bvarmgr.c
     src/baranium/backend/bfuncmgr.c
+    src/baranium/backend/dynlibloader.c
     src/baranium/backend/varmath.c
     src/baranium/compiler/binaries/compiler.c
     src/baranium/compiler/binaries/symbol_table.c
@@ -19,6 +20,7 @@ set(baraniumSources
     src/baranium/compiler/language/loop_token.c
     src/baranium/compiler/language/token.c
     src/baranium/compiler/language/variable_token.c
+    src/baranium/compiler/compiler_context.c
     src/baranium/compiler/preprocessor.c
     src/baranium/compiler/source_token.c
     src/baranium/compiler/source.c
@@ -31,6 +33,7 @@ set(baraniumSources
     src/baranium/field.c
     src/baranium/file_util.c
     src/baranium/function.c
+    src/baranium/library.c
     src/baranium/logging.c
     src/baranium/runtime.c
     src/baranium/script.c

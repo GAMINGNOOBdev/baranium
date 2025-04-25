@@ -1,14 +1,10 @@
 #
-# This is a custom test script that is only here to test if compiling and
+# This is an example script that is only here to test if compiling and
 # interpreting the produced binaries works
+# Note: This script currently contains random code that will not compile successfully, doesn't make sense and is only here for testing purposes
 #
 
-#
-# Note: Scripts only get executed when they are attached to a game object or when invoked to run directly by the runtime
-# Another note: This script currently contains random code that doesn't make sense and is only here for testing purposes
-#
-
-# an example for including a library
+# an example for including a file
 +include Library0.bgs
 
 # an example for including multiple files at once
@@ -47,18 +43,6 @@ define moveObject()
 
     # expression ast test
     variable1 = 10 + ((-variable2) * 6 - 1) / variable1;
-
-    #
-    # assignment of variables using functions
-    #
-    # position3D = getPostion3D(object); # getPosition3D is a builtin function
-
-    #
-    # builtin functions
-    #
-    warning("Warning! This is a test warning!");
-    debug("int");
-    error("Error! This is a test error!");
 
     if (object == null)
         return;

@@ -32,6 +32,7 @@ uint8_t baranium_function_token_return_requested(baranium_function_token* functi
 
 void baranium_function_token_init(baranium_function_token* function)
 {
+    function->base.name = NULL;
     function->base.id = BARANIUM_INVALID_INDEX;
     function->base.type = BARANIUM_TOKEN_TYPE_FUNCTION;
     function->return_type = BARANIUM_VARIABLE_TYPE_VOID;
@@ -47,7 +48,7 @@ void baranium_function_token_dispose(baranium_function_token* function)
 {
     baranium_token_list_dispose(&function->tokens);
     baranium_token_list_dispose(&function->parameters);
-    baranium_source_token_list_dispose(&function->inner_tokens, 0);
+    baranium_source_token_list_dispose(&function->inner_tokens);
 }
 
 void baranium_function_token_parse(baranium_function_token* function, baranium_token_list* global_tokens)

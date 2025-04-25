@@ -80,6 +80,7 @@ typedef struct baranium_handle
 {
     struct baranium_handle* prev;
     FILE* file;
+    char* path;
     struct baranium_handle* next;
 } baranium_handle;
 
@@ -87,6 +88,8 @@ typedef struct baranium_handle
 struct bstack;
 struct bcpu;
 struct bvarmgr;
+struct baranium_library;
+struct baranium_string_list;
 struct baranium_callback_list;
 struct baranium_function_manager;
 
@@ -100,6 +103,12 @@ typedef struct
     struct bstack* function_stack;
     struct bvarmgr* varmgr;
     struct bcpu* cpu;
+
+    struct baranium_string_list* library_dir_contents;
+    struct baranium_library** libraries;
+    size_t library_buffer_size;
+    const char* library_path;
+    size_t library_count;
 } baranium_runtime;
 
 

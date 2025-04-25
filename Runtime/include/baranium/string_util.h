@@ -9,7 +9,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#define BARANIUM_STRING_LIST_BUFFER_SIZE 0x80 // should be an okay initial size, realloc should just handle it fine
+#define BARANIUM_STRING_LIST_BUFFER_SIZE 0x10 // should be an okay initial size, realloc should just handle it fine
 #define BARANIUM_STRING_MAP_BUFFER_SIZE BARANIUM_STRING_LIST_BUFFER_SIZE
 
 ///////////////////
@@ -101,6 +101,11 @@ BARANIUMAPI int baranium_string_map_get_index_of_hash(baranium_string_map* map, 
  * @brief Add an item to the string map
 */
 BARANIUMAPI void baranium_string_map_add(baranium_string_map* map, const char* name, const char* string);
+
+/**
+ * @brief Add an item directly to the string map
+*/
+BARANIUMAPI void baranium_string_map_add_direct(baranium_string_map* map, const char* name, const char* string);
 
 /**
  * @brief Remove a given item from the string map

@@ -1,4 +1,6 @@
-#ifdef _WIN32
+#include <baranium/defines.h>
+#include <baranium/version.h>
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
 #   pragma warning(disable: 4996)
 #endif
 
@@ -21,7 +23,7 @@ uint8_t BARANIUM_SCRIPT_HEADER_MAGIC[4] = {
 
 void baranium_script_dynadd_var_or_field(baranium_script_section* section)
 {
-    bvarmgr* varmgr = baranium_get_context()->varmgr;
+    bvarmgr* varmgr = baranium_get_runtime()->varmgr;
     baranium_variable_type_t type = (baranium_variable_type_t)*( (uint8_t*)section->data );
     index_t id = section->id;
     size_t size = section->data_size - 1;
@@ -60,7 +62,7 @@ void baranium_script_dynadd_var_or_field(baranium_script_section* section)
     memcpy(dataPtr, data, size);
 }
 
-void baranium_script_append_section(baranium_script* script, baranium_script_section* section)
+void baranium_script_assign_section(baranium_script* script, baranium_script_section* section)
 {
     if (script == NULL || section == NULL)
         return;
@@ -70,7 +72,7 @@ void baranium_script_append_section(baranium_script* script, baranium_script_sec
     if (section->type == BARANIUM_SCRIPT_SECTION_TYPE_FIELDS || section->type == BARANIUM_SCRIPT_SECTION_TYPE_VARIABLES)
         baranium_script_dynadd_var_or_field(section);
     else
-        baranium_function_manager_add(baranium_get_context()->function_manager, section->id, script);
+        baranium_function_manager_add(baranium_get_runtime()->function_manager, section->id, script, NULL);
 
     if (script->sections == NULL)
     {
@@ -126,13 +128,19 @@ baranium_script* baranium_open_script(baranium_handle* handle)
     fread(&script->header, 1, sizeof(baranium_script_header), file);
 
     if (memcmp(script->header.magic, BARANIUM_SCRIPT_HEADER_MAGIC, 4*sizeof(uint8_t)) != 0)
+    {
+        free(script);
         return NULL;
+    }
 
     if (script->header.version != BARANIUM_VERSION_CURRENT)
         LOGWARNING("Warning, script may be out of date, be sure to update your compiler and recompile the script");
 
     baranium_script_section section;
-    for (uint64_t i = 0; i <= script->header.section_count; i++)
+    script->section_count = 0;
+    script->section_buffer_size = script->header.section_count;
+    script->sections = malloc(sizeof(baranium_script_section)*script->header.section_count);
+    for (uint64_t i = 0; i < script->header.section_count; i++)
     {
         section = (baranium_script_section){.type=0,.id=0,.data_size=0,.data_location=0,.data=NULL};
 
@@ -142,6 +150,7 @@ baranium_script* baranium_open_script(baranium_handle* handle)
         if (section.data_size == 0)
         {
             LOGDEBUG(stringf("found a section with a size of 0 (id[0x%x/%lld] type[0x%x/%lld])",section.id,section.id,section.type));
+            script->section_count++;
             continue;
         }
         if (section.type != BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS)
@@ -163,27 +172,46 @@ baranium_script* baranium_open_script(baranium_handle* handle)
             fseek(file, section.data_size, SEEK_CUR);
         }
 
-        baranium_script_append_section(script, &section);
+        baranium_script_assign_section(script, &section);
+    }
+    script->section_count = script->header.section_count;
+
+    if (script->header.version < BARANIUM_VERSION_THIRD_RELEASE)
+    {
+        fread(&script->nametable.name_count, sizeof(uint64_t), 1, file);
+        script->nametable.buffer_size = 0;
+        script->nametable.entries = NULL;
+        baranium_script_name_table_entry entry;
+        for (uint64_t i = 0; i < script->nametable.name_count; i++)
+        {
+            entry = (baranium_script_name_table_entry){.length=0,.name=NULL,.id=BARANIUM_INVALID_INDEX};
+
+            fread(&entry.length, sizeof(uint8_t), 1, file);
+            entry.name = malloc(entry.length);
+            if (!entry.name)
+                continue;
+
+            memset(entry.name, 0, entry.length);
+            fread(entry.name, sizeof(uint8_t), entry.length, file);
+            fread(&entry.id, sizeof(index_t), 1, file);
+
+            baranium_script_append_name_table_entry(script, &entry);
+        }
+        return script;
     }
 
-    fread(&script->nametable.name_count, sizeof(uint64_t), 1, file);
-    script->nametable.buffer_size = 0;
-    script->nametable.entries = NULL;
-    baranium_script_name_table_entry entry;
-    for (uint64_t i = 0; i < script->nametable.name_count; i++)
+    size_t dependency_count = 0;
+    fread(&dependency_count, sizeof(size_t), 1, file);
+    for (size_t i = 0; i < dependency_count; i++)
     {
-        entry = (baranium_script_name_table_entry){.length=0,.name=NULL,.id=BARANIUM_INVALID_INDEX};
-
-        fread(&entry.length, sizeof(uint8_t), 1, file);
-        entry.name = malloc(entry.length);
-        if (!entry.name)
-            continue;
-
-        memset(entry.name, 0, entry.length);
-        fread(entry.name, sizeof(uint8_t), entry.length, file);
-        fread(&entry.id, sizeof(index_t), 1, file);
-
-        baranium_script_append_name_table_entry(script, &entry);
+        size_t dependencylen = BARANIUM_INVALID_INDEX;
+        char* dependency = NULL;
+        fread(&dependencylen, sizeof(size_t), 1, file);
+        dependency = malloc(dependencylen+1);
+        fread(dependency, sizeof(char), dependencylen, file);
+        dependency[dependencylen] = 0;
+        baranium_runtime_load_dependency(dependency);
+        free(dependency);
     }
 
     return script;
@@ -215,7 +243,7 @@ void baranium_close_script(baranium_script* script)
         {
             baranium_script_section current = script->sections[i];
             if (current.type == BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS)
-                baranium_function_manager_remove(baranium_get_context()->function_manager, current.id);
+                baranium_function_manager_remove(baranium_get_runtime()->function_manager, current.id);
 
             free(current.data);
         }
@@ -295,7 +323,7 @@ baranium_variable* baranium_script_get_variable_by_id(baranium_script* script, i
 
     baranium_variable* result = NULL;
 
-    bvarmgr_n* entry = bvarmgr_get(baranium_get_context()->varmgr, variableID);
+    bvarmgr_n* entry = bvarmgr_get(baranium_get_runtime()->varmgr, variableID);
     if (entry != NULL)
         if (entry->isVariable)
             return entry->variable; // early out if we can somehow find it in the var manager already
@@ -332,7 +360,7 @@ baranium_field* baranium_script_get_field_by_id(baranium_script* script, index_t
 
     baranium_field* result = NULL;
 
-    bvarmgr_n* entry = bvarmgr_get(baranium_get_context()->varmgr, fieldID);
+    bvarmgr_n* entry = bvarmgr_get(baranium_get_runtime()->varmgr, fieldID);
     if (entry != NULL)
         if (!entry->isVariable)
             return entry->field; // early out if we can somehow find it in the var manager already

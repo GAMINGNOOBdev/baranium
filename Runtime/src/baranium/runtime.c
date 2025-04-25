@@ -1,11 +1,14 @@
 #include <baranium/backend/bfuncmgr.h>
 #include <baranium/cpu/bcpu_opcodes.h>
 #include <baranium/backend/bvarmgr.h>
+#include <baranium/string_util.h>
 #include <baranium/cpu/bstack.h>
+#include <baranium/file_util.h>
 #include <baranium/callback.h>
 #include <baranium/runtime.h>
 #include <baranium/defines.h>
 #include <baranium/logging.h>
+#include <baranium/library.h>
 #include <baranium/bcpu.h>
 #include <memory.h>
 #include <stdlib.h>
@@ -32,17 +35,82 @@ baranium_runtime* baranium_init(void)
     return runtimeHandle;
 }
 
-void baranium_set_context(baranium_runtime* runtimeContext)
+void baranium_set_runtime(baranium_runtime* runtimeContext)
 {
     current_active_runtime = runtimeContext;
 }
 
-baranium_runtime* baranium_get_context(void)
+baranium_runtime* baranium_get_runtime(void)
 {
     return current_active_runtime;
 }
 
-void baranium_cleanup(baranium_runtime* runtime)
+void baranium_runtime_set_library_path(const char* library_path)
+{
+    if (current_active_runtime == NULL || library_path == NULL)
+        return;
+
+    if (current_active_runtime->library_dir_contents == NULL)
+        current_active_runtime->library_dir_contents = malloc(sizeof(baranium_string_list));
+
+    if (current_active_runtime->library_path != NULL)
+    {
+        free((void*)current_active_runtime->library_path);
+            baranium_string_list_dispose(current_active_runtime->library_dir_contents);
+    }
+
+    size_t len = strlen(library_path);
+    if (library_path[len-1] == '/' || library_path[len-1] == '\\')
+        len--;
+
+    current_active_runtime->library_path = malloc(len+1);
+    strncpy((char*)current_active_runtime->library_path, library_path, len);
+    ((char*)current_active_runtime->library_path)[len] = 0;
+    baranium_string_list_init(current_active_runtime->library_dir_contents);
+    baranium_file_util_get_directory_contents(current_active_runtime->library_dir_contents, current_active_runtime->library_path, BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES);
+}
+
+void baranium_runtime_load_dependency(const char* dependency)
+{
+    if (current_active_runtime == NULL)
+        return;
+
+    LOGDEBUG(stringf("loading dependency '%s' from '%s'", dependency, current_active_runtime->library_path));
+    baranium_library* library = NULL;
+
+    for (size_t i = 0; i < current_active_runtime->library_dir_contents->count; i++)
+    {
+        const char* path = current_active_runtime->library_dir_contents->strings[i];
+        char* filenameptr = (char*)path;
+        for (int i = strlen(path)-1; i > 0; i--)
+        {
+            if (path[i] == '\\' || path[i] == '/')
+            {
+                filenameptr = (char*)&path[i+1];
+                break;
+            }
+        }
+        if (strcmp(filenameptr, dependency) == 0)
+        {
+            library = baranium_library_load(stringf("%s/%s", current_active_runtime->library_path, path));
+            break;
+        }
+    }
+
+    if (library == NULL)
+        return;
+
+    if (current_active_runtime->library_count + 1 >= current_active_runtime->library_buffer_size)
+    {
+        current_active_runtime->library_buffer_size += BARANIUM_RUNTIME_LIBRARY_BUFFER_SIZE;
+        current_active_runtime->libraries = realloc(current_active_runtime->libraries, sizeof(baranium_library*)*current_active_runtime->library_buffer_size);
+    }
+
+    current_active_runtime->libraries[current_active_runtime->library_count] = library;
+    current_active_runtime->library_count++;
+}
+
+void baranium_dispose_runtime(baranium_runtime* runtime)
 {
     if (runtime == NULL) return;
 
@@ -60,6 +128,21 @@ void baranium_cleanup(baranium_runtime* runtime)
             free(handle);
             handle = next;
         }
+    }
+
+    for (size_t i = 0; i < runtime->library_count; i++)
+        baranium_library_dispose(runtime->libraries[i]);
+
+    if (runtime->libraries)
+        free(runtime->libraries);
+
+    if (runtime->library_path)
+        free((void*)runtime->library_path);
+
+    if (runtime->library_dir_contents)
+    {
+        baranium_string_list_dispose(runtime->library_dir_contents);
+        free(runtime->library_dir_contents);
     }
 
     bcpu_dispose(runtime->cpu);
@@ -100,6 +183,15 @@ baranium_handle* baranium_open_handle(const char* source)
 
     memset(handle, 0, sizeof(baranium_handle));
     handle->file = file;
+    handle->path = malloc(strlen(source)+1);
+    if (!handle->path)
+    {
+        LOGERROR("Couldn't create handle, insufficient memory");
+        free(handle);
+        return NULL;
+    }
+    strcpy(handle->path, source);
+    handle->path[strlen(source)] = 0;
 
     if (current_active_runtime->start == NULL)
     {
@@ -177,6 +269,9 @@ void baranium_close_handle(baranium_handle* handle)
 destroy:
     if (handle->file)
         fclose(handle->file);
+
+    if (handle->path)
+        free(handle->path);
 
     free(handle);
 

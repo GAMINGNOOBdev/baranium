@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#ifdef _WIN32
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
 #   undef min
 #   undef max
 #endif

@@ -9,6 +9,7 @@ void baranium_loop_token_init(baranium_loop_token* loop)
 {
     loop->base.id = BARANIUM_INVALID_INDEX;
     loop->base.type = BARANIUM_TOKEN_TYPE_FUNCTION;
+    loop->base.name = NULL;
     loop->t_while = 0;
     loop->t_do_while = 0;
     loop->t_reserved = 0;
@@ -26,7 +27,7 @@ void baranium_loop_token_dispose(baranium_loop_token* loop)
     baranium_expression_token_dispose(&loop->start_expression);
     baranium_expression_token_dispose(&loop->condition);
     baranium_expression_token_dispose(&loop->iteration);
-    baranium_source_token_list_dispose(&loop->inner_tokens, 0);
+    baranium_source_token_list_dispose(&loop->inner_tokens);
     baranium_token_list_dispose(&loop->tokens);
 }
 

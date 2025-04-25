@@ -21,7 +21,8 @@ the language in other projects.
 More information can be found in the [syntax section of the wiki](../../wiki/Syntax).
 
 ## Examples
-Under `Compiler/test` there are test scripts that demonstrate the language.
+You can find example scripts under `examples` in the root of this repository.
+Some of them may compile, some of them may not.
 
 ## Building
 1. Open a command line at the root of the reporitory, create a `build` directory and change into that directory using
@@ -29,7 +30,7 @@ Under `Compiler/test` there are test scripts that demonstrate the language.
 mkdir build
 cd build
 ```
-2. Run cmake and point towards the root of the repository containing the `CMakeLists.txt` file
+2. Run cmake and point towards the root of the repository containing the `CMakeLists.txt` file, optionally add `-D CMAKE_BUILD_TYPE=<Release/Debug>` at the end to specify whether to build a debug or release build
 ```bash
 cmake ..
 ```
@@ -52,6 +53,8 @@ Compiler flags/options:<br/>
 | -h | Show the help message |
 | -I `file` | Specify file containing all custom user include directories |
 | -d | Print debug messages (only useful for debugging the compiler itself!) |
+| -e | Export output as a library file |
+| -l `name` | Link against a library named `name` (filename has to exactly match the library name, no extensions!) |
 
 As for specifying source files, just list the paths to the files like every other compiler on this planet.
 

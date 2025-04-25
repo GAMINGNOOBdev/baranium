@@ -7,18 +7,187 @@
 #include <baranium/compiler/language/loop_token.h>
 #include <baranium/compiler/binaries/compiler.h>
 #include <baranium/compiler/language/language.h>
+#include <baranium/compiler/compiler_context.h>
 #include <baranium/compiler/language/token.h>
 #include <baranium/compiler/source_token.h>
 #include <baranium/string_util.h>
 #include <baranium/variable.h>
+#include <baranium/library.h>
 #include <baranium/version.h>
 #include <baranium/logging.h>
+#include <baranium/runtime.h>
 #include <baranium/script.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <memory.h>
 
+//////////////////////////
+///                    ///
+///   PREDEFINITIONS   ///
+///                    ///
+//////////////////////////
+
+/**
+ * @brief Compile a list of tokens (does not write to a file!)
+ * 
+ * @param tokens The code tokens
+ */
+void baranium_compiler_compile(baranium_compiler* compiler, baranium_token_list* tokens);
+
+/**
+ * @brief Initialize the `baranium_compiler_code_builder` object
+ */
+void baranium_compiler_code_builder_init(baranium_compiler* compiler);
+
+/**
+ * @brief Dispose the `baranium_compiler_code_builder` object
+ */
+void baranium_compiler_code_builder_dispose(baranium_compiler* compiler);
+
+/**
+ * @brief Clear the currently held code
+ */
+void baranium_compiler_code_builder_clear(baranium_compiler* compiler);
+
+/**
+ * @brief Check if the last instruction is a return statement
+ */
+uint8_t baranium_compiler_code_builder_returned_from_execution(baranium_compiler* compiler);
+
+// push a string value to the stack (needed for assignments of strings)
+void baranium_compiler_code_builder_push_string(baranium_compiler* compiler, const char* str);
+
+// push a bool value to the stack
+void baranium_compiler_code_builder_push_bool(baranium_compiler* compiler, uint8_t b);
+
+// push a uint value to the stack
+void baranium_compiler_code_builder_push_uint(baranium_compiler* compiler, uint32_t val);
+
+// push a int value to the stack
+void baranium_compiler_code_builder_push_int(baranium_compiler* compiler, int32_t val);
+
+// push a float value to the stack
+void baranium_compiler_code_builder_push_float(baranium_compiler* compiler, float val);
+
+void baranium_compiler_code_builder_push64(baranium_compiler* compiler, uint64_t data);
+void baranium_compiler_code_builder_push32(baranium_compiler* compiler, uint32_t data);
+void baranium_compiler_code_builder_push16(baranium_compiler* compiler, uint16_t data);
+void baranium_compiler_code_builder_push(baranium_compiler* compiler, uint8_t data);
+
+//////////////////////
+///                ///
+///   OPERATIONS   ///
+///                ///
+//////////////////////
+
+// no operation
+void baranium_compiler_code_builder_NOP(baranium_compiler* compiler);
+
+// clear compare flag
+void baranium_compiler_code_builder_CCF(baranium_compiler* compiler);
+
+// set compare flag
+void baranium_compiler_code_builder_SCF(baranium_compiler* compiler);
+
+// clear compare value
+void baranium_compiler_code_builder_CCV(baranium_compiler* compiler);
+
+// invert compare value
+void baranium_compiler_code_builder_ICV(baranium_compiler* compiler);
+
+// push the compare value to the stack
+void baranium_compiler_code_builder_PUSHCV(baranium_compiler* compiler);
+
+// pop the compare value from the stack
+void baranium_compiler_code_builder_POPCV(baranium_compiler* compiler);
+
+// push a variable's value to the stack (can't be used on string variables fyi)
+void baranium_compiler_code_builder_PUSHVAR(baranium_compiler* compiler, index_t id);
+
+// pop a value from the stack into a variable
+void baranium_compiler_code_builder_POPVAR(baranium_compiler* compiler, index_t id);
+
+// push a value to the stack
+void baranium_compiler_code_builder_PUSH(baranium_compiler* compiler, uint64_t val);
+
+// call a function with a specific id
+void baranium_compiler_code_builder_CALL(baranium_compiler* compiler, index_t id);
+
+// return from a function
+void baranium_compiler_code_builder_RET(baranium_compiler* compiler);
+
+// jump to
+void baranium_compiler_code_builder_JMP(baranium_compiler* compiler, uint64_t addr);
+
+// jump offset-ed from the current position to
+void baranium_compiler_code_builder_JMPOFF(baranium_compiler* compiler, int16_t offset);
+
+// jump if equal to
+void baranium_compiler_code_builder_JMPC(baranium_compiler* compiler, uint64_t addr);
+
+// jump offset-ed from the current position
+void baranium_compiler_code_builder_JMPCOFF(baranium_compiler* compiler, int16_t addr);
+
+// modulo two values from the stack
+void baranium_compiler_code_builder_MOD(baranium_compiler* compiler);
+
+// divide two values from the stack
+void baranium_compiler_code_builder_DIV(baranium_compiler* compiler);
+
+// multiply two values from the stack
+void baranium_compiler_code_builder_MUL(baranium_compiler* compiler);
+
+// subtrack two values from the stack
+void baranium_compiler_code_builder_SUB(baranium_compiler* compiler);
+
+// add two values from the stack
+void baranium_compiler_code_builder_ADD(baranium_compiler* compiler);
+
+// bitwise and two values from the stack
+void baranium_compiler_code_builder_AND(baranium_compiler* compiler);
+
+// bitwise or two values from the stack
+void baranium_compiler_code_builder_OR(baranium_compiler* compiler);
+
+// bitwise exclusive-or two values from the stack
+void baranium_compiler_code_builder_XOR(baranium_compiler* compiler);
+
+// bitwise shift left
+void baranium_compiler_code_builder_SHFTL(baranium_compiler* compiler);
+
+// bitwise shift right
+void baranium_compiler_code_builder_SHFTR(baranium_compiler* compiler);
+
+// compare two values on the stack
+void baranium_compiler_code_builder_CMP(baranium_compiler* compiler, uint8_t compareMethod);
+
+// compare two compared values together
+void baranium_compiler_code_builder_CMPC(baranium_compiler* compiler, uint8_t compareCombineMethod);
+
+// allocate memory
+void baranium_compiler_code_builder_MEM(baranium_compiler* compiler, size_t size, uint8_t type, index_t id);
+
+// deallocate memory
+void baranium_compiler_code_builder_FEM(baranium_compiler* compiler, index_t id);
+
+// set var data
+void baranium_compiler_code_builder_SET(baranium_compiler* compiler, index_t id, size_t size, baranium_value_t data, baranium_variable_type_t type);
+
+// instantiate an object
+void baranium_compiler_code_builder_INSTANTIATE(baranium_compiler* compiler);
+
+// delete an object
+void baranium_compiler_code_builder_DELETE(baranium_compiler* compiler);
+
+// attach to an object
+void baranium_compiler_code_builder_ATTACH(baranium_compiler* compiler);
+
+// detach from an object
+void baranium_compiler_code_builder_DETACH(baranium_compiler* compiler);
+
+// stop execution with return code
+void baranium_compiler_code_builder_KILL(baranium_compiler* compiler, int64_t code);
 void baranium_compiler_compile_variable(baranium_compiler* compiler, baranium_variable_token* token);
 void baranium_compiler_compile_expression(baranium_compiler* compiler, baranium_expression_token* token);
 void baranium_compiler_compile_if_else_statement(baranium_compiler* compiler, baranium_if_else_token* token);
@@ -41,6 +210,14 @@ baranium_compiler baranium_compiler_predict_code_size_expression(baranium_compil
 
 index_t baranium_compiler_get_id(baranium_compiler* compiler, const char* name, int lineNumber);
 
+
+/////////////////////////////////
+///                           ///
+///   FUNCTION DECLARATIONS   ///
+///                           ///
+/////////////////////////////////
+
+
 void baranium_compiler_init(baranium_compiler* compiler)
 {
     if (compiler == NULL)
@@ -61,6 +238,9 @@ void baranium_compiler_dispose(baranium_compiler* compiler)
     if (compiler->sections)
         free(compiler->sections);
 
+    if (compiler->dependencies)
+        free(compiler->dependencies);
+
     baranium_symbol_table_dispose(&compiler->var_table);
 
     memset(compiler, 0, sizeof(baranium_compiler));
@@ -70,113 +250,291 @@ void baranium_compiler_copy_variable_data(baranium_compiler* compiler, void* __d
 void baranium_compiler_compile_variables(baranium_compiler* compiler, baranium_token_list* variables);
 void baranium_compiler_clear_variables(baranium_compiler* compiler, baranium_token_list* variables);
 
-void baranium_compiler_write(baranium_compiler* compiler, baranium_token_list* tokens, FILE* file)
+void baranium_compiler_add_dependency(baranium_compiler* compiler, baranium_library* dependency)
+{
+    if (compiler == NULL || dependency == NULL)
+        return;
+
+    const char* libid = dependency->name;
+
+    if (compiler->dependencies == NULL)
+    {
+        compiler->dependency_count++;
+        compiler->dependencies = malloc(sizeof(const char*)*compiler->dependency_count);
+        compiler->dependencies[0] = libid;
+        return;
+    }
+
+    for (size_t i = 0; i < compiler->dependency_count; i++)
+        if (compiler->dependencies[i] == libid)
+            return;
+    
+    compiler->dependency_count++;
+    compiler->dependencies = realloc(compiler->dependencies, sizeof(const char*)*compiler->dependency_count);
+    compiler->dependencies[compiler->dependency_count-1] = libid;
+}
+
+void baranium_compiler_write(baranium_compiler* compiler, baranium_token_list* tokens, FILE* file, uint8_t library)
 {
     if (compiler == NULL || tokens == NULL || file == NULL || tokens->count == 0)
         return;
 
     size_t tmp = 0;
-    tmp = BARANIUM_MAGIC_NUM0; fwrite(&tmp, sizeof(uint8_t), 1, file);
-    tmp = BARANIUM_MAGIC_NUM1; fwrite(&tmp, sizeof(uint8_t), 1, file);
-    tmp = BARANIUM_MAGIC_NUM2; fwrite(&tmp, sizeof(uint8_t), 1, file);
-    tmp = BARANIUM_MAGIC_NUM3; fwrite(&tmp, sizeof(uint8_t), 1, file);
-
-    tmp = BARANIUM_VERSION_CURRENT; fwrite(&tmp, sizeof(uint32_t), 1, file);
-    size_t tokencountposition = ftell(file);
-    tmp = tokens->count; fwrite(&tmp, sizeof(uint64_t), 1, file);
-
-    // fwrite<uint8_t>((uint8_t)section.Type);
-    // fwrite<index_t>(section.ID);
-    // fwrite<uint64_t>(section.DataSize);
-    // fwrite(section.Data, sizeof(uint8_t), section.DataSize);
-    size_t uselesssectioncount = 0;
-
-    for (size_t i = 0; i < tokens->count; i++)
+    if (!library)
     {
-        baranium_token* token = tokens->data[i];
-        if (token->type == BARANIUM_TOKEN_TYPE_FUNCTION)
+        baranium_script_header header = {
+            .magic = { BARANIUM_MAGIC_NUM0, BARANIUM_MAGIC_NUM1, BARANIUM_MAGIC_NUM2, BARANIUM_MAGIC_NUM3 },
+            .version = BARANIUM_VERSION_CURRENT,
+            .section_count = tokens->count,
+        };
+        fwrite(&header, sizeof(baranium_script_header), 1, file);
+
+        size_t tokencountposition = offsetof(struct baranium_script_header, section_count);
+        size_t uselesssectioncount = 0;
+        for (size_t i = 0; i < tokens->count; i++)
         {
-            baranium_function_token* function = (baranium_function_token*)token;
-            baranium_symbol_table_add_from_name_and_id(&compiler->var_table, token->name, token->id);
-            if (function->only_declaration)
+            baranium_token* token = tokens->data[i];
+            if (token->type == BARANIUM_TOKEN_TYPE_FUNCTION)
             {
-                uselesssectioncount++;
+                baranium_function_token* function = (baranium_function_token*)token;
+                baranium_symbol_table_add_from_name_and_id(&compiler->var_table, token->name, token->id);
+                if (function->only_declaration)
+                {
+                    uselesssectioncount++;
+                    continue;
+                }
+
+                tmp = (uint8_t)BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                fwrite(&token->id, sizeof(index_t), 1, file);
+
+                // "compile" the code
+                baranium_compiler_code_builder_clear(compiler);
+                baranium_compiler_compile_variables(compiler, &function->parameters);
+                baranium_compiler_compile(compiler, &function->tokens);
+                baranium_compiler_clear_variables(compiler, &function->parameters);
+
+                // Size calculation: parameter count + return type + compiled code size
+                uint64_t dataSize = 2 + compiler->code_length;
+                fwrite(&dataSize, sizeof(uint64_t), 1, file);
+
+                tmp = (uint8_t)function->parameters.count; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                tmp = (uint8_t)function->return_type; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                fwrite(compiler->code, sizeof(uint8_t), compiler->code_length, file);
+
+                baranium_compiler_code_builder_clear(compiler);
                 continue;
             }
 
-            tmp = (uint8_t)BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS; fwrite(&tmp, sizeof(uint8_t), 1, file);
-            fwrite(&token->id, sizeof(index_t), 1, file);
+            if (token->type == BARANIUM_TOKEN_TYPE_VARIABLE)
+            {
+                baranium_variable_token* variable = (baranium_variable_token*)token;
+                tmp = (uint8_t)BARANIUM_SCRIPT_SECTION_TYPE_FIELDS; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                fwrite(&token->id, sizeof(index_t), 1, file);
+                int8_t dataTypeSize = baranium_variable_get_size_of_type(variable->type);
+                if (dataTypeSize == -1) // meaning this is a string
+                    dataTypeSize = strlen(variable->value) + 1; // for now store the initial string's length + 1 because of the null-char at the end
 
-            // "compile" the code
-            baranium_compiler_code_builder_clear(compiler);
-            baranium_compiler_compile_variables(compiler, &function->parameters);
-            baranium_compiler_compile(compiler, &function->tokens);
-            baranium_compiler_clear_variables(compiler, &function->parameters);
+                // Size calculation: data type(1 byte) + data size
+                uint64_t dataSize = sizeof(uint8_t) + dataTypeSize;
+                fwrite(&dataSize, sizeof(uint64_t), 1, file);
+                void* data = (uint8_t*)malloc(dataSize);
+                memset(data, 0, dataSize);
+                baranium_compiler_copy_variable_data(compiler, data, variable->value, variable->type);
+                fwrite(data, sizeof(uint8_t), dataSize, file);
+                free(data);
 
-            // Size calculation: parameter count + return type + compiled code size
-            uint64_t dataSize = 2 + compiler->code_length;
-            fwrite(&dataSize, sizeof(uint64_t), 1, file);
+                baranium_symbol_table_add_from_name_and_id(&compiler->var_table, token->name, token->id);
+                continue;
+            }
 
-            tmp = (uint8_t)function->parameters.count; fwrite(&tmp, sizeof(uint8_t), 1, file);
-            tmp = (uint8_t)function->return_type; fwrite(&tmp, sizeof(uint8_t), 1, file);
-            fwrite(compiler->code, sizeof(uint8_t), compiler->code_length, file);
+            if (token->type == BARANIUM_TOKEN_TYPE_FIELD)
+            {
+                baranium_field_token* field = (baranium_field_token*)token;
+                tmp = (uint8_t)BARANIUM_SCRIPT_SECTION_TYPE_FIELDS; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                fwrite(&token->id, sizeof(index_t), 1, file);
+                int8_t dataTypeSize = baranium_variable_get_size_of_type(field->type);
+                if (dataTypeSize == -1) // meaning this is a string
+                    dataTypeSize = strlen(field->value) + 1; // for now store the initial string's length + 1 because of the null-char at the end
 
-            baranium_compiler_code_builder_clear(compiler);
-            continue;
+                // Size calculation: data type(1 byte) + data size
+                uint64_t dataSize = sizeof(uint8_t) + dataTypeSize;
+                fwrite(&dataSize, sizeof(uint64_t), 1, file);
+                void* data = (uint8_t*)malloc(dataSize);
+                memset(data, 0, dataSize);
+                baranium_compiler_copy_variable_data(compiler, data, field->value, field->type);
+                fwrite(data, sizeof(uint8_t), dataSize, file);
+                free(data);
+
+                baranium_symbol_table_add_from_name_and_id(&compiler->var_table, token->name, token->id);
+                continue;
+            }
         }
 
-        if (token->type == BARANIUM_TOKEN_TYPE_VARIABLE)
+        // update the old section count
+        size_t end_pos = ftell(file);
+        fseek(file, tokencountposition, SEEK_SET);
+        tmp = tokens->count - uselesssectioncount;
+        fwrite(&tmp, sizeof(uint64_t), 1, file);
+        fseek(file, end_pos, SEEK_SET);
+    }
+    else
+    {
+        baranium_library_header header = {
+            .magic = {BARANIUM_LIBRARY_MAGIC_NUM0,BARANIUM_LIBRARY_MAGIC_NUM1,BARANIUM_LIBRARY_MAGIC_NUM2,BARANIUM_LIBRARY_MAGIC_NUM3},
+            .version = BARANIUM_VERSION_CURRENT,
+            .exports_count = 0,
+            .section_count = tokens->count,
+        };
+        size_t exportcountposition = offsetof(struct baranium_library_header, exports_count);
+        size_t tokencountposition = offsetof(struct baranium_library_header, section_count);
+        fwrite(&header, sizeof(baranium_library_header), 1, file);
+
+        size_t externalsymbolnameappendixlength = 7;
+        const char* externalsymbolnameappendix = "_extern";
+        for (size_t i = 0; i < tokens->count; i++)
         {
-            baranium_variable_token* variable = (baranium_variable_token*)token;
-            tmp = (uint8_t)BARANIUM_SCRIPT_SECTION_TYPE_FIELDS; fwrite(&tmp, sizeof(uint8_t), 1, file);
-            fwrite(&token->id, sizeof(index_t), 1, file);
-            int8_t dataTypeSize = baranium_variable_get_size_of_type(variable->type);
-            if (dataTypeSize == -1) // meaning this is a string
-                dataTypeSize = strlen(variable->value) + 1; // for now store the initial string's length + 1 because of the null-char at the end
+            baranium_token* token = tokens->data[i];
+            baranium_library_export export = {
+                .type = -1,
+                .id = token->id,
+                .num_params = -1,
+                .return_type = -1,
+                .symnamelen = 0,
+                .symname = NULL,
+            };
 
-            // Size calculation: data type(1 byte) + data size
-            uint64_t dataSize = sizeof(uint8_t) + dataTypeSize;
-            fwrite(&dataSize, sizeof(uint64_t), 1, file);
-            void* data = (uint8_t*)malloc(dataSize);
-            memset(data, 0, dataSize);
-            baranium_compiler_copy_variable_data(compiler, data, variable->value, variable->type);
-            fwrite(data, sizeof(uint8_t), dataSize, file);
-            free(data);
+            if (token->type == BARANIUM_TOKEN_TYPE_VARIABLE)
+                continue;
 
-            baranium_symbol_table_add_from_name_and_id(&compiler->var_table, token->name, token->id);
-            continue;
+            if (token->type == BARANIUM_TOKEN_TYPE_FUNCTION)
+            {
+                baranium_function_token* function = (baranium_function_token*)token;
+                export.type = BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS;
+                export.return_type = function->return_type;
+                export.num_params = function->parameters.count;
+                if (function->only_declaration)
+                {
+                    export.symnamelen = strlen(token->name) + externalsymbolnameappendixlength;
+                    export.symname = token->name;
+                }
+            }
+
+            if (token->type == BARANIUM_TOKEN_TYPE_FIELD)
+                export.type = BARANIUM_SCRIPT_SECTION_TYPE_FIELDS;
+
+            fwrite(&export.type, sizeof(baranium_script_section_type_t), 1, file);
+            fwrite(&export.id, sizeof(index_t), 1, file);
+            fwrite(&export.num_params, sizeof(int), 1, file);
+            fwrite(&export.return_type, sizeof(baranium_variable_type_t), 1, file);
+            fwrite(&export.symnamelen, sizeof(size_t), 1, file);
+            if (export.symname)
+            {
+                fwrite(export.symname, sizeof(char), export.symnamelen-externalsymbolnameappendixlength, file);
+                fwrite(externalsymbolnameappendix, sizeof(char), externalsymbolnameappendixlength, file);
+            }
+
+            header.exports_count++;
         }
 
-        if (token->type == BARANIUM_TOKEN_TYPE_FIELD)
+        size_t uselesssectioncount = 0;
+        for (size_t i = 0; i < tokens->count; i++)
         {
-            baranium_field_token* field = (baranium_field_token*)token;
-            tmp = (uint8_t)BARANIUM_SCRIPT_SECTION_TYPE_FIELDS; fwrite(&tmp, sizeof(uint8_t), 1, file);
-            fwrite(&token->id, sizeof(index_t), 1, file);
-            int8_t dataTypeSize = baranium_variable_get_size_of_type(field->type);
-            if (dataTypeSize == -1) // meaning this is a string
-                dataTypeSize = strlen(field->value) + 1; // for now store the initial string's length + 1 because of the null-char at the end
+            baranium_token* token = tokens->data[i];
+            if (token->type == BARANIUM_TOKEN_TYPE_FUNCTION)
+            {
+                baranium_function_token* function = (baranium_function_token*)token;
+                baranium_symbol_table_add_from_name_and_id(&compiler->var_table, token->name, token->id);
+                if (function->only_declaration)
+                {
+                    uselesssectioncount++;
+                    continue;
+                }
 
-            // Size calculation: data type(1 byte) + data size
-            uint64_t dataSize = sizeof(uint8_t) + dataTypeSize;
-            fwrite(&dataSize, sizeof(uint64_t), 1, file);
-            void* data = (uint8_t*)malloc(dataSize);
-            memset(data, 0, dataSize);
-            baranium_compiler_copy_variable_data(compiler, data, field->value, field->type);
-            fwrite(data, sizeof(uint8_t), dataSize, file);
-            free(data);
+                tmp = (uint8_t)BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                fwrite(&token->id, sizeof(index_t), 1, file);
 
-            baranium_symbol_table_add_from_name_and_id(&compiler->var_table, token->name, token->id);
-            continue;
+                // "compile" the code
+                baranium_compiler_code_builder_clear(compiler);
+                baranium_compiler_compile_variables(compiler, &function->parameters);
+                baranium_compiler_compile(compiler, &function->tokens);
+                baranium_compiler_clear_variables(compiler, &function->parameters);
+
+                // Size calculation: parameter count + return type + compiled code size
+                uint64_t dataSize = 2 + compiler->code_length;
+                fwrite(&dataSize, sizeof(uint64_t), 1, file);
+
+                tmp = (uint8_t)function->parameters.count; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                tmp = (uint8_t)function->return_type; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                fwrite(compiler->code, sizeof(uint8_t), compiler->code_length, file);
+
+                baranium_compiler_code_builder_clear(compiler);
+                continue;
+            }
+
+            if (token->type == BARANIUM_TOKEN_TYPE_VARIABLE)
+            {
+                baranium_variable_token* variable = (baranium_variable_token*)token;
+                tmp = (uint8_t)BARANIUM_SCRIPT_SECTION_TYPE_FIELDS; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                fwrite(&token->id, sizeof(index_t), 1, file);
+                int8_t dataTypeSize = baranium_variable_get_size_of_type(variable->type);
+                if (dataTypeSize == -1) // meaning this is a string
+                    dataTypeSize = strlen(variable->value) + 1; // for now store the initial string's length + 1 because of the null-char at the end
+
+                // Size calculation: data type(1 byte) + data size
+                uint64_t dataSize = sizeof(uint8_t) + dataTypeSize;
+                fwrite(&dataSize, sizeof(uint64_t), 1, file);
+                void* data = (uint8_t*)malloc(dataSize);
+                memset(data, 0, dataSize);
+                baranium_compiler_copy_variable_data(compiler, data, variable->value, variable->type);
+                fwrite(data, sizeof(uint8_t), dataSize, file);
+                free(data);
+
+                baranium_symbol_table_add_from_name_and_id(&compiler->var_table, token->name, token->id);
+                continue;
+            }
+
+            if (token->type == BARANIUM_TOKEN_TYPE_FIELD)
+            {
+                baranium_field_token* field = (baranium_field_token*)token;
+                tmp = (uint8_t)BARANIUM_SCRIPT_SECTION_TYPE_FIELDS; fwrite(&tmp, sizeof(uint8_t), 1, file);
+                fwrite(&token->id, sizeof(index_t), 1, file);
+                int8_t dataTypeSize = baranium_variable_get_size_of_type(field->type);
+                if (dataTypeSize == -1) // meaning this is a string
+                    dataTypeSize = strlen(field->value) + 1; // for now store the initial string's length + 1 because of the null-char at the end
+
+                // Size calculation: data type(1 byte) + data size
+                uint64_t dataSize = sizeof(uint8_t) + dataTypeSize;
+                fwrite(&dataSize, sizeof(uint64_t), 1, file);
+                void* data = (uint8_t*)malloc(dataSize);
+                memset(data, 0, dataSize);
+                baranium_compiler_copy_variable_data(compiler, data, field->value, field->type);
+                fwrite(data, sizeof(uint8_t), dataSize, file);
+                free(data);
+
+                baranium_symbol_table_add_from_name_and_id(&compiler->var_table, token->name, token->id);
+                continue;
+            }
         }
+
+        // update the old section count
+        size_t end_pos = ftell(file);
+        fseek(file, tokencountposition, SEEK_SET);
+        header.section_count = tokens->count - uselesssectioncount;
+        fwrite(&header.section_count, sizeof(uint64_t), 1, file);
+        fseek(file, exportcountposition, SEEK_SET);
+        fwrite(&header.exports_count, sizeof(uint64_t), 1, file);
+        fseek(file, end_pos, SEEK_SET);
     }
 
-    tmp = 0;
-    fwrite(&tmp, sizeof(uint64_t), 1, file); // backwards compatibilty with name tables
-
-    // update the old section count
-    fseek(file, tokencountposition, SEEK_SET);
-    tmp = tokens->count - uselesssectioncount;
-    fwrite(&tmp, sizeof(uint64_t), 1, file);
+    // write dependencies (shared feature on both library files and executable scripts)
+    fwrite(&compiler->dependency_count, sizeof(size_t), 1, file);
+    for (size_t i = 0; i < compiler->dependency_count; i++)
+    {
+        const char* dependency = compiler->dependencies[i];
+        size_t len = strlen(dependency);
+        fwrite(&len, sizeof(size_t), 1, file);
+        fwrite(dependency, sizeof(char), len, file);
+    }
 }
 
 void baranium_compiler_clear_compiled_code(baranium_compiler* compiler)
@@ -205,9 +563,9 @@ void baranium_compiler_copy_variable_data(baranium_compiler* compiler, void* __d
             int64_t objID;
             if (__src == NULL || strlen(__src) == 0)
                 objID = 0;
-            else if (__src == baranium_keywords[BARANIUM_KEYWORD_INDEX_NULL].name) // in this instance it *is* possible to just a normal == comparison since keywords should not be allocated seperately at any point
+            else if (__src == baranium_keywords[BARANIUM_KEYWORD_INDEX_NULL].name) // in this instance it *is* possible to just use a normal == comparison since keywords should not be allocated seperately at any point
                 objID = 0;
-            else if (__src == baranium_keywords[BARANIUM_KEYWORD_INDEX_ATTACHED].name) // in this instance it *is* possible to just a normal == comparison since keywords should not be allocated seperately at any point
+            else if (__src == baranium_keywords[BARANIUM_KEYWORD_INDEX_ATTACHED].name) // in this instance it *is* possible to just use a normal == comparison since keywords should not be allocated seperately at any point
                 objID = -1;
             else
                 objID = (int64_t)strgetnumval(__src);
@@ -473,7 +831,15 @@ index_t baranium_compiler_get_id(baranium_compiler* compiler, const char* name, 
 
     index_t varID = BARANIUM_INVALID_INDEX;
     varID = baranium_symbol_table_lookup(&compiler->var_table, name);
-    if (varID == BARANIUM_INVALID_INDEX) // ok, the script writer really doesn't know
+    if (varID == BARANIUM_INVALID_INDEX) // lookup inside a library
+    {
+        baranium_compiler_context* ctx = baranium_get_compiler_context();
+        baranium_library* library = baranium_compiler_context_lookup(ctx, name);
+        baranium_compiler_add_dependency(compiler, library);
+        varID = baranium_get_id_of_name(name);
+    }
+
+    if (varID == BARANIUM_INVALID_INDEX)// ok, the script author really doesn't know
     {
         LOGERROR(stringf("Line %d: No symbol with name '%s' (ID: '%lld') found", lineNumber, name, varID));
         return BARANIUM_INVALID_INDEX;
@@ -641,16 +1007,14 @@ void baranium_compiler_compile_assignment(baranium_compiler* compiler, baranium_
 
 void baranium_compiler_compile_return_statement(baranium_compiler* compiler, baranium_expression_token* expression)
 {
-    if (expression->return_expression != NULL)
-    {
-        baranium_compiler_compile_ast_node(compiler, expression->return_expression->ast, 1);
-    }
-    else if (expression->return_variable != NULL && strcmp(expression->return_variable, "") != 0)
+    if (expression->return_variable != NULL && strcmp(expression->return_variable, "") != 0)
     {
         const char* varName = expression->return_variable;
         index_t varID = baranium_compiler_get_id(compiler, varName, expression->line_number);
         baranium_compiler_code_builder_PUSHVAR(compiler, varID);
     }
+    else if (expression->return_expression != NULL)
+        baranium_compiler_compile_ast_node(compiler, expression->return_expression->ast, 1);
     else if (expression->return_type != BARANIUM_VARIABLE_TYPE_VOID)
     {
         baranium_variable_token var;
