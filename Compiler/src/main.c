@@ -322,7 +322,8 @@ void print_usage(void)
     printf("Options:\n");
     printf("\t-o <path>\tSpecify output file\n");
     printf("\t-h\t\tShow this help message\n");
-    printf("\t-e <name>\tCompile as a library with the internal name `name`\n");
+    printf("\t-e\tCompile as a library\n");
+    printf("\t-l <name>\tLink against a library named `name`\n");
     printf("\t-I <file>\tSpecify file containing all custom user include directories\n");
     printf("\t-d\t\tPrint debug messages (only useful for debugging the compiler itself!)\n\n");
 }
