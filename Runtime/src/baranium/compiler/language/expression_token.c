@@ -40,14 +40,11 @@ const char* baranium_expression_type_to_string(baranium_expression_type_t type)
 
 void baranium_expression_token_init(baranium_expression_token* expression)
 {
+    memset(expression, 0, sizeof(baranium_expression_token));
     expression->base.id = BARANIUM_INVALID_INDEX;
-    expression->base.name = NULL;
     expression->base.type = BARANIUM_TOKEN_TYPE_EXPRESSION;
     expression->expression_type = BARANIUM_EXPRESSION_TYPE_INVALID;
-    expression->return_value = NULL;
     expression->return_type = BARANIUM_VARIABLE_TYPE_INVALID;
-    expression->return_variable = NULL;
-    expression->ast = NULL;
     baranium_source_token_list_init(&expression->inner_tokens);
 }
 

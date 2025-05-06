@@ -32,13 +32,10 @@ uint8_t baranium_function_token_return_requested(baranium_function_token* functi
 
 void baranium_function_token_init(baranium_function_token* function)
 {
-    function->base.name = NULL;
+    memset(function, 0, sizeof(baranium_function_token));
     function->base.id = BARANIUM_INVALID_INDEX;
     function->base.type = BARANIUM_TOKEN_TYPE_FUNCTION;
     function->return_type = BARANIUM_VARIABLE_TYPE_VOID;
-    function->return_value = NULL;
-    function->return_variable = NULL;
-    function->only_declaration = 0;
     baranium_token_list_init(&function->tokens);
     baranium_token_list_init(&function->parameters);
     baranium_source_token_list_init(&function->inner_tokens);

@@ -1,3 +1,4 @@
+#include "baranium/defines.h"
 #include <baranium/compiler/language/variable_token.h>
 #include <baranium/compiler/language/language.h>
 #include <baranium/compiler/language/token.h>
@@ -89,10 +90,10 @@ baranium_variable_type_t baranium_variable_predict_type(baranium_source_token_li
 
 void baranium_variable_token_init(baranium_variable_token* variable)
 {
+    memset(variable, 0, sizeof(baranium_variable_token));
+    variable->base.id = BARANIUM_INVALID_INDEX;
     variable->base.type = BARANIUM_TOKEN_TYPE_VARIABLE;
-    variable->base.name = NULL;
     variable->type = BARANIUM_VARIABLE_TYPE_INVALID;
-    variable->value = NULL;
     variable->array_size = -1;
 }
 

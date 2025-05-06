@@ -1,0 +1,29 @@
+# 
+# @author GAMINGNOOBdev
+# @brief This is a test for calculating the fibanocci numbers
+# 
+
+
++include stdio
++include stdlib
+
+define fibanocci(int max)
+{
+    int fib = 0;
+    int next = 1;
+    while (fib < max)
+    {
+        print(" " + fib + " ");
+        fib += next;
+        next = fib + next;
+    }
+}
+
+define main()
+{
+    print("Enter fibanocci maximum: ");
+    int fibmax = 0;
+    fibmax = input();
+    print_fibanocci_sequence(fibmax);
+    return 0;
+}

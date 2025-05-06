@@ -7,12 +7,9 @@
 
 void baranium_loop_token_init(baranium_loop_token* loop)
 {
+    memset(loop, 0, sizeof(baranium_loop_token));
     loop->base.id = BARANIUM_INVALID_INDEX;
     loop->base.type = BARANIUM_TOKEN_TYPE_FUNCTION;
-    loop->base.name = NULL;
-    loop->t_while = 0;
-    loop->t_do_while = 0;
-    loop->t_reserved = 0;
     baranium_variable_token_init(&loop->start_variable);
     baranium_expression_token_init(&loop->start_expression);
     baranium_expression_token_init(&loop->condition);
@@ -90,8 +87,7 @@ void baranium_loop_token_parse(baranium_loop_token* loop, baranium_token_list* l
         baranium_token_parser_parse_expression(&index, token, &loop->inner_tokens, &loop->tokens, global_tokens);
     }
 
-    for (size_t i = 0; i < local_tokens->count; i++)
-        baranium_token_list_remove_at(&loop->tokens, local_start_index + i);
+    baranium_token_list_remove_n_at(&loop->tokens, local_start_index, local_tokens->count);
 
     if (loop->start_variable.base.id != BARANIUM_INVALID_INDEX)
         baranium_token_list_remove(&loop->tokens, loop->start_variable.base.id);
