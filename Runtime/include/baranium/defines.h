@@ -73,6 +73,7 @@ typedef union baranium_value_t
     int32_t snum32;
     int64_t snum64;
 
+    char* str;
     void* ptr;
 } baranium_value_t;
 

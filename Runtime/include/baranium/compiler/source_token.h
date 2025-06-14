@@ -1,3 +1,9 @@
+/**
+ * @note THIS IS NOT INTENDED FOR USE BY THE USER OF THE RUNTIME!
+ *       This header is intended to be used internally by the runtime
+ *       and therefore, functions defined in this header cannot be used
+ *       by the user.
+ */
 #ifndef __BARANIUM__COMPILER__SOURCE_TOKEN_H_
 #define __BARANIUM__COMPILER__SOURCE_TOKEN_H_ 1
 
@@ -104,6 +110,9 @@ BARANIUMAPI void baranium_source_token_list_reset(baranium_source_token_list* ob
 
 // insert another list into the list after a certain point
 BARANIUMAPI void baranium_source_token_list_insert_after(baranium_source_token_list* obj, int index, baranium_source_token_list* other);
+
+// insert another list at the start of a list
+BARANIUMAPI void baranium_source_token_list_insert_start(baranium_source_token_list* obj, baranium_source_token_list* other);
 
 // check if we reached the end of the list
 BARANIUMAPI uint8_t baranium_source_token_list_end_of_list(baranium_source_token_list* obj);

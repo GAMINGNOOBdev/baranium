@@ -142,15 +142,40 @@ void baranium_source_token_list_insert_after(baranium_source_token_list* obj, in
     if (obj == NULL || other == NULL || other->data == NULL)
         return;
 
-    size_t free_space = obj->buffer_size - obj->count;
+    size_t free_space;
+
+check_free_space:
+    free_space = obj->buffer_size - obj->count;
     if (free_space < other->count)
     {
         obj->buffer_size += other->buffer_size;
         obj->data = realloc(obj->data, sizeof(baranium_source_token)*obj->buffer_size);
+        goto check_free_space;
     }
 
     memmove(&obj->data[index+other->count+1], &obj->data[index+1], sizeof(baranium_source_token)*(obj->count-index-1));
     memcpy(&obj->data[index+1], other->data, sizeof(baranium_source_token)*other->count);
+    obj->count += other->count;
+}
+
+void baranium_source_token_list_insert_start(baranium_source_token_list* obj, baranium_source_token_list* other)
+{
+    if (obj == NULL || other == NULL || other->data == NULL)
+        return;
+
+    size_t free_space;
+
+check_free_space:
+    free_space = obj->buffer_size - obj->count;
+    if (free_space < other->count)
+    {
+        obj->buffer_size += other->buffer_size;
+        obj->data = realloc(obj->data, sizeof(baranium_source_token)*obj->buffer_size);
+        goto check_free_space;
+    }
+
+    memmove(&obj->data[other->count], &obj->data[0], sizeof(baranium_source_token)*(obj->count-1));
+    memcpy(&obj->data[0], other->data, sizeof(baranium_source_token)*other->count);
     obj->count += other->count;
 }
 
@@ -213,11 +238,15 @@ void baranium_source_token_list_push_list(baranium_source_token_list* obj, baran
         obj->data = malloc(sizeof(baranium_source_token)*obj->buffer_size);
     }
 
-    size_t free_space = obj->buffer_size - obj->count;
+    size_t free_space;
+
+check_free_space:
+    free_space = obj->buffer_size - obj->count;
     if (free_space < other->count)
     {
         obj->buffer_size += other->buffer_size;
         obj->data = realloc(obj->data, sizeof(baranium_source_token)*obj->buffer_size);
+        goto check_free_space;
     }
 
     memcpy(&obj->data[obj->count], other->data, sizeof(baranium_source_token)*other->count);

@@ -25,13 +25,13 @@ void baranium_library_dynadd_var_or_field(baranium_library_section* section)
     uint8_t isField = section->type == BARANIUM_SCRIPT_SECTION_TYPE_FIELDS;
     void* data = (void*)( ((uint64_t)section->data) + 1 );
 
-    LOGDEBUG(stringf("Adding field/variable with id %ld", id));
+    LOGDEBUG("Adding field/variable with id %ld", id);
 
     bvarmgr_alloc(varmgr, type, id, size, isField);
     bvarmgr_n* entry = bvarmgr_get(varmgr, id);
     if (!entry)
     {
-        LOGERROR(stringf("Could not append %s with id %ld", isField ? "field" : "variable", id));
+        LOGERROR("Could not append %s with id %ld", isField ? "field" : "variable", id);
         return;
     }
 
@@ -49,7 +49,7 @@ void baranium_library_dynadd_var_or_field(baranium_library_section* section)
 
     if (!dataPtr)
     {
-        LOGERROR(stringf("Could not allocate memory for %s with id %ld", isField ? "field" : "variable", id));
+        LOGERROR("Could not allocate memory for %s with id %ld", isField ? "field" : "variable", id);
         bvarmgr_dealloc(varmgr, id);
         return;
     }
@@ -82,7 +82,7 @@ baranium_library* baranium_library_load(const char* path)
     FILE* file = fopen(path, "rb");
     if (file == NULL)
     {
-        LOGERROR(stringf("File '%s' not found", path));
+        LOGERROR("File '%s' not found", path);
         return NULL;
     }
 
@@ -138,7 +138,7 @@ baranium_library* baranium_library_load(const char* path)
     }
 
     if (library->libheader.version != BARANIUM_VERSION_CURRENT)
-        LOGWARNING(stringf("Library '%s' may be out of date, be sure to update your compiler and recompile the library", library->name));
+        LOGWARNING("Library '%s' may be out of date, be sure to update your compiler and recompile the library", library->name);
 
     library->exports = realloc(library->exports, sizeof(baranium_library_export)*library->libheader.exports_count);
     for (uint64_t i = 0; i < library->libheader.exports_count; i++)
@@ -168,7 +168,7 @@ baranium_library* baranium_library_load(const char* path)
         fread(&section.data_size, sizeof(uint64_t), 1, file);
         if (section.data_size == 0)
         {
-            LOGDEBUG(stringf("found a section with a size of 0 (id[0x%x/%lld] type[0x%x/%lld])",section.id,section.id,section.type));
+            LOGDEBUG("found a section with a size of 0 (id[0x%x/%lld] type[0x%x/%lld])",section.id,section.id,section.type);
             continue;
         }
         if (section.type != BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS)

@@ -7,6 +7,10 @@
 #ifndef __BARANIUM__BACKEND__DYNLIBLOADER_H_
 #define __BARANIUM__BACKEND__DYNLIBLOADER_H_ 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
 #   define BARANIUM_DYNLIB_EXTENSION ".dll"
 #else
@@ -81,5 +85,9 @@ void* baranium_dynlib_symbol(baranium_dynlib_handle handle, const char* name);
  * @param handle Dynamic library handle
  */
 void baranium_dynlib_unload(baranium_dynlib_handle handle);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

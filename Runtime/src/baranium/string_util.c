@@ -12,15 +12,11 @@
 ///             ///
 ///////////////////
 
-void baranium_string_list_init(baranium_string_list* list)
+baranium_string_list baranium_string_list_init(void)
 {
-    if (list == NULL)
-        return;
-
-    list->count = 0;
-    list->buffer_size = 0;
-    list->hashes = NULL;
-    list->strings = NULL;
+    baranium_string_list list;
+    memset(&list, 0, sizeof(baranium_string_list));
+    return list;
 }
 
 int baranium_string_list_get_index_of_string(baranium_string_list* list, const char* string)
@@ -106,10 +102,7 @@ void baranium_string_list_dispose(baranium_string_list* list)
     free(list->hashes);
     free(list->strings);
 
-    list->count = 0;
-    list->buffer_size = 0;
-    list->hashes = NULL;
-    list->strings = NULL;
+    memset(list, 0, sizeof(baranium_string_list));
 }
 
 //////////////////////
@@ -118,15 +111,11 @@ void baranium_string_list_dispose(baranium_string_list* list)
 ///                ///
 //////////////////////
 
-void baranium_string_map_init(baranium_string_map* map)
+baranium_string_map baranium_string_map_init(void)
 {
-    if (map == NULL)
-        return;
-
-    map->count = 0;
-    map->buffer_size = 0;
-    map->hashes = NULL;
-    map->strings = NULL;
+    baranium_string_map map;
+    memset(&map, 0, sizeof(baranium_string_map));
+    return map;
 }
 
 int baranium_string_map_get_index(baranium_string_map* map, const char* name)
@@ -511,6 +500,46 @@ float strgetfloatval(const char* str)
     return negative ? -result : result;
 }
 
+double strgetdoubleval(const char* str)
+{
+    double result = 0;
+    size_t index = 0;
+
+    char chr = str[index];
+    uint8_t negative = chr == '-';
+    if (chr == '+' || chr == '-')
+        index++;
+
+    uint8_t hasDot = 0;
+    double dotfactor = 0;
+
+    for (; index < strlen(str); index++)
+    {
+        chr = str[index];
+
+        if (chr == '.')
+        {
+            hasDot = 1;
+            dotfactor = 1;
+            continue;
+        }
+
+        if (chr < '0' || chr > '9')
+            return INFINITY;
+
+        if (hasDot)
+        {
+            dotfactor *= 10;
+            result += (chr - '0') / dotfactor;
+            continue;
+        }
+
+        result *= 10;
+        result += (chr - '0');
+    }
+
+    return negative ? -result : result;
+}
 
 uint64_t strgetnumval(const char* src)
 {
@@ -669,7 +698,7 @@ void strsplit(baranium_string_list* _out, const char* src, char delim)
     if (_out == NULL || src == NULL)
         return;
 
-    baranium_string_list_init(_out);
+    *_out = baranium_string_list_init();
 
     size_t count = 0;
     char** strings = NULL;

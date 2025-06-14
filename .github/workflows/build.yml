@@ -89,8 +89,14 @@ jobs:
                 "${{ github.workspace }}/baranium/baranium-ubuntu-latest-Release/*"
                 "${{ github.workspace }}/baranium/baranium-macos-latest-Debug/*"
                 "${{ github.workspace }}/baranium/baranium-macos-latest-Release/*"
-                "${{ github.workspace }}/baranium/baranium-windows-latest-Debug/*/*"
-                "${{ github.workspace }}/baranium/baranium-windows-latest-Release/*/*"
+                "${{ github.workspace }}/baranium/baranium-windows-latest-Debug/*"
+                "${{ github.workspace }}/baranium/baranium-windows-latest-Release/*"
+    - name: Rename ubuntu to linux for convenience (release)
+      id: renamestuff1
+      run: mv "${{ github.workspace }}/baranium/baranium-ubuntu-latest-Release/" "${{ github.workspace }}/baranium/baranium-linux-latest-Release/"
+    - name: Rename ubuntu to linux for convenience (debug)
+      id: renamestuff2
+      run: mv "${{ github.workspace }}/baranium/baranium-ubuntu-latest-Debug/" "${{ github.workspace }}/baranium/baranium-linux-latest-Debug/"
     - name: Upload to a single artifact
       uses: actions/upload-artifact@v4
       with:

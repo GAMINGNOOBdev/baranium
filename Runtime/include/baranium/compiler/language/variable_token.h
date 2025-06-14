@@ -1,3 +1,9 @@
+/**
+ * @note THIS IS NOT INTENDED FOR USE BY THE USER OF THE RUNTIME!
+ *       This header is intended to be used internally by the runtime
+ *       and therefore, functions defined in this header cannot be used
+ *       by the user.
+ */
 #ifndef __BARANIUM__COMPILER__LANGUAGE__VARIABLE_TOKEN_H_
 #define __BARANIUM__COMPILER__LANGUAGE__VARIABLE_TOKEN_H_ 1
 
@@ -5,6 +11,7 @@
 extern "C" {
 #endif
 
+#include <baranium/compiler/language/expression_token.h>
 #include <baranium/compiler/language/token.h>
 #include <baranium/compiler/source_token.h>
 #include <baranium/variable.h>
@@ -30,6 +37,7 @@ BARANIUMAPI baranium_variable_type_t baranium_variable_predict_type(baranium_sou
 typedef struct
 {
     baranium_token base;
+    baranium_expression_token init_expression;
     baranium_variable_type_t type;
     size_t array_size;
     const char* value;

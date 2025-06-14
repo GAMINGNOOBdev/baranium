@@ -67,7 +67,7 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
     baranium_source_token_list_init(&return_value_list);
     for (size_t i = 1; i < expression->inner_tokens.count; i++)
         baranium_source_token_list_add(&return_value_list, &expression->inner_tokens.data[i]);
-    
+
     baranium_source_token* valueToken = return_value_list.data;
     expression->return_type = baranium_variable_predict_type(&return_value_list);
 
@@ -98,7 +98,7 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
     baranium_token* token = baranium_token_lists_contain(valueToken->contents, local_tokens, global_tokens);
     if (token == NULL)
     {
-        LOGERROR(stringf("Line %d: Invalid return value \"%s\"", valueToken->line_number, valueToken->contents));
+        LOGERROR("Line %d: Invalid return value \"%s\"", valueToken->line_number, valueToken->contents);
         baranium_source_token_list_dispose(&return_value_list);
         return;
     }
@@ -121,7 +121,7 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
         return;
     }
 
-    LOGERROR(stringf("Line %d: Invalid return value \"%s\"", valueToken->line_number, valueToken->contents));
+    LOGERROR("Line %d: Invalid return value \"%s\"", valueToken->line_number, valueToken->contents);
     baranium_source_token_list_dispose(&return_value_list);
 }
 
@@ -202,6 +202,13 @@ void baranium_expression_token_identify(baranium_expression_token* expression, b
                 break;
             }
 
+            if (firstToken.special_index == BARANIUM_KEYWORD_INDEX_BREAK || firstToken.special_index == BARANIUM_KEYWORD_INDEX_CONTINUE)
+            {
+                expression->expression_type = BARANIUM_EXPRESSION_TYPE_KEYWORD_EXPRESSION;
+                expression->line_number = firstToken.line_number;
+                break;
+            }
+
             if (expression->inner_tokens.count < 3 && firstToken.special_index >= BARANIUM_KEYWORD_INDEX_INSTANTIATE && firstToken.special_index <= BARANIUM_KEYWORD_INDEX_DETACH)
             {
                 baranium_source_token* object_source_token = baranium_source_token_list_get(&expression->inner_tokens, 1);
@@ -209,7 +216,7 @@ void baranium_expression_token_identify(baranium_expression_token* expression, b
                 baranium_token* parsed_object_token = baranium_token_lists_contain(object_source_token->contents, local_tokens, global_tokens);
                 if (parsed_object_token == NULL && !(strcmp(object_source_token->contents, "null") == 0 || strcmp(object_source_token->contents, baranium_keywords[BARANIUM_KEYWORD_INDEX_ATTACHED].name) == 0))
                 {
-                    LOGERROR(stringf("Line %d: Cannot parse keyword expression: Cannot find variable named '%s'", firstToken.line_number, object_source_token->contents));
+                    LOGERROR("Line %d: Cannot parse keyword expression: Cannot find variable named '%s'", firstToken.line_number, object_source_token->contents);
                     return;
                 }
 
@@ -217,6 +224,7 @@ void baranium_expression_token_identify(baranium_expression_token* expression, b
                 expression->return_type = BARANIUM_VARIABLE_TYPE_OBJECT;
                 expression->return_value = object_source_token->contents;
                 expression->line_number = object_source_token->line_number;
+                break;
             }
 
             break;

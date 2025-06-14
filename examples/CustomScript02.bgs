@@ -3,12 +3,12 @@
 +define TEST_DEFINE "dayum, this actually works"
 +define BARANIUMAPI
 
-define myVeryFancyFunction(int var)
+define myVeryFancyFunction(int32 var)
 {
     # variables
     float variable0 = 10.0;
-    int variable1 = -10;
-    uint variable2 = 10;
+    int32 variable1 = -10;
+    uint32 variable2 = 10;
     object object = myObject;
     bool isStupidCode = false;
 

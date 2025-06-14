@@ -49,7 +49,7 @@ void baranium_loop_token_parse(baranium_loop_token* loop, baranium_token_list* l
 
         if (token->special_index == BARANIUM_KEYWORD_INDEX_DEFINE)
         {
-            LOGERROR(stringf("Line %d: Invalid syntax: function definition inside a loop", token->line_number));
+            LOGERROR("Line %d: Invalid syntax: function definition inside a loop", token->line_number);
             return;
         }
 
@@ -67,20 +67,20 @@ void baranium_loop_token_parse(baranium_loop_token* loop, baranium_token_list* l
 
         if (token->special_index == BARANIUM_KEYWORD_INDEX_ELSE)
         {
-            LOGERROR(stringf("Line %d: missing `if` for `else` statement", token->line_number));
+            LOGERROR("Line %d: missing `if` for `else` statement", token->line_number);
             return;
         }
 
         if (token->type == BARANIUM_SOURCE_TOKEN_TYPE_FIELD)
         {
-            LOGERROR(stringf("Line %d: Invalid syntax: fields are not allowed outside of the global scope", token->line_number));
+            LOGERROR("Line %d: Invalid syntax: fields are not allowed outside of the global scope", token->line_number);
             return;
         }
 
         if (baranium_is_internal_type(*token))
         {
             ///TODO: make variables inside loops possible through a temporary variable table
-            LOGERROR(stringf("Line %d: Invalid syntax: variables are not allowed inside of loops", token->line_number));
+            LOGERROR("Line %d: Invalid syntax: variables are not allowed inside of loops", token->line_number);
             return;
         }
 

@@ -4,22 +4,22 @@
 
 baranium_keyword baranium_keywords[] = {
     // the "field", a custom type that can be set outside of this environment
-    {"field",        BARANIUM_SOURCE_TOKEN_TYPE_FIELD},
-    {"attached",     BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"field",         BARANIUM_SOURCE_TOKEN_TYPE_FIELD},
+    {"attached",      BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
 
     // the null type
-    {"null",         BARANIUM_SOURCE_TOKEN_TYPE_NULL},
+    {"null",          BARANIUM_SOURCE_TOKEN_TYPE_NULL},
 
     // types
-    {"object",       BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
-    {"string",       BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
-    {"float",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
-    {"bool",         BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
-    {"int",          BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
-    {"uint",         BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
-    {"double",       BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
-    {"byte",         BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
-    {"ubyte",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"object",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"string",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"float",         BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"bool",          BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"int32",         BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"uint32",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"double",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"int8",         BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"uint8",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
     {"int16",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
     {"uint16",       BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
     {"int64",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
@@ -46,6 +46,9 @@ baranium_keyword baranium_keywords[] = {
     {"do",           BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
     {"for",          BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
     {"while",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"break",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+    {"continue",     BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+
     {0,BARANIUM_SOURCE_TOKEN_TYPE_INVALID}
 };
 

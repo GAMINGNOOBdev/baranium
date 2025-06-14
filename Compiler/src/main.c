@@ -119,17 +119,14 @@ void read_includes_file(const char* path, uint8_t freepath)
     char* line = NULL;
     size_t linesize = 0;
     #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
-    while (getlinev2(&line, &linesize, includePathsFile) != EOF)
+    while ((linesize = getlinev2(&line, &linesize, includePathsFile)) != (size_t)EOF)
     #else
-    while (getline(&line, &linesize, includePathsFile) != EOF)
+    while ((linesize = getline(&line, &linesize, includePathsFile)) != (size_t)EOF)
     #endif
     {
         line[linesize-1] = 0;
         linesize--;
         baranium_preprocessor_add_include_path(line);
-        if (line != NULL)
-            free(line);
-        line = NULL;
     }
     if (line != NULL)
         free(line);
@@ -200,10 +197,10 @@ int main(const int argc, const char** argv)
     }
 
     g_debug_mode = argument_parser_has(parser, "-d");
-    logEnableDebugMsgs(g_debug_mode);
-    logEnableStdout(1); // should always be on
+    log_enable_debug_msgs(g_debug_mode);
+    log_enable_stdout(1); // should always be on
     FILE* logOutput = fopen("compiler.log", "wb+");
-    logSetStream(logOutput);
+    log_set_stream(logOutput);
 
     char* output = "output.bin";
     uint8_t is_library = 0;
@@ -291,10 +288,10 @@ int main(const int argc, const char** argv)
         FILE* inputFile = fopen(file->values[0], "r");
         if (inputFile == NULL)
         {
-            LOGERROR(stringf("Error: file '%s' doesn't exist", file->values[0]));
+            LOGERROR("Error: file '%s' doesn't exist", file->values[0]);
             continue;
         }
-        LOGINFO(stringf("Compiling file '%s'...", file->values[0]));
+        LOGINFO("Compiling file '%s'...", file->values[0]);
         baranium_compiler_context_add_source(context, inputFile);
 
         fclose(inputFile);

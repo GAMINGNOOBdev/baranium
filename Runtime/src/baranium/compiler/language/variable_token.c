@@ -1,9 +1,10 @@
-#include "baranium/defines.h"
+#include <baranium/compiler/language/expression_token.h>
 #include <baranium/compiler/language/variable_token.h>
 #include <baranium/compiler/language/language.h>
 #include <baranium/compiler/language/token.h>
 #include <baranium/compiler/source_token.h>
 #include <baranium/variable.h>
+#include <baranium/defines.h>
 
 baranium_variable_type_t baranium_variable_type_from_token(baranium_source_token* token)
 {
@@ -18,16 +19,16 @@ baranium_variable_type_t baranium_variable_type_from_token(baranium_source_token
         return BARANIUM_VARIABLE_TYPE_FLOAT;
     if (token->special_index == BARANIUM_KEYWORD_INDEX_BOOL)
         return BARANIUM_VARIABLE_TYPE_BOOL;
-    if (token->special_index == BARANIUM_KEYWORD_INDEX_INT)
-        return BARANIUM_VARIABLE_TYPE_INT;
-    if (token->special_index == BARANIUM_KEYWORD_INDEX_UINT)
-        return BARANIUM_VARIABLE_TYPE_UINT;
+    if (token->special_index == BARANIUM_KEYWORD_INDEX_INT32)
+        return BARANIUM_VARIABLE_TYPE_INT32;
+    if (token->special_index == BARANIUM_KEYWORD_INDEX_UINT32)
+        return BARANIUM_VARIABLE_TYPE_UINT32;
     if (token->special_index == BARANIUM_KEYWORD_INDEX_DOUBLE)
         return BARANIUM_VARIABLE_TYPE_DOUBLE;
-    if (token->special_index == BARANIUM_KEYWORD_INDEX_BYTE)
-        return BARANIUM_VARIABLE_TYPE_BYTE;
-    if (token->special_index == BARANIUM_KEYWORD_INDEX_UBYTE)
-        return BARANIUM_VARIABLE_TYPE_UBYTE;
+    if (token->special_index == BARANIUM_KEYWORD_INDEX_INT8)
+        return BARANIUM_VARIABLE_TYPE_INT8;
+    if (token->special_index == BARANIUM_KEYWORD_INDEX_UINT8)
+        return BARANIUM_VARIABLE_TYPE_UINT8;
     if (token->special_index == BARANIUM_KEYWORD_INDEX_INT16)
         return BARANIUM_VARIABLE_TYPE_INT16;
     if (token->special_index == BARANIUM_KEYWORD_INDEX_UINT16)
@@ -68,14 +69,14 @@ baranium_variable_type_t baranium_variable_predict_type(baranium_source_token_li
                 if (thirdToken->type == BARANIUM_SOURCE_TOKEN_TYPE_DOT)
                     return BARANIUM_VARIABLE_TYPE_FLOAT;
             }
-            return first_token->type == BARANIUM_SOURCE_TOKEN_TYPE_MINUS ? BARANIUM_VARIABLE_TYPE_INT : BARANIUM_VARIABLE_TYPE_UINT;
+            return first_token->type == BARANIUM_SOURCE_TOKEN_TYPE_MINUS ? BARANIUM_VARIABLE_TYPE_INT32 : BARANIUM_VARIABLE_TYPE_UINT32;
         }
     }
 
     if (first_token->type == BARANIUM_SOURCE_TOKEN_TYPE_NUMBER)
     {
         if (tokenIndex >= tokens->count)
-            return BARANIUM_VARIABLE_TYPE_UINT;
+            return BARANIUM_VARIABLE_TYPE_UINT32;
         
         baranium_source_token* secondToken = baranium_source_token_list_get(tokens, tokenIndex++);
         if (secondToken->type == BARANIUM_SOURCE_TOKEN_TYPE_DOT)
@@ -95,8 +96,13 @@ void baranium_variable_token_init(baranium_variable_token* variable)
     variable->base.type = BARANIUM_TOKEN_TYPE_VARIABLE;
     variable->type = BARANIUM_VARIABLE_TYPE_INVALID;
     variable->array_size = -1;
+    baranium_expression_token_init(&variable->init_expression);
 }
 
 void baranium_variable_token_dispose(baranium_variable_token* variable)
 {
+    if (!variable)
+        return;
+
+    baranium_expression_token_dispose(&variable->init_expression);
 }

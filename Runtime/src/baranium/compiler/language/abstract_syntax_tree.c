@@ -249,6 +249,10 @@ baranium_abstract_syntax_tree_node* baranium_ast_string_parser(baranium_source_t
     memset(result, 0, sizeof(baranium_abstract_syntax_tree_node));
     result->contents = *baranium_source_token_list_current(tokens);
     result->operation = (uint8_t)-1;
+
+    if (baranium_source_token_list_next_matches(tokens, BARANIUM_SOURCE_TOKEN_TYPE_DOUBLEQUOTE)) // handle empty strings
+        return result;
+
     baranium_source_token_list_next(tokens);
 
     result->left = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
@@ -260,7 +264,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_string_parser(baranium_source_t
     result->left->contents = *baranium_source_token_list_current(tokens);
     if (!baranium_source_token_list_next_matches(tokens, BARANIUM_SOURCE_TOKEN_TYPE_DOUBLEQUOTE))
     {
-        LOGERROR(stringf("Line %d: missing \" at the end of string", result->left->contents.line_number));
+        LOGERROR("Line %d: missing '\"' at the end of string", result->left->contents.line_number);
         return NULL;
     }
     return result;
@@ -313,7 +317,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_indecrement_operator_parser(bar
 
     if (result->left->contents.type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
     {
-        LOGERROR(stringf("Line %d: Invalid assignment, expected variable name, got '%s'", result->left->contents.line_number, result->left->contents.contents));
+        LOGERROR("Line %d: Invalid assignment, expected variable name, got '%s'", result->left->contents.line_number, result->left->contents.contents);
         return NULL;
     }
 
@@ -328,7 +332,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_parenthesis_order_parser(barani
     baranium_source_token closing_token = *baranium_source_token_list_current(tokens);
     if (closing_token.type != BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISCLOSE)
     {
-        LOGERROR(stringf("Line %d: Expected ')', got '%s'", closing_token.line_number, closing_token.contents));
+        LOGERROR("Line %d: Expected ')', got '%s'", closing_token.line_number, closing_token.contents);
         return NULL;
     }
 
@@ -357,7 +361,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_array_indexing_parser(baranium_
         baranium_abstract_syntax_tree_node_list_add(&result->sub_nodes, baranium_abstract_syntax_tree_parse_tokens(tokens, BARANIUM_BINDING_POWER_NONE));
         if (!baranium_source_token_list_next_matches(tokens, BARANIUM_SOURCE_TOKEN_TYPE_BRACKETCLOSE))
         {
-            LOGERROR(stringf("Line %d: Missing ']'", baranium_source_token_list_current(tokens)->line_number));
+            LOGERROR("Line %d: Missing ']'", baranium_source_token_list_current(tokens)->line_number);
             return NULL;
         }
     }
@@ -395,7 +399,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_function_call_parser(baranium_s
         while (baranium_source_token_list_next_matches(tokens, BARANIUM_SOURCE_TOKEN_TYPE_COMMA));
         if (!baranium_source_token_list_next_matches(tokens, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISCLOSE))
         {
-            LOGERROR(stringf("Line %d: Missing ')'", baranium_source_token_list_current(tokens)->line_number));
+            LOGERROR("Line %d: Missing ')'", baranium_source_token_list_current(tokens)->line_number);
             return NULL;
         }
     }
@@ -439,9 +443,9 @@ baranium_abstract_syntax_tree_node* baranium_ast_combined_comparison_operator_pa
         return NULL;
     memset(result, 0, sizeof(baranium_abstract_syntax_tree_node));
     result->contents = *baranium_source_token_list_current(tokens);
-    LOGDEBUG(stringf("Previous token: '%s'", parent_node->contents.contents));
-    LOGDEBUG(stringf("Current token: '%s'", *baranium_source_token_list_current(tokens)->contents));
-    LOGDEBUG(stringf("Next token: '%s'", baranium_source_token_list_peek(tokens)->contents));
+    LOGDEBUG("Previous token: '%s'", parent_node->contents.contents);
+    LOGDEBUG("Current token: '%s'", *baranium_source_token_list_current(tokens)->contents);
+    LOGDEBUG("Next token: '%s'", baranium_source_token_list_peek(tokens)->contents);
     baranium_source_token_type_t type;
     uint8_t was_special_char = 0;
     int64_t operationIndex = baranium_abstract_syntax_tree_get_operation_index(*baranium_source_token_list_current(tokens), &type, &was_special_char);
@@ -457,8 +461,8 @@ baranium_abstract_syntax_tree_node* baranium_ast_combined_comparison_operator_pa
     if (parent_node != NULL)
         free(parent_node);
 
-    LOGDEBUG(stringf("left token: %s", result->left->contents.contents));
-    LOGDEBUG(stringf("right token: %s", result->right->contents.contents));
+    LOGDEBUG("left token: %s", result->left->contents.contents);
+    LOGDEBUG("right token: %s", result->right->contents.contents);
     return result;
 }
 
@@ -497,7 +501,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_assignment_operator_parser(bara
 
     if (parent_node->contents.type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
     {
-        LOGERROR(stringf("Line %d: Invalid assignment, expected variable/field name, got '%s'", parent_node->contents.line_number, parent_node->contents.contents));
+        LOGERROR("Line %d: Invalid assignment, expected variable/field name, got '%s'", parent_node->contents.line_number, parent_node->contents.contents);
         return NULL;
     }
 
@@ -534,7 +538,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_postfix_operator_parser(baraniu
 
     if (parent_node->contents.type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
     {
-        LOGERROR(stringf("Line %d: Invalid in-/decrementation, expected variable name, got '%s'", parent_node->contents.line_number, parent_node->contents.contents));
+        LOGERROR("Line %d: Invalid in-/decrementation, expected variable name, got '%s'", parent_node->contents.line_number, parent_node->contents.contents);
         return NULL;
     }
 
@@ -706,7 +710,7 @@ baranium_abstract_syntax_tree_node* baranium_abstract_syntax_tree_parse_tokens(b
 
     if(baranium_preinpostfix_token_parser_map_get_index(baranium_ast_prefix_map, token->type) == -1)
     {
-        LOGERROR(stringf("Invalid prefix '%s'", token->contents));
+        LOGERROR("Invalid prefix '%s'", token->contents);
         return NULL;
     }
 

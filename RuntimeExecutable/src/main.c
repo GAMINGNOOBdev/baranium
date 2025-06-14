@@ -31,8 +31,17 @@
 
 uint8_t debug_mode_enabled;
 
-void print_help_message(void);
 extern void setup_callbacks(void);
+
+void print_help_message(void)
+{
+    printf("bar [options] <filepath>\n");
+    printf("Options:\n");
+    printf("\t-h/--help:\t\t\tShow this help message\n");
+    printf("\t-v/--version:\t\t\tShow the version of the runtime\n");
+    printf("\t-stdout/--enable-stdout:\tShow the version of the runtime\n");
+    printf("\t-d/--debug:\t\t\tEnable debug messages\n");
+}
 
 char* get_executable_working_directory(void)
 {
@@ -61,15 +70,17 @@ size_t str_index_of(const char* string, char delim)
 
 int main(int argc, const char** argv)
 {
+    int exit_code = 0;
     if (argc < 2)
     {
         print_help_message();
-        return 0;
+        return exit_code;
     }
 
     argument_parser* parser = argument_parser_init();
     argument_parser_add(parser, Argument_Type_Flag, "-h", "--help");
     argument_parser_add(parser, Argument_Type_Flag, "-d", "--debug");
+    argument_parser_add(parser, Argument_Type_Flag, "-stdout", "--enable-stdout");
     argument_parser_add(parser, Argument_Type_Flag, "-v", "--version");
     argument_parser_parse(parser, argc, argv);
 
@@ -77,23 +88,23 @@ int main(int argc, const char** argv)
     {
         print_help_message();
         argument_parser_dispose(parser);
-        return 0;
+        return exit_code;
     }
 
     if (argument_parser_has(parser, "-v"))
     {
         PRINT_VERSION;
         argument_parser_dispose(parser);
-        return 0;
+        return exit_code;
     }
 
     debug_mode_enabled = argument_parser_has(parser, "-d");
     if (debug_mode_enabled)
         PRINT_VERSION;
-    logEnableDebugMsgs(debug_mode_enabled);
-    logEnableStdout(!debug_mode_enabled);
+    log_enable_debug_msgs(debug_mode_enabled);
+    log_enable_stdout(argument_parser_has(parser, "-stdout"));
     FILE* logOutput = fopen("runtime.log", "wb+");
-    logSetStream(logOutput);
+    log_set_stream(logOutput);
 
     if (debug_mode_enabled)
         LOGINFO("Debug messages enabled");
@@ -101,10 +112,11 @@ int main(int argc, const char** argv)
     if (parser->unparsed->size != 1)
     {
         print_help_message();
-        LOGERROR(stringf("Invalid number of files passed, expected one, got %ld", parser->unparsed->size));
+        LOGERROR("Invalid number of files passed, expected one, got %ld", parser->unparsed->size);
         argument_parser_dispose(parser);
         fclose(logOutput);
-        return -1;
+        exit_code = -1;
+        return exit_code;
     }
 
     const char* filePath = parser->unparsed->start->values[0];
@@ -125,6 +137,13 @@ int main(int argc, const char** argv)
 
     baranium_handle* handle = baranium_open_handle(filePath);
     baranium_script* script = baranium_open_script(handle);
+    if (script == NULL)
+    {
+        log_enable_stdout(1);
+        LOGERROR("Invalid file passed, terminating...");
+        exit_code = -2;
+        goto end;
+    }
 
     index_t mainIndex = baranium_script_get_id_of(script, "main");
 
@@ -132,6 +151,7 @@ int main(int argc, const char** argv)
     baranium_function_call(main, NULL, NULL, 0);
     baranium_function_dispose(main);
 
+end:
     baranium_close_script(script);
     baranium_close_handle(handle);
 
@@ -139,14 +159,5 @@ int main(int argc, const char** argv)
     free(executableFilePath);
     fclose(logOutput);
 
-    return 0;
-}
-
-void print_help_message(void)
-{
-    printf("bar [options] <filepath>\n");
-    printf("Options:\n");
-    printf("\t-h/--help:\tShow this help message\n");
-    printf("\t-v/--version:\tShow the version of the runtime\n");
-    printf("\t-d/--debug:\tEnable debug messages\n");
+    return exit_code;
 }

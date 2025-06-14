@@ -1,3 +1,9 @@
+/**
+ * @note THIS IS NOT INTENDED FOR USE BY THE USER OF THE RUNTIME!
+ *       This header is intended to be used internally by the runtime
+ *       and therefore, functions defined in this header cannot be used
+ *       by the user.
+ */
 #ifndef __BARANIUM__COMPILER__LANGUAGE__EXPRESSION_H_
 #define __BARANIUM__COMPILER__LANGUAGE__EXPRESSION_H_ 1
 
@@ -6,7 +12,6 @@ extern "C" {
 #endif
 
 #include <baranium/compiler/language/abstract_syntax_tree.h>
-#include <baranium/compiler/language/variable_token.h>
 #include <baranium/compiler/language/language.h>
 #include <baranium/compiler/language/token.h>
 #include <baranium/compiler/source_token.h>

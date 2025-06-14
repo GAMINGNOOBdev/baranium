@@ -41,7 +41,7 @@ void baranium_callback_list_dispose(baranium_callback_list* list)
 {
     if (!list) return;
 
-    LOGDEBUG(stringf("Disposing callback list with %ld entries", list->count));
+    LOGDEBUG("Disposing callback list with %ld entries", list->count);
 
     for (baranium_callback_list_entry* entry = list->start; entry != NULL; )
     {
@@ -104,7 +104,7 @@ baranium_callback_list_entry* baranium_callback_find_by_id(index_t id)
     baranium_callback_list* list = runtime->callbacks;
     if (!list) return NULL;
 
-    LOGDEBUG(stringf("Disposing callback list with %ld entries", list->count));
+    LOGDEBUG("Callback list has %ld entries", list->count);
 
     for (baranium_callback_list_entry* entry = list->start; entry != NULL; )
     {
@@ -127,7 +127,7 @@ baranium_callback_list_entry* baranium_callback_find_by_cb_ptr(baranium_callback
     baranium_callback_list* list = runtime->callbacks;
     if (!list) return NULL;
 
-    LOGDEBUG(stringf("Disposing callback list with %ld entries", list->count));
+    LOGDEBUG("Callback list has %ld entries", list->count);
 
     for (baranium_callback_list_entry* entry = list->start; entry != NULL; )
     {

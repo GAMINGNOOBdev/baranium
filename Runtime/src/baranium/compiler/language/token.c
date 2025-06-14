@@ -57,7 +57,7 @@ void baranium_token_list_dispose(baranium_token_list* obj)
 
     if (obj->data != NULL)
     {
-        LOGDEBUG(stringf("disposing token list 0x%x with '%lld' children", obj->data, obj->count));
+        LOGDEBUG("disposing token list 0x%x with '%lld' children", obj->data, obj->count);
         for (size_t i = 0; i < obj->count; i++)
         {
             baranium_token* token = obj->data[i];
@@ -65,7 +65,7 @@ void baranium_token_list_dispose(baranium_token_list* obj)
                 continue;
 
             baranium_token_type_t type = token->type;
-            LOGDEBUG(stringf("token 0x%x{ .type=%s, .id=%lld }", token, baranium_token_type_to_string(type), token->id));
+            LOGDEBUG("token 0x%x{ .type=%s, .id=%lld }", token, baranium_token_type_to_string(type), token->id);
 
             if (type == BARANIUM_TOKEN_TYPE_FUNCTION)
                 baranium_function_token_dispose((baranium_function_token*)token);

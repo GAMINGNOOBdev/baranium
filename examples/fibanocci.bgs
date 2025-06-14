@@ -1,29 +1,51 @@
 # 
 # @author GAMINGNOOBdev
-# @brief This is a test for calculating the fibanocci numbers
+# @brief This is a test for calculating fibanocci numbers and printing the sequence
 # 
-
 
 +include stdio
 +include stdlib
 
-define fibanocci(int max)
-{
-    int fib = 0;
-    int next = 1;
-    while (fib < max)
-    {
-        print(" " + fib + " ");
-        fib += next;
-        next = fib + next;
-    }
-}
-
 define main()
 {
-    print("Enter fibanocci maximum: ");
-    int fibmax = 0;
-    fibmax = input();
+    print("Enter the amount of fibanocci numbers to calculate: ");
+    int fibmax = input();
     print_fibanocci_sequence(fibmax);
     return 0;
+}
+
+define print_fibanocci_num(uint64 num)
+{
+    print("'" + num + "'");
+}
+
+define print_fibanocci_sequence(int max)
+{
+    if (max <= 0)
+    {
+        print("Enter a positive number, smh\n");
+        return;
+    }
+
+    uint64 a = 0;
+    uint64 b = 1;
+    uint64 count = 0;
+    uint64 next = 0;
+
+    if (max >= 1)
+    {
+        print_fibanocci_num(a);
+        count++;
+    }
+
+    while (count < max)
+    {
+        next = a + b;
+        print(",");
+        print_fibanocci_num(next);
+        a = b;
+        b = next;
+        count++;
+    }
+    print("\n");
 }

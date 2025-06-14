@@ -9,8 +9,13 @@ void baranium_field_token_init(baranium_field_token* field)
     field->base.type = BARANIUM_TOKEN_TYPE_FIELD;
     field->type = BARANIUM_VARIABLE_TYPE_INVALID;
     field->array_size = -1;
+    baranium_expression_token_init(&field->init_expression);
 }
 
 void baranium_field_token_dispose(baranium_field_token* field)
 {
+    if (!field)
+        return;
+
+    baranium_expression_token_dispose(&field->init_expression);
 }

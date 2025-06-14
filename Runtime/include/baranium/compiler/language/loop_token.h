@@ -1,3 +1,9 @@
+/**
+ * @note THIS IS NOT INTENDED FOR USE BY THE USER OF THE RUNTIME!
+ *       This header is intended to be used internally by the runtime
+ *       and therefore, functions defined in this header cannot be used
+ *       by the user.
+ */
 #ifndef __BARANIUM__COMPILER__LANGUAGE__LOOP_TOKEN_H_
 #define __BARANIUM__COMPILER__LANGUAGE__LOOP_TOKEN_H_ 1
 

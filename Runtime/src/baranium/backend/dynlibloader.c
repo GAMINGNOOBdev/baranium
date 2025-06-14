@@ -23,7 +23,7 @@
 baranium_dynlib_handle baranium_dynlib_load(const char* filepath, baranium_dynlib_data* data)
 {
     baranium_dynlib_handle handle = libopen(filepath);
-    LOGINFO(stringf("loaded library 0x%x", handle));
+    LOGINFO("loaded library 0x%x", handle);
 
     void(*initsymbol)(baranium_dynlib_data*) = (void(*)(baranium_dynlib_data*))baranium_dynlib_symbol(handle, "__dynlib_initialize__");
     if (initsymbol != NULL)
@@ -35,12 +35,12 @@ baranium_dynlib_handle baranium_dynlib_load(const char* filepath, baranium_dynli
 void* baranium_dynlib_symbol(baranium_dynlib_handle handle, const char* name)
 {
     void* sym = libsym(handle, name);
-    LOGINFO(stringf("loaded symbol '%s' (0x%x) from library 0x%x", name, sym, handle));
+    LOGINFO("loaded symbol '%s' (0x%x) from library 0x%x", name, sym, handle);
     return sym;
 }
 
 void baranium_dynlib_unload(baranium_dynlib_handle handle)
 {
-    LOGINFO(stringf("unloading library with address 0x%x", handle));
+    LOGINFO("unloading library with address 0x%x", handle);
     libclose(handle);
 }

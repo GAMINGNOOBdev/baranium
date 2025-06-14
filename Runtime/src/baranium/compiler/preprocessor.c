@@ -89,7 +89,7 @@ static baranium_preprocessor_define_list baranium_define_list;
 void baranium_preprocessor_init(void)
 {
     baranium_preprocessor_define_list_init(&baranium_define_list);
-    baranium_string_list_init(&baranium_include_paths);
+    baranium_include_paths = baranium_string_list_init();
 }
 
 void baranium_preprocessor_dispose(void)
@@ -135,7 +135,7 @@ void baranium_preprocessor_parse(const char* operation, baranium_source_token_li
             include_path = (char*)baranium_preprocessor_search_include_path(include_file);
             if (include_path == NULL)
             {
-                LOGERROR(stringf("Including file '%s' failed: Check path variable", include_file));
+                LOGERROR("Including file '%s' failed: Check path variable", include_file);
                 continue;
             }
 
@@ -143,7 +143,7 @@ void baranium_preprocessor_parse(const char* operation, baranium_source_token_li
 
             if (file == NULL)
             {
-                LOGERROR(stringf("Including file '%s' failed: File might be missing/corrupt (or path may not even point to a file!)", include_file));
+                LOGERROR("Including file '%s' failed: File might be missing/corrupt (or path may not even point to a file!)", include_file);
                 continue;
             }
 
@@ -214,7 +214,7 @@ void baranium_preprocessor_add_define(const char* define, const char* replacemen
         isdigit(define[0]) || baranium_is_special_char(define[0]) != -1)
         return;
 
-    LOGDEBUG(stringf("define{'%s'} replacement{'%s'}", define, replacement));
+    LOGDEBUG("define{'%s'} replacement{'%s'}", define, replacement);
 
     baranium_preprocessor_define_list_add(&baranium_define_list, define, replacement);
 }
@@ -231,16 +231,19 @@ void baranium_preprocessor_assist_in_line(baranium_source_token_list* line_token
         if (index == -1)
             continue;
 
+        baranium_source_token_list replacementTokens = baranium_define_list.replacements[index];
         index = i;
         baranium_source_token_list_remove(line_tokens, index);
-        index--;
-
-        baranium_source_token_list replacementTokens = baranium_define_list.replacements[index];
+        if (index != 0)
+            index--;
 
         for (size_t i = 0; i < replacementTokens.count; i++)
             replacementTokens.data[i].line_number = token.line_number;
 
-        baranium_source_token_list_insert_after(line_tokens, index, &replacementTokens);
+        if (index != 0)
+            baranium_source_token_list_insert_after(line_tokens, index, &replacementTokens);
+        else
+            baranium_source_token_list_insert_start(line_tokens, &replacementTokens);
     }
 }
 
@@ -251,8 +254,7 @@ const char* baranium_preprocessor_search_include_path(const char* file)
     for (size_t i = 0; i < baranium_include_paths.count; i++)
     {
         const char* include_path = baranium_include_paths.strings[i];
-        baranium_string_list_init(&directory_contents);
-        baranium_file_util_get_directory_contents(&directory_contents, include_path, BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES);
+        directory_contents = baranium_file_util_get_directory_contents(include_path, BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES);
         for (size_t i = 0; i < directory_contents.count; i++)
         {
             const char* filename = directory_contents.strings[i];

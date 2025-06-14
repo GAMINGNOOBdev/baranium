@@ -28,6 +28,9 @@ extern "C" {
 */
 typedef struct
 {
+    size_t loop_begin_addr; // used for `continue`
+    size_t loop_end_addr; // used for `break`
+
     uint8_t* code;
     size_t code_length;
     size_t code_buffer_size;

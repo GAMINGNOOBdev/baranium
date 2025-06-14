@@ -1,3 +1,9 @@
+/**
+ * @note THIS IS NOT INTENDED FOR USE BY THE USER OF THE RUNTIME!
+ *       This header is intended to be used internally by the runtime
+ *       and therefore, functions defined in this header cannot be used
+ *       by the user.
+ */
 #ifndef __BARANIUM__COMPILER__LANGUAGE__LANGUAGE_H_
 #define __BARANIUM__COMPILER__LANGUAGE__LANGUAGE_H_ 1
 
@@ -17,11 +23,11 @@ extern "C" {
 #define BARANIUM_KEYWORD_INDEX_STRING        4
 #define BARANIUM_KEYWORD_INDEX_FLOAT         5
 #define BARANIUM_KEYWORD_INDEX_BOOL          6
-#define BARANIUM_KEYWORD_INDEX_INT           7
-#define BARANIUM_KEYWORD_INDEX_UINT          8
+#define BARANIUM_KEYWORD_INDEX_INT32         7
+#define BARANIUM_KEYWORD_INDEX_UINT32        8
 #define BARANIUM_KEYWORD_INDEX_DOUBLE        9
-#define BARANIUM_KEYWORD_INDEX_BYTE          10
-#define BARANIUM_KEYWORD_INDEX_UBYTE         11
+#define BARANIUM_KEYWORD_INDEX_INT8          10
+#define BARANIUM_KEYWORD_INDEX_UINT8         11
 #define BARANIUM_KEYWORD_INDEX_INT16         12
 #define BARANIUM_KEYWORD_INDEX_UINT16        13
 #define BARANIUM_KEYWORD_INDEX_INT64         14
@@ -40,6 +46,8 @@ extern "C" {
 #define BARANIUM_KEYWORD_INDEX_DO            27
 #define BARANIUM_KEYWORD_INDEX_FOR           28
 #define BARANIUM_KEYWORD_INDEX_WHILE         29
+#define BARANIUM_KEYWORD_INDEX_BREAK         30
+#define BARANIUM_KEYWORD_INDEX_CONTINUE      31
 
 typedef struct baranium_keyword
 {

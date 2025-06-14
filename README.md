@@ -41,9 +41,10 @@ cmake ..
 
 5. Open the generated visual studio solution and build the entire solution
 
-Note: The generated binaries are under the subfolders `Compiler`, `Runtime`
-      and `RuntimeExecutable` and if using Windows under a folder with the
-      same name as the build configuration
+> [!NOTE]
+> The generated binaries are under the subfolders `Compiler`, `Runtime`
+> and `RuntimeExecutable` and if using Windows under a folder with the
+> same name as the build configuration
 
 ## Using the compiler
 Compiler flags/options:<br/>

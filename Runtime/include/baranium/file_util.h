@@ -16,6 +16,18 @@ extern "C" {
 #define BARANIUM_FILE_UTIL_FILTER_MASK_FILES_AND_FOLDERS          0x04 // Only files and folders inside the given directory
 #define BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES_AND_FOLDERS      0x05 // All files and folders including those in subdirectories
 
+typedef void (*baranium_file_util_iteration_callback_t)(const char* filename);
+
+/**
+ * Iterate over the contents of the given directory
+ * @note This function may take a while to complete since it will retrieve all files from subfolders as well if requested
+ * 
+ * @param path Path to the directory
+ * @param mask A filter which decides how a directories' contents shall be gotten
+ * @param callback Function which will be called on each iteration/entry
+*/
+BARANIUMAPI void baranium_file_util_iterate_directory(const char* path, int mask, baranium_file_util_iteration_callback_t callback);
+
 /**
  * Gets the contents of the given directory
  * @note This function may take a while to complete since it will retrieve all files from subfolders as well if specified
@@ -26,7 +38,7 @@ extern "C" {
  * 
  * @returns A list of files inside the given directory
 */
-BARANIUMAPI void baranium_file_util_get_directory_contents(baranium_string_list* out, const char* path, int mask);
+BARANIUMAPI baranium_string_list baranium_file_util_get_directory_contents(const char* path, int mask);
 
 #ifdef __cplusplus
 }

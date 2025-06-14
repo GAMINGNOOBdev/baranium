@@ -21,7 +21,7 @@ void baranium_function_manager_dispose(baranium_function_manager* obj)
 {
     if (!obj) return;
 
-    LOGDEBUG(stringf("Disposing function manager with %ld entries", obj->count));
+    LOGDEBUG("Disposing function manager with %ld entries", obj->count);
 
     baranium_function_manager_clear(obj);
     free(obj);
@@ -33,7 +33,7 @@ void baranium_function_manager_clear(baranium_function_manager* obj)
 
     if (obj->buffer == NULL) return;
 
-    LOGDEBUG(stringf("Cleared function manager with %ld entries", obj->count));
+    LOGDEBUG("Cleared function manager with %ld entries", obj->count);
 
     free(obj->buffer);
     memset(obj, 0, sizeof(baranium_function_manager));
@@ -56,11 +56,11 @@ void baranium_function_manager_add(baranium_function_manager* obj, index_t id, b
     int status = baranium_function_manager_add_entry(obj, id, script, library);
     if (status)
     {
-        LOGERROR(stringf("Could not allocate entry for function with id %ld, status code 0x%2.2x", id, status));
+        LOGERROR("Could not allocate entry for function with id %ld, status code 0x%2.2x", id, status);
         return;
     }
 
-    LOGDEBUG(stringf("Allocated entry for function with id %ld", id));
+    LOGDEBUG("Allocated entry for function with id %ld", id);
 }
 
 baranium_function* baranium_function_manager_get(baranium_function_manager* obj, index_t id)
@@ -125,7 +125,7 @@ void baranium_function_manager_remove(baranium_function_manager* obj, index_t id
     int index = baranium_function_manager_get_entry_index(obj, id);
     if (index == -1)
     {
-        LOGERROR(stringf("Could not find function with id %ld", id));
+        LOGERROR("Could not find function with id %ld", id);
         return;
     }
 
@@ -136,7 +136,7 @@ void baranium_function_manager_remove(baranium_function_manager* obj, index_t id
         return;
     }
 
-    LOGDEBUG(stringf("Disposed function with id %ld", id));
+    LOGDEBUG("Disposed function with id %ld", id);
     memset(&obj->buffer[index], 0, sizeof(baranium_function_manager_entry));
     memmove(&obj->buffer[index], &obj->buffer[index+1], sizeof(baranium_function_manager_entry)*(obj->count - index - 1));
 

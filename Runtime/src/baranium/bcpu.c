@@ -50,8 +50,8 @@ void bcpu_tick(bcpu* obj)
     }
 
     obj->opcode = bbus_read(obj->bus, obj->ip);
-    LOGDEBUG(stringf("IP: 0x%2.16x | Ticks (total): 0x%2.16x | Opcode: 0x%2.2x | Instruction: '%s'",
-               obj->ip, obj->ticks, obj->opcode, opcodes[obj->opcode].name));
+    LOGDEBUG("IP: 0x%2.16x | Ticks (total): 0x%2.16x | Opcode: 0x%2.2x | Instruction: '%s'",
+               obj->ip, obj->ticks, obj->opcode, opcodes[obj->opcode].name);
     obj->ip++;
     opcodes[obj->opcode].handle(obj);
     obj->ticks++;

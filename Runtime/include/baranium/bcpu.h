@@ -4,7 +4,6 @@
  *       and therefore, functions defined in this header cannot be used
  *       by the user.
  */
-
 #ifndef __BARANIUM__BCPU_H_
 #define __BARANIUM__BCPU_H_ 1
 

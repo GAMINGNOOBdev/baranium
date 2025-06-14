@@ -30,7 +30,7 @@ typedef struct baranium_string_list
 /**
  * @brief Initialize a string list
 */
-BARANIUMAPI void baranium_string_list_init(baranium_string_list* list);
+BARANIUMAPI baranium_string_list baranium_string_list_init(void);
 
 /**
  * @brief Get the index of a string inside the list using it's hash
@@ -85,7 +85,7 @@ typedef struct baranium_string_map
 /**
  * @brief Initialize a string map
 */
-BARANIUMAPI void baranium_string_map_init(baranium_string_map* map);
+BARANIUMAPI baranium_string_map baranium_string_map_init(void);
 
 /**
  * @brief Get the index of a string inside the map
@@ -186,6 +186,11 @@ BARANIUMAPI uint8_t strisnum(const char* src);
  * @brief Get the floating point number value from a string
 */
 BARANIUMAPI float strgetfloatval(const char* str);
+
+/**
+ * @brief Get the floating point number value from a string
+*/
+BARANIUMAPI double strgetdoubleval(const char* str);
 
 /**
  * @brief Get the number value from a string

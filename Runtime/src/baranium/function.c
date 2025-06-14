@@ -1,4 +1,5 @@
 #include <baranium/backend/varmath.h>
+#include <baranium/backend/errors.h>
 #include <baranium/cpu/bstack.h>
 #include <baranium/function.h>
 #include <baranium/variable.h>
@@ -77,7 +78,10 @@ void baranium_function_call(baranium_function* function, baranium_value_t* datap
     }
 
     if (runtime->cpu->flags.FORCED_KILL)
-        LOGERROR(stringf("Exited with code %ld", bstack_pop(runtime->cpu->stack)));
+    {
+        uint64_t err = bstack_pop(runtime->cpu->stack);
+        LOGERROR("Exited with code %ld: %s", err, BARANIUM_ERROR_TO_STRING(err));
+    }
     else
         runtime->cpu->kill_triggered = 0;
 

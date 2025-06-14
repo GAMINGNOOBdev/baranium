@@ -53,7 +53,7 @@ void baranium_if_else_token_parse(baranium_if_else_token* ifelsetoken, baranium_
 
         if (token->special_index == BARANIUM_KEYWORD_INDEX_ELSE)
         {
-            LOGERROR(stringf("Line %d: missing `if` for `else` statement", token->line_number));
+            LOGERROR("Line %d: missing `if` for `else` statement", token->line_number);
             return;
         }
 

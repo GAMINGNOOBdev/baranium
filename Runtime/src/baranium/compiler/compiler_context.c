@@ -24,10 +24,14 @@ baranium_compiler_context* baranium_compiler_context_init(void)
     memset(ctx, 0, sizeof(baranium_compiler_context));
     baranium_source_token_list_init(&ctx->combined_source);
     baranium_token_parser_init(&ctx->token_parser);
-    baranium_string_map_init(&ctx->nametable);
+    ctx->nametable = baranium_string_map_init();
     baranium_preprocessor_init();
 
-    baranium_string_list_init(&ctx->library_dir_contents);
+    // has to be added so that the compiler will actually create the variables and such
+    baranium_preprocessor_add_define("int", "int32");
+    baranium_preprocessor_add_define("uint", "uint32");
+
+    ctx->library_dir_contents = baranium_string_list_init();
 
     if (current_active_compiler_context == NULL)
         baranium_set_compiler_context(ctx);
@@ -88,8 +92,7 @@ void baranium_compiler_context_set_library_directory(baranium_compiler_context* 
     ctx->library_dir_path = malloc(len+1);
     strncpy(ctx->library_dir_path, str, len);
     ctx->library_dir_path[len] = 0;
-    baranium_string_list_init(&ctx->library_dir_contents);
-    baranium_file_util_get_directory_contents(&ctx->library_dir_contents, ctx->library_dir_path, BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES);
+    ctx->library_dir_contents = baranium_file_util_get_directory_contents(ctx->library_dir_path, BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES);
 }
 
 void baranium_compiler_context_add_source(baranium_compiler_context* ctx, FILE* sourcefile)
@@ -136,7 +139,7 @@ void baranium_compiler_context_compile(baranium_compiler_context* ctx, const cha
     FILE* file = fopen(output, "wb+");
     if (file == NULL)
     {
-        LOGERROR(stringf("Error: cannot create or open file '%s'\n", output));
+        LOGERROR("Error: cannot create or open file '%s'\n", output);
         return;
     }
 
@@ -149,7 +152,7 @@ void baranium_compiler_context_compile(baranium_compiler_context* ctx, const cha
     baranium_compiler_dispose(&compiler);
     fclose(file);
 
-    LOGINFO(stringf("Successfully compiled %s as '%s'", library ? "library" : "executable", output));
+    LOGINFO("Successfully compiled %s as '%s'", library ? "library" : "executable", output);
 }
 
 void baranium_compiler_context_add_library(baranium_compiler_context* ctx, const char* name)
@@ -180,7 +183,7 @@ void baranium_compiler_context_add_library(baranium_compiler_context* ctx, const
 
     if (lib == NULL)
     {
-        LOGERROR(stringf("Could not find library named '%s'", name));
+        LOGERROR("Could not find library named '%s'", name);
         return;
     }
 

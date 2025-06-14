@@ -39,7 +39,7 @@ define main()
     }
 
     print("9+10 >> ");
-    int myResponseToNinePlusTen = 0xFF;
+    int32 myResponseToNinePlusTen = 0xFF;
     myResponseToNinePlusTen += 0b0101;
     myResponseToNinePlusTen = input();
 

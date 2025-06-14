@@ -14,11 +14,11 @@ extern "C" {
 #define BARANIUM_VARIABLE_TYPE_STRING   (baranium_variable_type_t)2
 #define BARANIUM_VARIABLE_TYPE_FLOAT    (baranium_variable_type_t)3
 #define BARANIUM_VARIABLE_TYPE_BOOL     (baranium_variable_type_t)4
-#define BARANIUM_VARIABLE_TYPE_INT      (baranium_variable_type_t)5
-#define BARANIUM_VARIABLE_TYPE_UINT     (baranium_variable_type_t)6
+#define BARANIUM_VARIABLE_TYPE_INT32    (baranium_variable_type_t)5
+#define BARANIUM_VARIABLE_TYPE_UINT32   (baranium_variable_type_t)6
 #define BARANIUM_VARIABLE_TYPE_DOUBLE   (baranium_variable_type_t)7
-#define BARANIUM_VARIABLE_TYPE_BYTE     (baranium_variable_type_t)8
-#define BARANIUM_VARIABLE_TYPE_UBYTE    (baranium_variable_type_t)9
+#define BARANIUM_VARIABLE_TYPE_INT8     (baranium_variable_type_t)8
+#define BARANIUM_VARIABLE_TYPE_UINT8    (baranium_variable_type_t)9
 #define BARANIUM_VARIABLE_TYPE_INT16    (baranium_variable_type_t)10
 #define BARANIUM_VARIABLE_TYPE_UINT16   (baranium_variable_type_t)11
 #define BARANIUM_VARIABLE_TYPE_INT64    (baranium_variable_type_t)12

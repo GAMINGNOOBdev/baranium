@@ -46,19 +46,19 @@ void baranium_token_parser_parse(baranium_token_parser* parser, baranium_source_
 
         if (token->special_index >= BARANIUM_KEYWORD_INDEX_DO && token->special_index <= BARANIUM_KEYWORD_INDEX_WHILE)
         {
-            LOGERROR(stringf("Line %d: cannot have loops in the global scope", token->line_number));
+            LOGERROR("Line %d: cannot have loops in the global scope", token->line_number);
             return;
         }
 
         if (token->special_index == BARANIUM_KEYWORD_INDEX_IF)
         {
-            LOGERROR(stringf("Line %d: cannot have `if` in the global scope", token->line_number));
+            LOGERROR("Line %d: cannot have `if` in the global scope", token->line_number);
             return;
         }
 
         if (token->special_index == BARANIUM_KEYWORD_INDEX_ELSE)
         {
-            LOGERROR(stringf("Line %d: cannot have `else` in the global scope", token->line_number));
+            LOGERROR("Line %d: cannot have `else` in the global scope", token->line_number);
             return;
         }
 
@@ -74,7 +74,7 @@ void baranium_token_parser_parse(baranium_token_parser* parser, baranium_source_
             continue;
         }
 
-        LOGERROR(stringf("Line %d: cannot have expressions in the global scope", token->line_number));
+        LOGERROR("Line %d: cannot have expressions in the global scope", token->line_number);
         return;
     }
 
@@ -93,14 +93,13 @@ void baranium_token_parser_parse_variable(size_t* index, baranium_source_token* 
 {
     baranium_variable_token* variable = (baranium_variable_token*)malloc(sizeof(baranium_variable_token));
     baranium_variable_token_init(variable);
-    baranium_source_token_list valueTokens;
-    baranium_source_token_list_init(&valueTokens);
     variable->type = baranium_variable_type_from_token(current);
 
     if (variable->type == BARANIUM_VARIABLE_TYPE_INVALID)
     {
-        LOGERROR(stringf("Line %d: Inalid variable type '%s'", current->line_number, current->contents));
-        baranium_source_token_list_dispose(&valueTokens);
+        LOGERROR("Line %d: Inalid variable type '%s'", current->line_number, current->contents);
+        baranium_variable_token_dispose(variable);
+        free(variable);
         return;
     }
 
@@ -117,48 +116,48 @@ void baranium_token_parser_parse_variable(size_t* index, baranium_source_token* 
         variable->base.name = nameToken->contents;
     else
     {
-        LOGERROR(stringf("Line %d: No valid name has been prodived for variable", nameToken->line_number));
-        baranium_source_token_list_dispose(&valueTokens);
+        LOGERROR("Line %d: No valid name has been prodived for variable", nameToken->line_number);
+        baranium_variable_token_dispose(variable);
+        free(variable);
         return;
     }
 
     if (baranium_token_lists_contain(nameToken->contents, output, global_tokens) != NULL)
     {
-        LOGERROR(stringf("Line %d: Name \"%s\" is already occupied", nameToken->line_number, nameToken->contents));
-        baranium_source_token_list_dispose(&valueTokens);
+        LOGERROR("Line %d: Name \"%s\" is already occupied", nameToken->line_number, nameToken->contents);
+        baranium_variable_token_dispose(variable);
+        free(variable);
         return;
     }
 
     variable->base.id = baranium_get_id_of_name(variable->base.name);
-    
+
     (*index)++;
     baranium_source_token* nextToken = baranium_source_token_list_get(tokens, *index);
     if (nextToken->type == BARANIUM_SOURCE_TOKEN_TYPE_SEMICOLON)
-    {
-        variable->value = NULL;
         goto end;
-    }
     else if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_EQUALSIGN)
     {
-        LOGERROR(stringf("Line %d: Invalid syntax for variable definition/assignment", nextToken->line_number));
-        baranium_source_token_list_dispose(&valueTokens);
+        LOGERROR("Line %d: Invalid syntax for variable definition/assignment", nextToken->line_number);
+        baranium_variable_token_dispose(variable);
+        free(variable);
         return;
     }
+    baranium_source_token_list_add(&variable->init_expression.inner_tokens, nameToken);
+    baranium_source_token_list_add(&variable->init_expression.inner_tokens, nextToken);
 
     while (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_SEMICOLON && (*index)+1 < tokens->count)
     {
         (*index)++;
         nextToken = baranium_source_token_list_get(tokens, *index);
-        baranium_source_token_list_add(&valueTokens, nextToken);
+        baranium_source_token_list_add(&variable->init_expression.inner_tokens, nextToken);
     }
 
     // to remove the last pushed semicolon
-    baranium_source_token_list_pop_token(&valueTokens);
-
-    variable->value = baranium_token_parser_parse_variable_value(&valueTokens, variable->type);
+    baranium_source_token_list_pop_token(&variable->init_expression.inner_tokens);
 
 end:
-    baranium_source_token_list_dispose(&valueTokens);
+    baranium_expression_token_identify(&variable->init_expression, output, global_tokens);
     baranium_token_list_add(output, (baranium_token*)variable);
 }
 
@@ -168,8 +167,6 @@ void baranium_token_parser_parse_field(size_t* index, baranium_source_token* cur
     baranium_source_token* typeToken = baranium_source_token_list_get(tokens, *index);
     baranium_field_token* field = (baranium_field_token*)malloc(sizeof(baranium_field_token));
     baranium_field_token_init(field);
-    baranium_source_token_list valueTokens;
-    baranium_source_token_list_init(&valueTokens);
     field->type = baranium_variable_type_from_token(typeToken);
     (*index)++;
     baranium_source_token* nameToken = baranium_source_token_list_get(tokens, *index);
@@ -184,8 +181,9 @@ void baranium_token_parser_parse_field(size_t* index, baranium_source_token* cur
         field->base.name = nameToken->contents;
     else
     {
-        LOGERROR(stringf("Line %d: No valid name has been prodived for field", nameToken->line_number));
-        baranium_source_token_list_dispose(&valueTokens);
+        LOGERROR("Line %d: No valid name has been prodived for field", nameToken->line_number);
+        baranium_field_token_dispose(field);
+        free(field);
         return;
     }
 
@@ -200,25 +198,26 @@ void baranium_token_parser_parse_field(size_t* index, baranium_source_token* cur
     }
     else if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_EQUALSIGN)
     {
-        LOGERROR(stringf("Line %d: Invalid syntax for field definition/assignment", nextToken->line_number));
-        baranium_source_token_list_dispose(&valueTokens);
+        LOGERROR("Line %d: Invalid syntax for field definition/assignment", nextToken->line_number);
+        baranium_field_token_dispose(field);
+        free(field);
         return;
     }
+    baranium_source_token_list_add(&field->init_expression.inner_tokens, nameToken);
+    baranium_source_token_list_add(&field->init_expression.inner_tokens, nextToken);
 
     while (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_SEMICOLON && (*index)+1 < tokens->count)
     {
         (*index)++;
         nextToken = baranium_source_token_list_get(tokens, *index);
-        baranium_source_token_list_add(&valueTokens, nextToken);
+        baranium_source_token_list_add(&field->init_expression.inner_tokens, nextToken);
     }
 
     // to remove the last pushed semicolon
-    baranium_source_token_list_pop_token(&valueTokens);
-
-    field->value = baranium_token_parser_parse_variable_value(&valueTokens, field->type);
+    baranium_source_token_list_pop_token(&field->init_expression.inner_tokens);
 
 end:
-    baranium_source_token_list_dispose(&valueTokens);
+baranium_expression_token_identify(&field->init_expression, output, global_tokens);
     baranium_token_list_add(output, (baranium_token*)field);
 }
 
@@ -231,7 +230,7 @@ uint8_t baranium_token_parser_parse_expression(size_t* index, baranium_source_to
     baranium_source_token_list_add(&expression->inner_tokens, nextToken);
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_INVALID, BARANIUM_SOURCE_TOKEN_TYPE_SEMICOLON, tokens, &expression->inner_tokens))
     {
-        LOGERROR(stringf("Line %d: Expected a ';' at the end", nextToken->line_number));
+        LOGERROR("Line %d: Expected a ';' at the end", nextToken->line_number);
         return 0;
     }
 
@@ -251,13 +250,13 @@ void baranium_token_parser_parse_function(size_t* index, baranium_source_token* 
     baranium_source_token* nameToken = baranium_source_token_list_get(tokens, *index);
     if (nameToken->type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
     {
-        LOGERROR(stringf("Line %d: No valid name has been prodived for function", nameToken->line_number));
+        LOGERROR("Line %d: No valid name has been prodived for function", nameToken->line_number);
         return;
     }
 
     if (baranium_token_lists_contain(nameToken->contents, output, global_tokens) != NULL)
     {
-        LOGERROR(stringf("Line %d: Name \"%s\" is already occupied", nameToken->line_number, nameToken->contents));
+        LOGERROR("Line %d: Name \"%s\" is already occupied", nameToken->line_number, nameToken->contents);
         return;
     }
 
@@ -269,7 +268,7 @@ void baranium_token_parser_parse_function(size_t* index, baranium_source_token* 
 
     if (parametersStart->type != BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN)
     {
-        LOGERROR(stringf("Line %d: Invalid function syntax", parametersStart->line_number));
+        LOGERROR("Line %d: Invalid function syntax", parametersStart->line_number);
         return;
     }
 
@@ -281,7 +280,7 @@ void baranium_token_parser_parse_function(size_t* index, baranium_source_token* 
     }
     if (!baranium_is_internal_type(*parameter))
     {
-        LOGERROR(stringf("Line %d: Invalid function parameter type", parameter->line_number));
+        LOGERROR("Line %d: Invalid function parameter type '%s'", parameter->line_number, parameter->contents);
         return;
     }
 
@@ -309,13 +308,13 @@ functionReadContents:
 
     if (functionContents->type != BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN)
     {
-        LOGERROR(stringf("Line %d: Invalid function syntax", functionContents->line_number));
+        LOGERROR("Line %d: Invalid function syntax", functionContents->line_number);
         return;
     }
 
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETCLOSE, tokens, &function->inner_tokens))
     {
-        LOGERROR(stringf("Line %d: Invalid contents for function contents, invalid content depth", functionContents->line_number));
+        LOGERROR("Line %d: Invalid contents for function contents, invalid content depth", functionContents->line_number);
         return;
     }
 
@@ -330,7 +329,7 @@ void baranium_token_parser_parse_if_statement(size_t* index, baranium_source_tok
     baranium_source_token* conditionStart = baranium_source_token_list_get(tokens, *index);
     if (conditionStart->type != BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN)
     {
-        LOGERROR(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart->line_number, conditionStart->contents));
+        LOGERROR("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart->line_number, conditionStart->contents);
         return;
     }
 
@@ -349,7 +348,7 @@ void baranium_token_parser_parse_if_statement(size_t* index, baranium_source_tok
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISCLOSE,
                                tokens, &ifElseStatement->condition.inner_tokens))
     {
-        LOGERROR(stringf("Line %d: Invalid condition contents for if-statement", nextToken->line_number));
+        LOGERROR("Line %d: Invalid condition contents for if-statement", nextToken->line_number);
         return;
     }
 
@@ -374,7 +373,7 @@ readStatementContents:
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETCLOSE, tokens, &ifElseStatement->inner_tokens))
     {
         nextToken = baranium_source_token_list_get(tokens, *index);
-        LOGERROR(stringf("Line %d: Invalid contents for if-statement, invalid content depth", nextToken->line_number));
+        LOGERROR("Line %d: Invalid contents for if-statement, invalid content depth", nextToken->line_number);
         return;
     }
 
@@ -397,7 +396,7 @@ readAlternativeConditions:
     nextToken = baranium_source_token_list_get(tokens, *index);
     if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN)
     {
-        LOGERROR(stringf("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart->line_number, conditionStart->contents));
+        LOGERROR("Line %d: Invalid start of if-statement, expected '(', got '%s'", conditionStart->line_number, conditionStart->contents);
         return;
     }
 
@@ -405,7 +404,7 @@ readAlternativeConditions:
     baranium_if_else_token_init(alternativeCondition);
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISCLOSE, tokens, &alternativeCondition->condition.inner_tokens))
     {
-        LOGERROR(stringf("Line %d: Invalid condition contents for if-statement", nextToken->line_number));
+        LOGERROR("Line %d: Invalid condition contents for if-statement", nextToken->line_number);
         return;
     }
 
@@ -430,7 +429,7 @@ readAlternaticeConditionContents:
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETCLOSE, tokens, &alternativeCondition->inner_tokens))
     {
         nextToken = baranium_source_token_list_get(tokens, *index);
-        LOGERROR(stringf("Line %d: Invalid contents for else-if-statement, invalid content depth", nextToken->line_number));
+        LOGERROR("Line %d: Invalid contents for else-if-statement, invalid content depth", nextToken->line_number);
         return;
     }
     baranium_if_else_token_parse(alternativeCondition, output, global_tokens);
@@ -468,7 +467,7 @@ readElseContents:
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETCLOSE, tokens, &elseStatement->inner_tokens))
     {
         nextToken = baranium_source_token_list_get(tokens, *index);
-        LOGERROR(stringf("Line %d: Invalid contents for else-statement, invalid content depth", nextToken->line_number));
+        LOGERROR("Line %d: Invalid contents for else-statement, invalid content depth", nextToken->line_number);
         return;
     }
 
@@ -526,7 +525,7 @@ void baranium_token_parser_parse_function_parameter(size_t* index, baranium_func
     baranium_source_token* nameToken = baranium_source_token_list_get(tokens, *index);
     if (nameToken->type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
     {
-        LOGERROR(stringf("Line %d: No valid name ('%s') has been prodived for parameter in function definition", nameToken->line_number, nameToken->contents));
+        LOGERROR("Line %d: No valid name ('%s') has been prodived for parameter in function definition", nameToken->line_number, nameToken->contents);
         return;
     }
 
@@ -550,7 +549,7 @@ void baranium_token_parser_parse_function_parameter(size_t* index, baranium_func
         return;
     }
 
-    LOGERROR(stringf("Line %d: Invalid syntax for parameter definition in function definition", nextToken->line_number));
+    LOGERROR("Line %d: Invalid syntax for parameter definition in function definition", nextToken->line_number);
 }
 
 const char* baranium_token_parser_parse_variable_value(baranium_source_token_list* tokens, baranium_variable_type_t varType)
@@ -574,7 +573,7 @@ const char* baranium_token_parser_parse_variable_value(baranium_source_token_lis
         if (dataToken->type == BARANIUM_SOURCE_TOKEN_TYPE_NULL)
             return "null";
 
-        LOGERROR(stringf("Line %d: Invalid object assignment", dataToken->line_number));
+        LOGERROR("Line %d: Invalid object assignment", dataToken->line_number);
     }
 
     if (varType == BARANIUM_VARIABLE_TYPE_STRING)
@@ -586,7 +585,7 @@ const char* baranium_token_parser_parse_variable_value(baranium_source_token_lis
 
         if (stringStart->type != BARANIUM_SOURCE_TOKEN_TYPE_DOUBLEQUOTE)
         {
-            LOGERROR(stringf("Line %d: Invalid string assignment", stringStart->line_number));
+            LOGERROR("Line %d: Invalid string assignment", stringStart->line_number);
             return NULL;
         }
 
@@ -601,7 +600,7 @@ const char* baranium_token_parser_parse_variable_value(baranium_source_token_lis
 
         if (stringEnd->type != BARANIUM_SOURCE_TOKEN_TYPE_DOUBLEQUOTE)
         {
-            LOGERROR(stringf("Line %d: Invalid string assignment", contentsToken->line_number));
+            LOGERROR("Line %d: Invalid string assignment", contentsToken->line_number);
             return NULL;
         }
 
@@ -621,7 +620,7 @@ const char* baranium_token_parser_parse_variable_value(baranium_source_token_lis
             if (valueStart->type == BARANIUM_SOURCE_TOKEN_TYPE_NUMBER)
                 return valueStart->contents;
             
-            LOGERROR(stringf("Line %d: Invalid float assignment: Not a number", valueStart->line_number));
+            LOGERROR("Line %d: Invalid float assignment: Not a number", valueStart->line_number);
             return NULL;
         }
 
@@ -636,7 +635,7 @@ const char* baranium_token_parser_parse_variable_value(baranium_source_token_lis
                 baranium_source_token* decimalPart = baranium_source_token_list_get(tokens, tokenIndex);
                 if (decimalPart->type != BARANIUM_SOURCE_TOKEN_TYPE_NUMBER)
                 {
-                    LOGERROR(stringf("Line %d: Invalid float assignment: Invalid literal after dot", decimalPart->line_number));
+                    LOGERROR("Line %d: Invalid float assignment: Invalid literal after dot", decimalPart->line_number);
                     return NULL;
                 }
                 decimal = decimalPart->contents;
@@ -664,33 +663,33 @@ const char* baranium_token_parser_parse_variable_value(baranium_source_token_lis
             return dotPart->contents;
         }
 
-        LOGERROR(stringf("Line %d: Invalid float assignment", valueStart->line_number));
+        LOGERROR("Line %d: Invalid float assignment", valueStart->line_number);
     }
 
     if (varType == BARANIUM_VARIABLE_TYPE_BOOL)
     {
         if (tokens->count > 1)
         {
-            LOGERROR(stringf("Line %d: Invalid bool assignment: Too many initializing values", baranium_source_token_list_get(tokens, 0)->line_number));
+            LOGERROR("Line %d: Invalid bool assignment: Too many initializing values", baranium_source_token_list_get(tokens, 0)->line_number);
             return NULL;
         }
 
         baranium_source_token* value = baranium_source_token_list_get(tokens, 0);
         if (value->special_index < BARANIUM_KEYWORD_INDEX_TRUE || value->special_index > BARANIUM_KEYWORD_INDEX_FALSE)
         {
-            LOGERROR(stringf("Line %d: Invalid bool assignment: Invalid assignment value", value->line_number));
+            LOGERROR("Line %d: Invalid bool assignment: Invalid assignment value", value->line_number);
             return NULL;
         }
 
         return value->contents;
     }
 
-    if (varType == BARANIUM_VARIABLE_TYPE_UINT ||
-        varType == BARANIUM_VARIABLE_TYPE_INT)
+    if (varType == BARANIUM_VARIABLE_TYPE_UINT32 ||
+        varType == BARANIUM_VARIABLE_TYPE_INT32)
     {
         if (tokens->count > 2)
         {
-            LOGERROR(stringf("Line %d: Invalid Int assignment: Too many initializing values", baranium_source_token_list_get(tokens, 0)->line_number));
+            LOGERROR("Line %d: Invalid Int assignment: Too many initializing values", baranium_source_token_list_get(tokens, 0)->line_number);
             return NULL;
         }
 
@@ -702,7 +701,7 @@ const char* baranium_token_parser_parse_variable_value(baranium_source_token_lis
             if ((signToken->type != BARANIUM_SOURCE_TOKEN_TYPE_PLUS && signToken->type != BARANIUM_SOURCE_TOKEN_TYPE_MINUS) ||
                 numberToken->type != BARANIUM_SOURCE_TOKEN_TYPE_NUMBER)
             {
-                LOGERROR(stringf("Line %d: Invalid Int assignment: Invalid value", signToken->line_number));
+                LOGERROR("Line %d: Invalid Int assignment: Invalid value", signToken->line_number);
                 return NULL;
             }
 
@@ -724,7 +723,7 @@ const char* baranium_token_parser_parse_variable_value(baranium_source_token_lis
         if (numberToken->type == BARANIUM_SOURCE_TOKEN_TYPE_NULL)
             return "0";
 
-        LOGERROR(stringf("Line %d: Invalid Int assignment: Not a number", numberToken->line_number));
+        LOGERROR("Line %d: Invalid Int assignment: Not a number", numberToken->line_number);
     }
 
     return "null";
@@ -760,20 +759,20 @@ void baranium_token_parser_parse_do_while_loop(baranium_loop_token* loop, size_t
     baranium_source_token* nextToken = baranium_source_token_list_get(tokens, *index);
     if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN)
     {
-        LOGERROR(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected '{'", nextToken->line_number, nextToken->contents));
+        LOGERROR("Line %d: Invalid do-while loop, unexpected literal '%s' expected '{'", nextToken->line_number, nextToken->contents);
         return;
     }
 
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETCLOSE, tokens, &loop->inner_tokens))
     {
-        LOGERROR(stringf("Line %d: Invalid contents for do-while loop contents, invalid content depth", current->line_number));
+        LOGERROR("Line %d: Invalid contents for do-while loop contents, invalid content depth", current->line_number);
     }
     (*index)++;
 
     nextToken = baranium_source_token_list_get(tokens, *index);
     if (nextToken->special_index != BARANIUM_KEYWORD_INDEX_WHILE)
     {
-        LOGERROR(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected 'while'", nextToken->line_number, nextToken->contents));
+        LOGERROR("Line %d: Invalid do-while loop, unexpected literal '%s' expected 'while'", nextToken->line_number, nextToken->contents);
         return;
     }
     (*index)++;
@@ -781,13 +780,13 @@ void baranium_token_parser_parse_do_while_loop(baranium_loop_token* loop, size_t
     nextToken = baranium_source_token_list_get(tokens, *index);
     if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN)
     {
-        LOGERROR(stringf("Line %d: Invalid do-while loop, unexpected literal '%s' expected '('", nextToken->line_number, nextToken->contents));
+        LOGERROR("Line %d: Invalid do-while loop, unexpected literal '%s' expected '('", nextToken->line_number, nextToken->contents);
         return;
     }
 
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISCLOSE, tokens, &loop->condition.inner_tokens))
     {
-        LOGERROR(stringf("Line %d: Invalid do-while loop, invalid depth at condition declaration", nextToken->line_number));
+        LOGERROR("Line %d: Invalid do-while loop, invalid depth at condition declaration", nextToken->line_number);
         return;
     }
     (*index)++;
@@ -795,7 +794,7 @@ void baranium_token_parser_parse_do_while_loop(baranium_loop_token* loop, size_t
     nextToken = baranium_source_token_list_get(tokens, *index);
     if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_SEMICOLON)
     {
-        LOGERROR(stringf("Line %d: Invalid do-while loop, expected ';'", nextToken->line_number));
+        LOGERROR("Line %d: Invalid do-while loop, expected ';'", nextToken->line_number);
         return;
     }
 
@@ -813,13 +812,13 @@ void baranium_token_parser_parse_for_loop(baranium_loop_token* loop, size_t* ind
     baranium_source_token* nextToken = baranium_source_token_list_get(tokens, *index);
     if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN)
     {
-        LOGERROR(stringf("Line %d: Invalid for loop, unexpected literal '%s' expected '('", nextToken->line_number, nextToken->contents));
+        LOGERROR("Line %d: Invalid for loop, unexpected literal '%s' expected '('", nextToken->line_number, nextToken->contents);
         return;
     }
 
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISCLOSE, tokens, &loopInitializerTokens))
     {
-        LOGERROR(stringf("Line %d: Invalid for loop, invalid depth at declaration", nextToken->line_number));
+        LOGERROR("Line %d: Invalid for loop, invalid depth at declaration", nextToken->line_number);
         return;
     }
     (*index)++;
@@ -829,7 +828,7 @@ void baranium_token_parser_parse_for_loop(baranium_loop_token* loop, size_t* ind
     {
         if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETCLOSE, tokens, &loop->inner_tokens))
         {
-            LOGERROR(stringf("Line %d: Invalid contents for for loop contents, invalid content depth", current->line_number));
+            LOGERROR("Line %d: Invalid contents for for loop contents, invalid content depth", current->line_number);
             return;
         }
 
@@ -840,7 +839,7 @@ void baranium_token_parser_parse_for_loop(baranium_loop_token* loop, size_t* ind
 
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_INVALID, BARANIUM_SOURCE_TOKEN_TYPE_SEMICOLON, tokens, &loop->inner_tokens))
     {
-        LOGERROR(stringf("Line %d: Invalid for loop, unexpected depth", nextToken->line_number));
+        LOGERROR("Line %d: Invalid for loop, unexpected depth", nextToken->line_number);
         return;
     }
 
@@ -848,7 +847,7 @@ parseLoopInitializers:
 
     if (loopInitializerTokens.count == 0)
     {
-        LOGERROR(stringf("Line %d: Invalid for loop, unexpected depth", nextToken->line_number));
+        LOGERROR("Line %d: Invalid for loop, unexpected depth", nextToken->line_number);
         return;
     }
 
@@ -919,13 +918,13 @@ void baranium_token_parser_parse_while_loop(baranium_loop_token* loop, size_t* i
     baranium_source_token* nextToken = baranium_source_token_list_get(tokens, *index);
     if (nextToken->type != BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN)
     {
-        LOGERROR(stringf("Line %d: Invalid while loop, unexpected literal '%s' expected '('", nextToken->line_number, nextToken->contents));
+        LOGERROR("Line %d: Invalid while loop, unexpected literal '%s' expected '('", nextToken->line_number, nextToken->contents);
         return;
     }
 
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISCLOSE, tokens, &loop->condition.inner_tokens))
     {
-        LOGERROR(stringf("Line %d: Invalid while loop, invalid depth at declaration", nextToken->line_number));
+        LOGERROR("Line %d: Invalid while loop, invalid depth at declaration", nextToken->line_number);
         return;
     }
     (*index)++;
@@ -935,7 +934,7 @@ void baranium_token_parser_parse_while_loop(baranium_loop_token* loop, size_t* i
     {
         if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN, BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETCLOSE, tokens, &loop->inner_tokens))
         {
-            LOGERROR(stringf("Line %d: Invalid contents for while loop contents, invalid content depth", current->line_number));
+            LOGERROR("Line %d: Invalid contents for while loop contents, invalid content depth", current->line_number);
             return;
         }
 
@@ -946,7 +945,7 @@ void baranium_token_parser_parse_while_loop(baranium_loop_token* loop, size_t* i
 
     if (!baranium_token_parser_parse_content_using_depth(index, BARANIUM_SOURCE_TOKEN_TYPE_INVALID, BARANIUM_SOURCE_TOKEN_TYPE_SEMICOLON, tokens, &loop->inner_tokens))
     {
-        LOGERROR(stringf("Line %d: Invalid while loop, unexpected depth", nextToken->line_number));
+        LOGERROR("Line %d: Invalid while loop, unexpected depth", nextToken->line_number);
         return;
     }
 

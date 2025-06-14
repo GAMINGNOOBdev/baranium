@@ -66,8 +66,7 @@ void baranium_runtime_set_library_path(const char* library_path)
     current_active_runtime->library_path = malloc(len+1);
     strncpy((char*)current_active_runtime->library_path, library_path, len);
     ((char*)current_active_runtime->library_path)[len] = 0;
-    baranium_string_list_init(current_active_runtime->library_dir_contents);
-    baranium_file_util_get_directory_contents(current_active_runtime->library_dir_contents, current_active_runtime->library_path, BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES);
+    *current_active_runtime->library_dir_contents = baranium_file_util_get_directory_contents(current_active_runtime->library_path, BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES);
 }
 
 void baranium_runtime_load_dependency(const char* dependency)
@@ -75,7 +74,7 @@ void baranium_runtime_load_dependency(const char* dependency)
     if (current_active_runtime == NULL)
         return;
 
-    LOGDEBUG(stringf("loading dependency '%s' from '%s'", dependency, current_active_runtime->library_path));
+    LOGDEBUG("loading dependency '%s' from '%s'", dependency, current_active_runtime->library_path);
     baranium_library* library = NULL;
 
     for (size_t i = 0; i < current_active_runtime->library_dir_contents->count; i++)
@@ -173,7 +172,7 @@ baranium_handle* baranium_open_handle(const char* source)
     FILE* file = fopen(source, "rb");
     if (file == NULL)
     {
-        LOGERROR(stringf("File '%s' not found", source));
+        LOGERROR("File '%s' not found", source);
         return NULL;
     }
 

@@ -62,7 +62,7 @@ void baranium_function_token_parse(baranium_function_token* function, baranium_t
 
         if (token->special_index == BARANIUM_KEYWORD_INDEX_DEFINE)
         {
-            LOGERROR(stringf("Line %d: Invalid function syntax: function inside function", token->line_number));
+            LOGERROR("Line %d: Invalid function syntax: function inside function", token->line_number);
             return;
         }
 
@@ -80,13 +80,13 @@ void baranium_function_token_parse(baranium_function_token* function, baranium_t
 
         if (token->special_index == BARANIUM_KEYWORD_INDEX_ELSE)
         {
-            LOGERROR(stringf("Line %d: missing `if` for `else` statement", token->line_number));
+            LOGERROR("Line %d: missing `if` for `else` statement", token->line_number);
             return;
         }
 
         if (token->type == BARANIUM_SOURCE_TOKEN_TYPE_FIELD)
         {
-            LOGERROR(stringf("Line %d: Invalid function syntax: fields inside function not allowed", token->line_number));
+            LOGERROR("Line %d: Invalid function syntax: fields inside function not allowed", token->line_number);
             return;
         }
 

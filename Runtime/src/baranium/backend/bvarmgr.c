@@ -41,7 +41,7 @@ void bvarmgr_dispose(bvarmgr* obj)
 {
     if (!obj) return;
 
-    LOGDEBUG(stringf("Disposing variable manager with %ld entries", obj->count));
+    LOGDEBUG("Disposing variable manager with %ld entries", obj->count);
 
     bvarmgr_clear(obj);
     free(obj);
@@ -53,7 +53,7 @@ void bvarmgr_clear(bvarmgr* obj)
 
     if (obj->start == NULL) return;
 
-    LOGDEBUG(stringf("Cleared variable manager with %ld entries", obj->count));
+    LOGDEBUG("Cleared variable manager with %ld entries", obj->count);
 
     bvarmgr_n* next = NULL;
     for (bvarmgr_n* ptr = obj->start; ptr != NULL;)
@@ -118,11 +118,11 @@ void bvarmgr_alloc(bvarmgr* obj, baranium_variable_type_t type, index_t id, size
     {
         if (type == BARANIUM_VARIABLE_TYPE_STRING)
             free(value.ptr);
-        LOGERROR(stringf("Could not allocate %s with id %ld and size %ld, status code 0x%2.2x", isField ? "field" : "variable", id, size, status));
+        LOGERROR("Could not allocate %s with id %ld and size %ld, status code 0x%2.2x", isField ? "field" : "variable", id, size, status);
         return;
     }
 
-    LOGDEBUG(stringf("Allocated %s with id %ld and size %ld", isField ? "field" : "variable", id, size));
+    LOGDEBUG("Allocated %s with id %ld and size %ld", isField ? "field" : "variable", id, size);
 }
 
 bvarmgr_n* bvarmgr_get(bvarmgr* obj, index_t id)
@@ -183,7 +183,7 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
 
     if (!foundEntry)
     {
-        LOGERROR(stringf("Could not find variable with id %ld", id));
+        LOGERROR("Could not find variable with id %ld", id);
         return;
     }
 
@@ -221,7 +221,7 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
 
 destroy:
     obj->count--;
-    LOGDEBUG(stringf("Disposed variable with id %ld", id));
+    LOGDEBUG("Disposed variable with id %ld", id);
     bvarmgr_n_free(foundEntry);
 }
 
