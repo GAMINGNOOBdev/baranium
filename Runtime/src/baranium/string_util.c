@@ -385,8 +385,7 @@ char* strsubstr(const char* src, size_t start, size_t length)
 
     char* result = malloc(length+1);
     memset(result, 0, length+1);
-    for (size_t i = 0; i < length; i++)
-        result[i] = src[start + i];
+    strncpy(result, &src[start], length);
 
     return result;
 }

@@ -6,7 +6,7 @@
 +include stdio
 +include stdlib
 
-define main()
+define main() = int
 {
     print("Enter the amount of fibanocci numbers to calculate: ");
     int fibmax = input();

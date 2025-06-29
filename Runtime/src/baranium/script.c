@@ -387,7 +387,7 @@ baranium_function* baranium_script_get_function_by_id(baranium_script* script, i
 {
     if (script == NULL || functionID == BARANIUM_INVALID_INDEX)
         return NULL;
-    
+
     baranium_function* result = NULL;
     baranium_script_section* foundSection = baranium_script_get_section_by_id_and_type(script, functionID, BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS);
     if (foundSection == NULL)

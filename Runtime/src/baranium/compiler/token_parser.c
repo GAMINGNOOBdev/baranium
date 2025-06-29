@@ -74,7 +74,7 @@ void baranium_token_parser_parse(baranium_token_parser* parser, baranium_source_
             continue;
         }
 
-        LOGERROR("Line %d: cannot have expressions in the global scope", token->line_number);
+        LOGERROR("Line %d: cannot have expressions in the global scope (%s)", token->line_number, token->contents);
         return;
     }
 
@@ -161,7 +161,7 @@ end:
     baranium_token_list_add(output, (baranium_token*)variable);
 }
 
-void baranium_token_parser_parse_field(size_t* index, baranium_source_token* current, baranium_source_token_list* tokens, baranium_token_list* output, baranium_token_list* global_tokens)
+void baranium_token_parser_parse_field(size_t* index, baranium_source_token* _, baranium_source_token_list* tokens, baranium_token_list* output, baranium_token_list* global_tokens)
 {
     (*index)++;
     baranium_source_token* typeToken = baranium_source_token_list_get(tokens, *index);
@@ -221,7 +221,7 @@ baranium_expression_token_identify(&field->init_expression, output, global_token
     baranium_token_list_add(output, (baranium_token*)field);
 }
 
-uint8_t baranium_token_parser_parse_expression(size_t* index, baranium_source_token* current, baranium_source_token_list* tokens, baranium_token_list* output, baranium_token_list* global_tokens)
+uint8_t baranium_token_parser_parse_expression(size_t* index, baranium_source_token* _, baranium_source_token_list* tokens, baranium_token_list* output, baranium_token_list* global_tokens)
 {
     baranium_expression_token* expression = (baranium_expression_token*)malloc(sizeof(baranium_expression_token));
     baranium_expression_token_init(expression);
@@ -241,7 +241,7 @@ uint8_t baranium_token_parser_parse_expression(size_t* index, baranium_source_to
     return expression->expression_type == BARANIUM_EXPRESSION_TYPE_RETURN_STATEMENT;
 }
 
-void baranium_token_parser_parse_function(size_t* index, baranium_source_token* current, baranium_source_token_list* tokens, baranium_token_list* output, baranium_token_list* global_tokens)
+void baranium_token_parser_parse_function(size_t* index, baranium_source_token* _, baranium_source_token_list* tokens, baranium_token_list* output, baranium_token_list* global_tokens)
 {
     baranium_function_token* function = (baranium_function_token*)malloc(sizeof(baranium_function_token));
     baranium_function_token_init(function);
@@ -323,7 +323,7 @@ functionReadContents:
     baranium_token_list_add(output, (baranium_token*)function);
 }
 
-void baranium_token_parser_parse_if_statement(size_t* index, baranium_source_token* current, baranium_source_token_list* tokens, baranium_token_list* output, baranium_token_list* global_tokens)
+void baranium_token_parser_parse_if_statement(size_t* index, baranium_source_token* _, baranium_source_token_list* tokens, baranium_token_list* output, baranium_token_list* global_tokens)
 {
     (*index)++;
     baranium_source_token* conditionStart = baranium_source_token_list_get(tokens, *index);

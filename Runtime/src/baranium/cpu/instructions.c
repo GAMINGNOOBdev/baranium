@@ -131,18 +131,18 @@ void PUSHVAR(bcpu* cpu)
         return;
     }
 
+    void* basevalue = &value.num64;
+    if (type == BARANIUM_VARIABLE_TYPE_STRING)
+        basevalue = value.ptr;
+
     uint64_t data = 0;
     if (size <= 8)
     {
-        memcpy(&data, &value.num64, size);
+        memcpy(&data, basevalue, size);
         bstack_push(cpu->stack, data);
     }
     else
     {
-        void* basevalue = &value.num64;
-        if (type == BARANIUM_VARIABLE_TYPE_STRING)
-            basevalue = value.ptr;
-
         size_t leftOverSize = size;
         size_t index = 0;
         void* valPtr;

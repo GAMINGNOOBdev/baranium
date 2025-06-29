@@ -17,3 +17,9 @@
 - Improved logging system
 - Variable arithmetics now function properly (negative number addition now works correctly)
 - Overall code cleanups
+
+## v2025.6.29
+
+## Fixes
+- Fixed string comparisons not working
+- Some very small memory usage improvements for strings

@@ -219,6 +219,8 @@ void baranium_source_read_line(baranium_source_token_list* _out, const char* lin
 
     if (start == 0 && end == lineLength-1)
         baranium_source_read_buffer(&line_tokens, strsubstr(line,0,-1), lineNumber, inString); // the line has to be copied in order to avoid double-free of the same address
+    if (start != 0 && end == lineLength-1)
+        baranium_source_read_buffer(&line_tokens, strsubstr(line,start,end - start + 1), lineNumber, inString); // the line has to be copied in order to avoid double-free of the same address
 
 validate:
     baranium_preprocessor_assist_in_line(&line_tokens);

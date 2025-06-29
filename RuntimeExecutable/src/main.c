@@ -149,6 +149,7 @@ int main(int argc, const char** argv)
 
     baranium_function* main = baranium_script_get_function_by_id(script, mainIndex);
     baranium_function_call(main, NULL, NULL, 0);
+    exit_code = main->return_value.snum32;
     baranium_function_dispose(main);
 
 end:

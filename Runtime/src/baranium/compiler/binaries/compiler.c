@@ -761,7 +761,12 @@ void baranium_compiler_compile_variable(baranium_compiler* compiler, baranium_va
 {
     size_t size = baranium_variable_get_size_of_type(token->type);
     if (token->type == BARANIUM_VARIABLE_TYPE_STRING)
-        size = strlen(token->value) + 1; // plus the nullchar at the end
+    {
+        if (token->value)
+            size = strlen(token->value) + 1; // plus the nullchar at the end
+        else
+            size = 1;
+    }
 
     baranium_compiler_code_builder_MEM(compiler, size, (uint8_t)token->type, token->base.id);
     if (token->init_expression.expression_type != BARANIUM_EXPRESSION_TYPE_INVALID)

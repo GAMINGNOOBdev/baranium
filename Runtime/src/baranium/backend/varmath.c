@@ -93,11 +93,6 @@ void baranium_compiled_variable_pop_from_stack_into_variable(bcpu* cpu, baranium
         }
         leftOverSize=0;
     }
-
-    ///TODO: fix invalid indexes and stuff
-
-    if (output->type == BARANIUM_VARIABLE_TYPE_STRING)
-        output->size++;
 }
 
 void baranium_compiled_variable_push_to_stack(bcpu* cpu, baranium_compiled_variable* var)
