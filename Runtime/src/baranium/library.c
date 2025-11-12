@@ -64,10 +64,12 @@ void baranium_library_load_section(baranium_library* lib, uint64_t index, barani
     if (section->type == BARANIUM_SCRIPT_SECTION_TYPE_INVALID)
         return;
 
-    if (section->type == BARANIUM_SCRIPT_SECTION_TYPE_FIELDS || section->type == BARANIUM_SCRIPT_SECTION_TYPE_VARIABLES)
-        baranium_library_dynadd_var_or_field(section);
-    else
+    uint8_t isFunction = section->type == BARANIUM_SCRIPT_SECTION_TYPE_FIELDS || section->type == BARANIUM_SCRIPT_SECTION_TYPE_VARIABLES ? 0 : 1;
+
+    if (isFunction)
         baranium_function_manager_add(baranium_get_runtime()->function_manager, section->id, NULL, lib);
+    else
+        baranium_library_dynadd_var_or_field(section);
 
     memcpy(&lib->sections[index], section, sizeof(baranium_library_section));
 }
@@ -89,6 +91,7 @@ baranium_library* baranium_library_load(const char* path)
     baranium_library* library = malloc(sizeof(baranium_library));
     if (!library)
     {
+        LOGERROR("Unable to allocate enough memory to store library (?)");
         fclose(file);
         return NULL;
     }
@@ -97,50 +100,45 @@ baranium_library* baranium_library_load(const char* path)
     library->file = file;
     library->sections = NULL;
 
-    int lastSeperatorIdx = strlen(path)-1;
-    for (int i = lastSeperatorIdx; i > 0; i--)
-    {
-        if (path[i] == '\\' || path[i] == '/')
-        {
-            lastSeperatorIdx = i;
-            break;
-        }
-    }
-    int namelen = strlen(path) - lastSeperatorIdx - 1;
-    library->name = malloc(namelen+1);
+    char* filenameptr = (char*)path+strlen(path)-1;
+    for (; *filenameptr != '\\' && *filenameptr != '/'; filenameptr--);
+    filenameptr++;
+    library->name = strdup(filenameptr);
     if (library->name == NULL)
     {
         free(library);
         fclose(file);
         return NULL;
     }
-    memset((void*)library->name, 0, namelen+1);
-    strncpy((char*)library->name, &path[lastSeperatorIdx+1], namelen);
+    LOGDEBUG("library name: '%s'", library->name);
 
-    int pathlen = strlen(path);
-    library->path = malloc(pathlen+1);
+    library->path = strdup(path);
     if (library->path == NULL)
     {
         free(library);
         fclose(file);
         return NULL;
     }
-    strcpy((char*)library->path, path);
-    ((char*)library->path)[pathlen] = 0;
+    LOGDEBUG("library path: '%s'", library->path);
 
     fread(&library->libheader, 1, sizeof(baranium_library_header), file);
 
+    LOGDEBUG("read library header");
+
     if (memcmp(library->libheader.magic, BARANIUM_LIBRARY_HEADER_MAGIC, 4*sizeof(uint8_t)) != 0)
     {
+        LOGERROR("Invalid library header");
         free(library);
         fclose(file);
         return NULL;
     }
 
+
     if (library->libheader.version != BARANIUM_VERSION_CURRENT)
         LOGWARNING("Library '%s' may be out of date, be sure to update your compiler and recompile the library", library->name);
 
     library->exports = realloc(library->exports, sizeof(baranium_library_export)*library->libheader.exports_count);
+    LOGDEBUG("library has %d exports", library->libheader.exports_count);
     for (uint64_t i = 0; i < library->libheader.exports_count; i++)
     {
         baranium_library_export* export = &library->exports[i];
@@ -159,6 +157,8 @@ baranium_library* baranium_library_load(const char* path)
 
     baranium_library_section section;
     library->sections = realloc(library->sections, sizeof(baranium_library_section)*library->libheader.section_count);
+    LOGDEBUG("library has %d sections", library->libheader.section_count);
+    int runtime_present = baranium_get_runtime() ? 1 : 0;
     for (uint64_t i = 0; i < library->libheader.section_count; i++)
     {
         section = (baranium_library_section){.type=0,.id=0,.data_size=0,.data_location=0,.data=NULL};
@@ -193,11 +193,14 @@ baranium_library* baranium_library_load(const char* path)
         library->sections[i] = section;
 
         // only works if there is a runtime loaded
-        baranium_library_load_section(library, i, &section);
+        if (runtime_present)
+            baranium_library_load_section(library, i, &section);
+        LOGDEBUG("loaded section %d with id 0x%x and data size 0x%x", i, section.id, section.data_size);
     }
 
     size_t dependency_count = 0;
     fread(&dependency_count, sizeof(size_t), 1, file);
+    LOGDEBUG("library has %d dependencies", dependency_count);
     for (size_t i = 0; i < dependency_count; i++)
     {
         size_t dependencylen = BARANIUM_INVALID_INDEX;
@@ -217,8 +220,6 @@ baranium_library* baranium_library_load(const char* path)
 
     // again, only works if a runtime is active
     baranium_library_install_callbacks(library);
-
-    fclose(file);
 
     return library;
 }
@@ -244,6 +245,8 @@ void baranium_library_dispose(baranium_library* lib)
             baranium_library_export export = lib->exports[i];
             if (export.symname == NULL)
                 continue;
+            if (export.symnamelen == 0)
+                continue;
 
             free((void*)export.symname);
         }
@@ -256,14 +259,18 @@ void baranium_library_dispose(baranium_library* lib)
         for (uint64_t i = 0; i < lib->libheader.section_count; i++)
         {
             baranium_library_section current = lib->sections[i];
-            if (current.type == BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS)
+            if (current.type == BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS && baranium_get_runtime())
                 baranium_function_manager_remove(baranium_get_runtime()->function_manager, current.id);
 
-            free(current.data);
+            if (current.data)
+                free(current.data);
         }
 
         free(lib->sections);
     }
+
+    if (lib->file)
+        fclose(lib->file);
 
     free(lib);
 }
@@ -351,7 +358,7 @@ baranium_function* baranium_library_get_function_by_id(baranium_library* lib, in
 {
     if (lib == NULL || functionID == BARANIUM_INVALID_INDEX)
         return NULL;
-    
+
     baranium_function* result = NULL;
     baranium_library_section* foundSection = baranium_library_get_section_by_id_and_type(lib, functionID, BARANIUM_SCRIPT_SECTION_TYPE_FUNCTIONS);
     if (foundSection == NULL)
@@ -367,7 +374,7 @@ baranium_function* baranium_library_get_function_by_id(baranium_library* lib, in
     memset(result->data, 0, result->data_size);
     fseek(lib->file, foundSection->data_location, SEEK_SET);
     fread(&result->parameter_count, sizeof(uint8_t), 1, lib->file);
-    fread(&result->return_type, sizeof(uint8_t), 1, lib->file);
+    fread(&result->return_data.type, sizeof(uint8_t), 1, lib->file);
     fread(result->data, 1, result->data_size, lib->file);
     result->id = functionID;
     result->library = lib;
@@ -395,6 +402,8 @@ void baranium_library_install_callbacks(baranium_library* lib)
     {
         baranium_library_export export = lib->exports[i];
         if (export.symname == NULL)
+            continue;
+        if (export.symnamelen == 0)
             continue;
 
         index_t id = export.id;

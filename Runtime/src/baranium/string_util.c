@@ -293,12 +293,28 @@ int strdelimcount(const char* string, char delim)
     return count;
 }
 
+uint8_t chr_is_delim(char c, const char* delims, int delim_count)
+{
+    for (int i = 0; i < delim_count; i++)
+        if (c == delims[i])
+            return 1;
+    
+    return 0;
+}
+
 char* strtrimleading(const char* src)
 {
     if (src == NULL)
         return NULL;
 
-    static const char* WHITESPACES = " \n\t\r\f\v";
+    static const char WHITESPACES[] = {
+        ' ',
+        '\n',
+        '\t',
+        '\r',
+        '\f',
+        '\v',
+    };
     uint8_t index = 0;
     for (int i = 0; i < 6; i++)
         index = (stridxnot(src, WHITESPACES[index]) != -1) ? 1 : index;
@@ -312,11 +328,25 @@ char* strtrimleading(const char* src)
     int16_t begin_index = 0;
     int16_t end_index = 0;
 
-    for (begin_index = 0; begin_index < (int16_t)strlen(src) && (src[begin_index] == '\t' || src[begin_index] == '\n' || src[begin_index] == ' '); begin_index++);
-    for (end_index = strlen(src)-1; end_index >= 0 && (src[end_index] == '\t' || src[end_index] == '\n' || src[end_index] == ' '); end_index--);
+    for (begin_index = 0; begin_index < (int16_t)strlen(src); begin_index++)
+    {
+        if (!chr_is_delim(src[begin_index], WHITESPACES, 6))
+            break;
+    }
+    for (end_index = strlen(src)-1; end_index > 0; end_index--)
+    {
+        if (!chr_is_delim(src[end_index], WHITESPACES, 6))
+            break;
+    }
 
     if (begin_index == 0 && end_index == (int16_t)strlen(src)-1)
         return (char*)src;
+
+    if (end_index == 0 && begin_index == (int16_t)strlen(src))
+    {
+        free((void*)src);
+        return NULL;
+    }
 
     char* str = strsubstr(src, begin_index, end_index - begin_index + 1);
     free((void*)src);

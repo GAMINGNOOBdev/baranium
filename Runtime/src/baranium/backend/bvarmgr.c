@@ -69,7 +69,7 @@ void bvarmgr_clear(bvarmgr* obj)
 
 int bvarmgr_add(bvarmgr* obj, baranium_variable* var, baranium_field* field);
 
-void bvarmgr_alloc(bvarmgr* obj, baranium_variable_type_t type, index_t id, size_t size, bool isField)
+void bvarmgr_alloc(bvarmgr* obj, baranium_variable_type_t type, index_t id, size_t size, uint8_t isField)
 {
     if (obj == NULL)
         return;
@@ -88,7 +88,7 @@ void bvarmgr_alloc(bvarmgr* obj, baranium_variable_type_t type, index_t id, size
 
     baranium_variable* variable = NULL;
     baranium_field* field = NULL;
-    if (isField == false)
+    if (!isField)
     {
         variable = malloc(sizeof(baranium_variable));
         if (variable == NULL)
@@ -151,6 +151,17 @@ bvarmgr_n* bvarmgr_get(bvarmgr* obj, index_t id)
     return entry;
 }
 
+uint8_t bvarmgr_entry_matches(bvarmgr_n* a, index_t id)
+{
+    if (a->variable != NULL)
+        return a->variable->id == id;
+
+    if (a->field != NULL)
+        return a->field->id == id;
+
+    return -1;
+}
+
 void bvarmgr_dealloc(bvarmgr* obj, index_t id)
 {
     if (obj == NULL)
@@ -162,23 +173,11 @@ void bvarmgr_dealloc(bvarmgr* obj, index_t id)
     bvarmgr_n* foundEntry = NULL;
     for (bvarmgr_n* entry = obj->start; entry != NULL; entry = entry->next)
     {
-        if (entry->variable != NULL)
-        {
-            if (entry->variable->id == id)
-            {
-                foundEntry = entry;
-                break;
-            }
-        }
+        if (!bvarmgr_entry_matches(entry, id))
+            continue;
 
-        if (entry->field != NULL)
-        {
-            if (entry->field->id == id)
-            {
-                foundEntry = entry;
-                break;
-            }
-        }
+        foundEntry = entry;
+        break;
     }
 
     if (!foundEntry)

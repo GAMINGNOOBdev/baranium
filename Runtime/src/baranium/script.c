@@ -403,7 +403,7 @@ baranium_function* baranium_script_get_function_by_id(baranium_script* script, i
     memset(result->data, 0, result->data_size);
     fseek(script->handle->file, foundSection->data_location, SEEK_SET);
     fread(&result->parameter_count, sizeof(uint8_t), 1, script->handle->file);
-    fread(&result->return_type, sizeof(uint8_t), 1, script->handle->file);
+    fread(&result->return_data.type, sizeof(uint8_t), 1, script->handle->file);
     fread(result->data, 1, result->data_size, script->handle->file);
     result->id = functionID;
     result->script = script;
