@@ -25,7 +25,7 @@ You can find example scripts under `examples` in the root of this repository.
 Some of them may compile, some of them may not.
 
 ## Building
-1. Open a command line at the root of the reporitory, create a `build` directory and change into that directory using
+1. Open a command line at the root of the repository, create a `build` directory and change into that directory using
 ```bash
 mkdir build
 cd build
@@ -68,6 +68,9 @@ or if enough people want a feature to be added.
 <br/>
 To use the provided runtime, just provide a compiled script to the runtime executable and it
 should run.
+
+## Using the project manager
+Run `barrel --help`, it'll tell you the basics :p
 
 ## Embedding the runtime
 For further information please consider reading the [wiki](../../wiki).
