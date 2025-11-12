@@ -73,7 +73,6 @@ void baranium_function_call(baranium_function* function, baranium_function_call_
 
         function->return_data.value = returnValue->value;
         function->return_data.type = returnValue->type;
-        function->return_data.array_size = returnValue->type;
 
         baranium_compiled_variable_dispose(returnValue);
     }
