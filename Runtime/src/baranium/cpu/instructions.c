@@ -1,3 +1,4 @@
+#include "baranium/function.h"
 #include <baranium/backend/bfuncmgr.h>
 #include <baranium/backend/bvarmgr.h>
 #include <baranium/backend/varmath.h>
@@ -258,37 +259,37 @@ void CALL(bcpu* cpu)
     if (callback != NULL)
     {
         baranium_callback_data_list_t data = {
-            .dataptr = NULL,
-            .datatypes = NULL,
-            .num_data = callback->parameter_count,
+            .data = NULL,
+            .types = NULL,
+            .count = callback->parameter_count,
         };
-        if (data.num_data > 0 && data.num_data != -1)
+        if (data.count > 0 && data.count != -1)
         {
-            data.dataptr = malloc(sizeof(baranium_value_t)*data.num_data);
-            data.datatypes = malloc(sizeof(baranium_variable_type_t));
+            data.data = malloc(sizeof(baranium_value_t)*data.count);
+            data.types = malloc(sizeof(baranium_variable_type_t));
 
             baranium_compiled_variable tmp;
-            for (int i = 0; i < data.num_data; i++)
+            for (int i = 0; i < data.count; i++)
             {
                 tmp = (baranium_compiled_variable){.type=0,.value={0},.size=0};
                 baranium_compiled_variable_pop_from_stack_into_variable(cpu, &tmp);
-                data.dataptr[i] = tmp.value;
-                data.datatypes[i] = tmp.type;
+                data.data[i] = tmp.value;
+                data.types[i] = tmp.type;
             }
         }
-        LOGDEBUG("callback call: data.dataptr{0x%16.16x} data.datatypes{0x%16.16x} data.numData=%d", (uint64_t)data.dataptr, (uint64_t)data.datatypes, data.num_data);
+        LOGDEBUG("callback call: data.dataptr{0x%16.16x} data.datatypes{0x%16.16x} data.numData=%d", (uint64_t)data.data, (uint64_t)data.types, data.count);
         callback->callback(&data);
-        if (data.num_data > 0 && data.num_data != -1)
+        if (data.count > 0 && data.count != -1)
         {
-            for (int i = 0; i < data.num_data; i++)
-                if (data.datatypes[i] == BARANIUM_VARIABLE_TYPE_STRING)
-                    free(data.dataptr[i].ptr);
-            free(data.dataptr);
-            free(data.datatypes);
+            for (int i = 0; i < data.count; i++)
+                if (data.types[i] == BARANIUM_VARIABLE_TYPE_STRING)
+                    free(data.data[i].ptr);
+            free(data.data);
+            free(data.types);
         }
     }
     else
-        baranium_function_call(func, NULL, NULL, -1);
+        baranium_function_call(func, (baranium_function_call_data_t){.count=-1});
 
     baranium_function_dispose(func);
 
