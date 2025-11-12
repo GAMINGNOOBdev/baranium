@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <baranium/callback.h>
 #include <baranium/variable.h>
 #include <baranium/defines.h>
 
@@ -22,12 +23,13 @@ typedef struct baranium_function
     index_t id;
     size_t data_size;
     uint8_t parameter_count;
-    baranium_variable_type_t return_type;
-    baranium_value_t return_value;
+    baranium_variable return_data;
     void* data;
     struct baranium_script* script;
     struct baranium_library* library;
 } baranium_function;
+
+typedef baranium_callback_data_list_t baranium_function_call_data_t;
 
 /**
  * @brief Dispose a function
@@ -44,7 +46,7 @@ BARANIUMAPI void baranium_function_dispose(baranium_function* var);
  * @param datatypes An array of variable types
  * @param numData The number of input parameters
  */
-BARANIUMAPI void baranium_function_call(baranium_function* function, baranium_value_t* dataptr, baranium_variable_type_t* datatypes, int numData);
+BARANIUMAPI void baranium_function_call(baranium_function* function, baranium_function_call_data_t data);
 
 #ifdef __cplusplus
 }
