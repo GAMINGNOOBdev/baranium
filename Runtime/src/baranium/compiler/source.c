@@ -1,6 +1,6 @@
-#include "baranium/compiler/compiler_context.h"
-#include "baranium/compiler/preprocessor.h"
+#include <baranium/compiler/compiler_context.h>
 #include <baranium/compiler/language/language.h>
+#include <baranium/compiler/preprocessor.h>
 #include <baranium/compiler/source_token.h>
 #include <baranium/compiler/source.h>
 #include <baranium/string_util.h>
@@ -13,6 +13,7 @@ void baranium_source_read_line(baranium_source_token_list* _out, const char* lin
 void baranium_source_read_buffer(baranium_source_token_list* _out, const char* buffer, int lineNumber, uint8_t isString);
 void baranium_source_read_letter(baranium_source_token_list* _out, char chr, int lineNumber);
 
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
 size_t baranium_getdelim(char **buffer, size_t *buffersz, FILE *stream, char delim)
 {
     if (buffer == NULL || stream == NULL || buffersz == NULL)
@@ -66,6 +67,9 @@ size_t baranium_getline(char **buffer, size_t *buffersz, FILE *stream)
 {
     return baranium_getdelim(buffer, buffersz, stream, '\n');
 }
+#else
+#   define baranium_getline getline
+#endif
 
 void baranium_source_open_from_file(baranium_source_token_list* _out, FILE* file)
 {

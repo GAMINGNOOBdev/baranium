@@ -1,9 +1,11 @@
 #include <baranium/compiler/language/loop_token.h>
 #include <baranium/compiler/language/language.h>
+#include <baranium/compiler/compiler_context.h>
 #include <baranium/compiler/source_token.h>
 #include <baranium/compiler/token_parser.h>
 #include <baranium/string_util.h>
 #include <baranium/logging.h>
+#include <memory.h>
 
 void baranium_loop_token_init(baranium_loop_token* loop)
 {
@@ -30,6 +32,7 @@ void baranium_loop_token_dispose(baranium_loop_token* loop)
 
 void baranium_loop_token_parse(baranium_loop_token* loop, baranium_token_list* local_tokens, baranium_token_list* global_tokens)
 {
+    baranium_compiler_context* ctx = baranium_get_compiler_context();
     size_t index = 0;
 
     size_t local_start_index = loop->tokens.count;
@@ -50,6 +53,8 @@ void baranium_loop_token_parse(baranium_loop_token* loop, baranium_token_list* l
         if (token->special_index == BARANIUM_KEYWORD_INDEX_DEFINE)
         {
             LOGERROR("Line %d: Invalid syntax: function definition inside a loop", token->line_number);
+            if (ctx)
+                ctx->error_occurred = 1;
             return;
         }
 
@@ -68,12 +73,16 @@ void baranium_loop_token_parse(baranium_loop_token* loop, baranium_token_list* l
         if (token->special_index == BARANIUM_KEYWORD_INDEX_ELSE)
         {
             LOGERROR("Line %d: missing `if` for `else` statement", token->line_number);
+            if (ctx)
+                ctx->error_occurred = 1;
             return;
         }
 
         if (token->type == BARANIUM_SOURCE_TOKEN_TYPE_FIELD)
         {
             LOGERROR("Line %d: Invalid syntax: fields are not allowed outside of the global scope", token->line_number);
+            if (ctx)
+                ctx->error_occurred = 1;
             return;
         }
 
@@ -81,6 +90,8 @@ void baranium_loop_token_parse(baranium_loop_token* loop, baranium_token_list* l
         {
             ///TODO: make variables inside loops possible through a temporary variable table
             LOGERROR("Line %d: Invalid syntax: variables are not allowed inside of loops", token->line_number);
+            if (ctx)
+                ctx->error_occurred = 1;
             return;
         }
 

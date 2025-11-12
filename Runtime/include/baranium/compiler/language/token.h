@@ -22,6 +22,7 @@ extern "C" {
 #define BARANIUM_TOKEN_TYPE_DOWHILELOOP         (baranium_token_type_t)5
 #define BARANIUM_TOKEN_TYPE_WHILELOOP           (baranium_token_type_t)6
 #define BARANIUM_TOKEN_TYPE_FORLOOP             (baranium_token_type_t)7
+#define BARANIUM_TOKEN_TYPE_STRUCT              (baranium_token_type_t)8
 
 #define BARANIUM_TOKEN_LIST_BUFFER_SIZE 0x80
 

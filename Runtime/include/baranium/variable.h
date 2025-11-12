@@ -37,10 +37,11 @@ BARANIUMAPI const char* baranium_variable_type_to_string(baranium_variable_type_
 
 typedef struct
 {
-    baranium_variable_type_t type;
-    size_t size;
-    baranium_value_t value;
     index_t id;
+    size_t size;
+    size_t array_size;
+    baranium_value_t value;
+    baranium_variable_type_t type;
 } baranium_variable;
 
 /**

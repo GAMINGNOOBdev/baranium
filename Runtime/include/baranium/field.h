@@ -9,10 +9,11 @@ extern "C" {
 
 typedef struct baranium_field
 {
-    baranium_variable_type_t type;
-    size_t size;
-    baranium_value_t value;
     index_t id;
+    size_t size;
+    size_t array_size;
+    baranium_value_t value;
+    baranium_variable_type_t type;
 } baranium_field;
 
 /**
@@ -21,11 +22,10 @@ typedef struct baranium_field
  * @note converts the given value to the fields type
  *
  * @param field Field whose value will be set
- * @param value Value pointer
- * @param size Size of the value (only used when the given value is a string)
- * @param type Type of the given value (has to be specified)
+ * @param value Value
+ * @param type Type of the given value
  */
-BARANIUMAPI void baranium_field_set_value(baranium_field* field, void* value, size_t size, baranium_variable_type_t type);
+BARANIUMAPI void baranium_field_set_value(baranium_field* field, baranium_value_t value, baranium_variable_type_t type);
 
 /**
  * @brief Get the value of a field

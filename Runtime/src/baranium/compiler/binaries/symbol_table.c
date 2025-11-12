@@ -1,6 +1,7 @@
 #include <baranium/compiler/binaries/symbol_table.h>
 #include <baranium/defines.h>
 #include <stdlib.h>
+#include <memory.h>
 
 void baranium_symbol_table_init(baranium_symbol_table* table)
 {

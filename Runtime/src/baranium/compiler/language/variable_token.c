@@ -5,6 +5,7 @@
 #include <baranium/compiler/source_token.h>
 #include <baranium/variable.h>
 #include <baranium/defines.h>
+#include <string.h>
 
 baranium_variable_type_t baranium_variable_type_from_token(baranium_source_token* token)
 {

@@ -1,11 +1,13 @@
-#include "baranium/compiler/language/language.h"
 #include <baranium/compiler/language/expression_token.h>
 #include <baranium/compiler/language/if_else_token.h>
+#include <baranium/compiler/language/language.h>
+#include <baranium/compiler/compiler_context.h>
 #include <baranium/compiler/language/token.h>
 #include <baranium/compiler/source_token.h>
 #include <baranium/compiler/token_parser.h>
 #include <baranium/string_util.h>
 #include <baranium/logging.h>
+#include <memory.h>
 
 void baranium_if_else_token_init(baranium_if_else_token* ifelsetoken)
 {
@@ -54,6 +56,9 @@ void baranium_if_else_token_parse(baranium_if_else_token* ifelsetoken, baranium_
         if (token->special_index == BARANIUM_KEYWORD_INDEX_ELSE)
         {
             LOGERROR("Line %d: missing `if` for `else` statement", token->line_number);
+            baranium_compiler_context* ctx = baranium_get_compiler_context();
+            if (ctx)
+                ctx->error_occurred = 1;
             return;
         }
 

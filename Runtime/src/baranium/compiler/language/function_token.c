@@ -1,6 +1,7 @@
 #include <baranium/compiler/language/expression_token.h>
 #include <baranium/compiler/language/function_token.h>
 #include <baranium/compiler/language/language.h>
+#include <baranium/compiler/compiler_context.h>
 #include <baranium/compiler/language/token.h>
 #include <baranium/compiler/source_token.h>
 #include <baranium/compiler/token_parser.h>
@@ -8,6 +9,7 @@
 #include <baranium/variable.h>
 #include <baranium/runtime.h>
 #include <baranium/logging.h>
+#include <memory.h>
 
 uint8_t baranium_function_token_return_requested(baranium_function_token* function)
 {
@@ -50,6 +52,7 @@ void baranium_function_token_dispose(baranium_function_token* function)
 
 void baranium_function_token_parse(baranium_function_token* function, baranium_token_list* global_tokens)
 {
+    baranium_compiler_context* ctx = baranium_get_compiler_context();
     size_t index = 0;
 
     size_t parameters_index = function->tokens.count;
@@ -63,6 +66,8 @@ void baranium_function_token_parse(baranium_function_token* function, baranium_t
         if (token->special_index == BARANIUM_KEYWORD_INDEX_DEFINE)
         {
             LOGERROR("Line %d: Invalid function syntax: function inside function", token->line_number);
+            if (ctx)
+                ctx->error_occurred = 1;
             return;
         }
 
@@ -81,12 +86,16 @@ void baranium_function_token_parse(baranium_function_token* function, baranium_t
         if (token->special_index == BARANIUM_KEYWORD_INDEX_ELSE)
         {
             LOGERROR("Line %d: missing `if` for `else` statement", token->line_number);
+            if (ctx)
+                ctx->error_occurred = 1;
             return;
         }
 
         if (token->type == BARANIUM_SOURCE_TOKEN_TYPE_FIELD)
         {
             LOGERROR("Line %d: Invalid function syntax: fields inside function not allowed", token->line_number);
+            if (ctx)
+                ctx->error_occurred = 1;
             return;
         }
 

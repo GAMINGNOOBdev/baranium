@@ -1,14 +1,18 @@
-#include "baranium/variable.h"
 #include <baranium/backend/varmath.h>
+#include <baranium/variable.h>
 #include <baranium/field.h>
 #include <assert.h>
 #include <memory.h>
 #include <stdlib.h>
 
-void baranium_field_set_value(baranium_field* field, void* value, size_t size, baranium_variable_type_t type)
+void baranium_field_set_value(baranium_field* field, baranium_value_t value, baranium_variable_type_t type)
 {
-    if (field == NULL || size == 0 || type == BARANIUM_VARIABLE_TYPE_INVALID || type == BARANIUM_VARIABLE_TYPE_VOID)
+    if (field == NULL || type == BARANIUM_VARIABLE_TYPE_INVALID || type == BARANIUM_VARIABLE_TYPE_VOID)
         return;
+
+    size_t size = baranium_variable_get_size_of_type(type);
+    if (type == BARANIUM_VARIABLE_TYPE_STRING)
+        size = strlen(value.str) + 1;
 
     baranium_compiled_variable compiled;
     compiled.size = size;
@@ -21,9 +25,9 @@ void baranium_field_set_value(baranium_field* field, void* value, size_t size, b
     }
 
     if (type == BARANIUM_VARIABLE_TYPE_STRING)
-        memcpy(compiled.value.ptr, value, size);
+        memcpy(compiled.value.ptr, value.ptr, size);
     else
-        memcpy(&compiled.value.num64, value, size);
+        memcpy(&compiled.value.num64, &value.num64, size);
 
     if (type != field->type)
         baranium_compiled_variable_convert_to_type(&compiled, field->type);

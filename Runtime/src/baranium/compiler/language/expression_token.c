@@ -3,12 +3,14 @@
 #include <baranium/compiler/language/variable_token.h>
 #include <baranium/compiler/language/field_token.h>
 #include <baranium/compiler/language/language.h>
+#include <baranium/compiler/compiler_context.h>
 #include <baranium/compiler/language/token.h>
 #include <baranium/compiler/token_parser.h>
 #include <baranium/compiler/source_token.h>
 #include <baranium/string_util.h>
 #include <baranium/variable.h>
 #include <baranium/logging.h>
+#include <memory.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -63,6 +65,7 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
         return;
     }
 
+    baranium_compiler_context* ctx = baranium_get_compiler_context();
     baranium_source_token_list return_value_list;
     baranium_source_token_list_init(&return_value_list);
     for (size_t i = 1; i < expression->inner_tokens.count; i++)
@@ -99,6 +102,8 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
     if (token == NULL)
     {
         LOGERROR("Line %d: Invalid return value \"%s\"", valueToken->line_number, valueToken->contents);
+        if (ctx)
+            ctx->error_occurred = 1;
         baranium_source_token_list_dispose(&return_value_list);
         return;
     }
@@ -122,6 +127,8 @@ void baranium_expression_token_parse_return_statement(baranium_expression_token*
     }
 
     LOGERROR("Line %d: Invalid return value \"%s\"", valueToken->line_number, valueToken->contents);
+    if (ctx)
+        ctx->error_occurred = 1;
     baranium_source_token_list_dispose(&return_value_list);
 }
 
@@ -131,8 +138,11 @@ void baranium_expression_token_identify(baranium_expression_token* expression, b
         return;
     
     expression->ast = baranium_abstract_syntax_tree_parse(&expression->inner_tokens);
-
+    expression->expression_type = BARANIUM_EXPRESSION_TYPE_INVALID;
     baranium_abstract_syntax_tree_node* rootNode = expression->ast;
+    if (rootNode == NULL)
+        return;
+
     baranium_source_token firstToken = rootNode->contents;
     expression->line_number = firstToken.line_number;
 
@@ -217,6 +227,9 @@ void baranium_expression_token_identify(baranium_expression_token* expression, b
                 if (parsed_object_token == NULL && !(strcmp(object_source_token->contents, "null") == 0 || strcmp(object_source_token->contents, baranium_keywords[BARANIUM_KEYWORD_INDEX_ATTACHED].name) == 0))
                 {
                     LOGERROR("Line %d: Cannot parse keyword expression: Cannot find variable named '%s'", firstToken.line_number, object_source_token->contents);
+                    baranium_compiler_context* ctx = baranium_get_compiler_context();
+                    if (ctx)
+                        ctx->error_occurred = 1;
                     return;
                 }
 

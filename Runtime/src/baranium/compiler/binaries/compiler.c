@@ -748,11 +748,7 @@ baranium_value_t baranium_compiler_get_variable_value_as_data(const char* value,
         data.num64 = strgetnumval(value);
 
     if (type == BARANIUM_VARIABLE_TYPE_STRING)
-    {
-        data.ptr = malloc(strlen(value) + 1);
-        memset(data.ptr, 0, strlen(value) + 1);
-        memcpy(data.ptr, value, strlen(value));
-    }
+        data.ptr = strdup(value);
 
     return data;
 }
@@ -933,6 +929,7 @@ index_t baranium_compiler_get_id(baranium_compiler* compiler, const char* name, 
     if (compiler == NULL || name == NULL)
         return BARANIUM_INVALID_INDEX;
 
+    baranium_compiler_context* ctx = baranium_get_compiler_context();
     index_t varID = BARANIUM_INVALID_INDEX;
     varID = baranium_symbol_table_lookup(&compiler->var_table, name);
     if (varID == BARANIUM_INVALID_INDEX) // lookup inside a library
@@ -946,6 +943,8 @@ index_t baranium_compiler_get_id(baranium_compiler* compiler, const char* name, 
     if (varID == BARANIUM_INVALID_INDEX)// ok, the script author really doesn't know
     {
         LOGERROR("Line %d: No symbol with name '%s' (ID: '%lld') found", lineNumber, name, varID);
+        if (ctx)
+            ctx->error_occurred = 1;
         return BARANIUM_INVALID_INDEX;
     }
 
@@ -1010,6 +1009,7 @@ void baranium_compiler_compile_ast_node(baranium_compiler* compiler, baranium_ab
         return;
     }
 
+    baranium_compiler_context* ctx = baranium_get_compiler_context();
     baranium_source_token token = node->contents;
 
     if (token.type == BARANIUM_SOURCE_TOKEN_TYPE_NUMBER && !isRoot)
@@ -1035,6 +1035,8 @@ void baranium_compiler_compile_ast_node(baranium_compiler* compiler, baranium_ab
         else
         {
             LOGERROR("Line %d: Invalid keyword '%s'", token.line_number, token.contents);
+            if (ctx)
+                ctx->error_occurred = 1;
             return;
         }
     }
@@ -1080,10 +1082,13 @@ void baranium_compiler_compile_assignment(baranium_compiler* compiler, baranium_
 {
     if (root == NULL) return;
 
+    baranium_compiler_context* ctx = baranium_get_compiler_context();
     baranium_source_token leftToken = root->left->contents;
     if (leftToken.type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
     {
         LOGERROR("Line %d: Invalid assignment, no variable name given, instead found '%s'", leftToken.line_number, leftToken.contents);
+        if (ctx)
+            ctx->error_occurred = 1;
         return;
     }
 
@@ -1295,6 +1300,9 @@ void baranium_compiler_compile_keyword_expression(baranium_compiler* compiler, b
     }
 
     LOGERROR("Line %d: Unknown keyword '%s' or maybe variable doesn't exist?", expression->line_number, keyword);
+    baranium_compiler_context* ctx = baranium_get_compiler_context();
+    if (ctx)
+        ctx->error_occurred = 1;
 }
 
 void baranium_compiler_compile_function_call(baranium_compiler* compiler, baranium_abstract_syntax_tree_node* node)
@@ -1356,44 +1364,50 @@ void baranium_compiler_compile(baranium_compiler* compiler, baranium_token_list*
     {
         baranium_token* token = tokens->data[i];
 
-        switch(token->type)
-        {
-        default:
-            continue;
-
-        case BARANIUM_TOKEN_TYPE_FUNCTION:
+        if (token->type == BARANIUM_TOKEN_TYPE_FUNCTION)
         {
             LOGERROR("Trying to compile function inside function, bruh");
             return;
         }
 
-        case BARANIUM_TOKEN_TYPE_FIELD:
+        if (token->type == BARANIUM_TOKEN_TYPE_FIELD)
         {
             LOGERROR("Fields should not be inside functions my man");
             return;
         }
 
-        case BARANIUM_TOKEN_TYPE_VARIABLE:
+        if (token->type == BARANIUM_TOKEN_TYPE_VARIABLE)
+        {
             baranium_compiler_compile_variable(compiler, (baranium_variable_token*)token);
             continue;
+        }
 
-        case BARANIUM_TOKEN_TYPE_EXPRESSION:
+        if (token->type == BARANIUM_TOKEN_TYPE_EXPRESSION)
+        {
             baranium_compiler_compile_expression(compiler, (baranium_expression_token*)token);
             continue;
+        }
 
-        case BARANIUM_TOKEN_TYPE_IFELSESTATEMENT:
+        if (token->type == BARANIUM_TOKEN_TYPE_IFELSESTATEMENT)
+        {
             baranium_compiler_compile_if_else_statement(compiler, (baranium_if_else_token*)token);
             continue;
+        }
 
-        case BARANIUM_TOKEN_TYPE_DOWHILELOOP:
+        if (token->type == BARANIUM_TOKEN_TYPE_DOWHILELOOP)
+        {
             baranium_compiler_compile_do_while_loop(compiler, (baranium_loop_token*)token);
             continue;
+        }
 
-        case BARANIUM_TOKEN_TYPE_WHILELOOP:
+        if (token->type == BARANIUM_TOKEN_TYPE_WHILELOOP)
+        {
             baranium_compiler_compile_while_loop(compiler, (baranium_loop_token*)token);
             continue;
+        }
 
-        case BARANIUM_TOKEN_TYPE_FORLOOP:
+        if (token->type == BARANIUM_TOKEN_TYPE_FORLOOP)
+        {
             baranium_compiler_compile_for_loop(compiler, (baranium_loop_token*)token);
             continue;
         }
