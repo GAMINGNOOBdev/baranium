@@ -50,6 +50,7 @@ extern "C" {
 #   else
 #       define BARANIUMAPI
 #   endif
+#   define __FILE_NAME__ __FILE__
 #else
 #   define BARANIUMAPI
 #endif
