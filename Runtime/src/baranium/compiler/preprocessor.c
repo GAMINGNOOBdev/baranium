@@ -21,7 +21,7 @@ typedef struct baranium_preprocessor_define_list
     baranium_source_token_list* replacements;
 } baranium_preprocessor_define_list;
 
-void baranium_preprocessor_define_list_init(baranium_preprocessor_define_list* list)
+static void baranium_preprocessor_define_list_init(baranium_preprocessor_define_list* list)
 {
     if (list == NULL)
         return;
@@ -29,7 +29,7 @@ void baranium_preprocessor_define_list_init(baranium_preprocessor_define_list* l
     memset(list, 0, sizeof(baranium_preprocessor_define_list));
 }
 
-void baranium_preprocessor_define_list_dispose(baranium_preprocessor_define_list* list)
+static void baranium_preprocessor_define_list_dispose(baranium_preprocessor_define_list* list)
 {
     if (list == NULL || list->buffer_size == 0 || list->hashes == NULL || list->replacements == NULL)
         return;
@@ -43,7 +43,7 @@ void baranium_preprocessor_define_list_dispose(baranium_preprocessor_define_list
     memset(list, 0, sizeof(baranium_preprocessor_define_list));
 }
 
-int baranium_preprocessor_define_list_get_index(baranium_preprocessor_define_list* list, const char* entry)
+static int baranium_preprocessor_define_list_get_index(baranium_preprocessor_define_list* list, const char* entry)
 {
     if (list == NULL || list->hashes == NULL || list->replacements == NULL || entry == NULL)
         return -1;
@@ -58,14 +58,30 @@ int baranium_preprocessor_define_list_get_index(baranium_preprocessor_define_lis
     return -1;
 }
 
-void baranium_preprocessor_define_list_add(baranium_preprocessor_define_list* list, const char* define, const char* replacement)
+static void baranium_preprocessor_define_list_set(baranium_preprocessor_define_list* list, int index, const char* replacement)
+{
+    if (list == NULL || index < 0 || index >= list->count || replacement == NULL)
+        return;
+
+    baranium_source_token_list replacementTokens;
+    baranium_source_token_list_init(&replacementTokens);
+    baranium_source_parse_single_line(&replacementTokens, replacement);
+
+    list->replacements[index] = replacementTokens;
+}
+
+static void baranium_preprocessor_define_list_add(baranium_preprocessor_define_list* list, const char* define, const char* replacement)
 {
     if (list == NULL || define == NULL || replacement == NULL)
         return;
 
     index_t hash = baranium_get_id_of_name(define);
-    if (baranium_preprocessor_define_list_get_index(list, define) != -1)
+    int index = baranium_preprocessor_define_list_get_index(list, define);
+    if (index != -1)
+    {
+        baranium_preprocessor_define_list_set(list, index, replacement);
         return;
+    }
 
     if (list->count + 1 >= list->buffer_size)
     {
@@ -131,11 +147,13 @@ void baranium_preprocessor_parse(const char* operation, baranium_source_token_li
         for (size_t i = 0; i < paths.count; i++)
         {
             const char* not_safe_for_work_path = paths.strings[i];
-            include_file = strtrimleading(not_safe_for_work_path);
+            include_file = strtrimleading(strdup(not_safe_for_work_path));
             include_path = (char*)baranium_preprocessor_search_include_path(include_file);
             if (include_path == NULL)
             {
                 LOGERROR("Including file '%s' failed: Check path variable", include_file);
+                free(include_file);
+                include_file = NULL;
                 continue;
             }
 
@@ -144,6 +162,8 @@ void baranium_preprocessor_parse(const char* operation, baranium_source_token_li
             if (file == NULL)
             {
                 LOGERROR("Including file '%s' failed: File might be missing/corrupt (or path may not even point to a file!)", include_file);
+                free(include_file);
+                include_file = NULL;
                 continue;
             }
 
@@ -153,9 +173,13 @@ void baranium_preprocessor_parse(const char* operation, baranium_source_token_li
             baranium_source_token_list_push_list(source, &src);
             fclose(file);
             baranium_source_token_list_dispose(&src);
+            free(include_file);
+            include_file = NULL;
         }
-        free(path_string);
         baranium_string_list_dispose(&paths);
+        if (include_file)
+            free(include_file);
+        free(path_string);
     }
     else if (strcmp(command, "define") == 0)
     {

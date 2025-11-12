@@ -48,6 +48,7 @@ extern "C" {
 #define BARANIUM_KEYWORD_INDEX_WHILE         29
 #define BARANIUM_KEYWORD_INDEX_BREAK         30
 #define BARANIUM_KEYWORD_INDEX_CONTINUE      31
+#define BARANIUM_KEYWORD_INDEX_STRUCT        32
 
 typedef struct baranium_keyword
 {
@@ -76,8 +77,6 @@ extern baranium_special_character baranium_special_operation_characters[];
  * @brief Checks if the given token is an internal type
  * 
  * @param token The token that will be checked
- * @return `true` if the token is an internal type
- * @return `false` otherwise
 */
 BARANIUMAPI uint8_t baranium_is_internal_type(baranium_source_token token);
 

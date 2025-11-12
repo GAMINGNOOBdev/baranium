@@ -49,6 +49,8 @@ baranium_keyword baranium_keywords[] = {
     {"break",        BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
     {"continue",     BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
 
+    {"struct",       BARANIUM_SOURCE_TOKEN_TYPE_KEYWORD},
+
     {0,BARANIUM_SOURCE_TOKEN_TYPE_INVALID}
 };
 
@@ -65,6 +67,7 @@ baranium_special_operator baranium_special_operators[] = {
     {"&=",   BARANIUM_SOURCE_TOKEN_TYPE_ANDEQUAL},
     {"|=",   BARANIUM_SOURCE_TOKEN_TYPE_OREQUAL},
     {"^=",   BARANIUM_SOURCE_TOKEN_TYPE_XOREQUAL},
+    {"%%",   BARANIUM_SOURCE_TOKEN_TYPE_MODMOD},
     {"&&",   BARANIUM_SOURCE_TOKEN_TYPE_ANDAND},
     {"||",   BARANIUM_SOURCE_TOKEN_TYPE_OROR},
     {"--",   BARANIUM_SOURCE_TOKEN_TYPE_MINUSMINUS},

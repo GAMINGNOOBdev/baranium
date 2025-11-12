@@ -24,6 +24,8 @@ typedef struct baranium_compiler_context
 
     baranium_string_list library_dir_contents;
     char* library_dir_path;
+
+    uint8_t error_occurred;
 } baranium_compiler_context;
 
 /**
@@ -67,8 +69,9 @@ BARANIUMAPI void baranium_compiler_context_set_library_directory(baranium_compil
  * 
  * @param ctx Compiler context
  * @param source Source file
+ + @param filename Filename
  */
-BARANIUMAPI void baranium_compiler_context_add_source(baranium_compiler_context* ctx, FILE* source);
+BARANIUMAPI void baranium_compiler_context_add_source(baranium_compiler_context* ctx, FILE* source, const char* filename);
 
 /**
  * @brief Clear all source files from the current compilation list

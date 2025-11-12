@@ -44,6 +44,8 @@ BARANIUMAPI void baranium_preprocessor_pop_last_include(void);
 /**
  * @brief Add a define
  * 
+ * @note WILL OVERWRITE EXISTING DEFINE VALUES!
+ * 
  * @param define Define name
  * @param replacement What the define replaces
 */

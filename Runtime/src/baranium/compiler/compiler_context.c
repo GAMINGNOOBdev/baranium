@@ -95,11 +95,12 @@ void baranium_compiler_context_set_library_directory(baranium_compiler_context* 
     ctx->library_dir_contents = baranium_file_util_get_directory_contents(ctx->library_dir_path, BARANIUM_FILE_UTIL_FILTER_MASK_ALL_FILES);
 }
 
-void baranium_compiler_context_add_source(baranium_compiler_context* ctx, FILE* sourcefile)
+void baranium_compiler_context_add_source(baranium_compiler_context* ctx, FILE* sourcefile, const char* filename)
 {
     if (ctx == NULL || sourcefile == NULL)
         return;
 
+    baranium_preprocessor_add_define("__FILE__", stringf("\"%s\"", filename));
     baranium_source_token_list source;
     baranium_source_token_list_init(&source);
     baranium_source_open_from_file(&source, sourcefile);
@@ -136,35 +137,48 @@ void baranium_compiler_context_compile(baranium_compiler_context* ctx, const cha
     if (ctx == NULL || output == NULL)
         return;
 
+    if (ctx->error_occurred)
+        return;
+
+    const char* outputType = library ? "library" : "executable";
+    baranium_token_parser_dispose(&ctx->token_parser);
+    baranium_token_parser_parse(&ctx->token_parser, &ctx->combined_source);
+
+    baranium_compiler compiler;
+    baranium_compiler_init(&compiler);
+
     FILE* file = fopen(output, "wb+");
     if (file == NULL)
     {
         LOGERROR("Error: cannot create or open file '%s'\n", output);
         return;
     }
-
-    baranium_token_parser_dispose(&ctx->token_parser);
-    baranium_token_parser_parse(&ctx->token_parser, &ctx->combined_source);
-
-    baranium_compiler compiler;
-    baranium_compiler_init(&compiler);
     baranium_compiler_write(&compiler, &ctx->token_parser.tokens, file, library);
     baranium_compiler_dispose(&compiler);
     fclose(file);
 
-    LOGINFO("Successfully compiled %s as '%s'", library ? "library" : "executable", output);
+    if (ctx->error_occurred)
+    {
+        remove(output);
+        LOGERROR("Error while compiling %s '%s'", outputType, output);
+        LOGWARNING("Aborting compilation...");
+        return;
+    }
+
+    LOGINFO("Successfully compiled %s as '%s'", outputType, output);
 }
 
 void baranium_compiler_context_add_library(baranium_compiler_context* ctx, const char* name)
 {
     if (ctx == NULL)
         return;
-    
+
     baranium_library* lib = NULL;
 
     for (size_t i = 0; i < ctx->library_dir_contents.count; i++)
     {
         const char* path = ctx->library_dir_contents.strings[i];
+        LOGDEBUG("libdir contents index %d: '%s'", i, path);
         char* filenameptr = (char*)path;
         for (int i = strlen(path)-1; i > 0; i--)
         {
@@ -174,8 +188,9 @@ void baranium_compiler_context_add_library(baranium_compiler_context* ctx, const
                 break;
             }
         }
-        if (strcmp(filenameptr, name) == 0)
+        if (strcmp(filenameptr, name) == 0 || strcmp(stringf("%s.blib", filenameptr), name) == 0)
         {
+            LOGDEBUG("loading library from '%s'", stringf("%s/%s", ctx->library_dir_path, path));
             lib = baranium_library_load(stringf("%s/%s", ctx->library_dir_path, path));
             break;
         }
@@ -184,6 +199,7 @@ void baranium_compiler_context_add_library(baranium_compiler_context* ctx, const
     if (lib == NULL)
     {
         LOGERROR("Could not find library named '%s'", name);
+        ctx->error_occurred = 1;
         return;
     }
 

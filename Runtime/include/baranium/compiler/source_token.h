@@ -61,12 +61,13 @@ typedef uint8_t baranium_source_token_type_t;
 #define BARANIUM_SOURCE_TOKEN_TYPE_OROR                 (baranium_source_token_type_t)39
 #define BARANIUM_SOURCE_TOKEN_TYPE_MINUSMINUS           (baranium_source_token_type_t)40
 #define BARANIUM_SOURCE_TOKEN_TYPE_PLUSPLUS             (baranium_source_token_type_t)41
-#define BARANIUM_SOURCE_TOKEN_TYPE_BITSHIFTLEFT         (baranium_source_token_type_t)42
-#define BARANIUM_SOURCE_TOKEN_TYPE_BITSHIFTRIGHT        (baranium_source_token_type_t)43
-#define BARANIUM_SOURCE_TOKEN_TYPE_QUOTE                (baranium_source_token_type_t)44
-#define BARANIUM_SOURCE_TOKEN_TYPE_DOUBLEQUOTE          (baranium_source_token_type_t)45
-#define BARANIUM_SOURCE_TOKEN_TYPE_LESSTHAN             (baranium_source_token_type_t)46
-#define BARANIUM_SOURCE_TOKEN_TYPE_GREATERTHAN          (baranium_source_token_type_t)47
+#define BARANIUM_SOURCE_TOKEN_TYPE_MODMOD               (baranium_source_token_type_t)42
+#define BARANIUM_SOURCE_TOKEN_TYPE_BITSHIFTLEFT         (baranium_source_token_type_t)43
+#define BARANIUM_SOURCE_TOKEN_TYPE_BITSHIFTRIGHT        (baranium_source_token_type_t)44
+#define BARANIUM_SOURCE_TOKEN_TYPE_QUOTE                (baranium_source_token_type_t)45
+#define BARANIUM_SOURCE_TOKEN_TYPE_DOUBLEQUOTE          (baranium_source_token_type_t)46
+#define BARANIUM_SOURCE_TOKEN_TYPE_LESSTHAN             (baranium_source_token_type_t)47
+#define BARANIUM_SOURCE_TOKEN_TYPE_GREATERTHAN          (baranium_source_token_type_t)48
 
 typedef struct baranium_source_token
 {
