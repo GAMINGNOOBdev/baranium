@@ -1,0 +1,10 @@
+#######################################
+###                                 ###
+###   Debugging utility functions   ###
+###                                 ###
+#######################################
+
+define log_info(string message) = void;
+define log_debug(string message) = void;
+define log_error(string message) = void;
+define log_warning(string message) = void;

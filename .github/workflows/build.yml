@@ -80,7 +80,7 @@ jobs:
         merge-multiple: false
     - name: Get current date
       id: date
-      run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
+      run: echo "date=$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
     - name: Sign outputs
       uses: sigstore/gh-action-sigstore-python@v3.0.0
       with:
@@ -97,6 +97,9 @@ jobs:
     - name: Rename ubuntu to linux for convenience (debug)
       id: renamestuff2
       run: mv "${{ github.workspace }}/baranium/baranium-ubuntu-latest-Debug/" "${{ github.workspace }}/baranium/baranium-linux-latest-Debug/"
+    - name: Remove latest from names because its annoying
+      id: removelatestfromnames
+      run: for filename in $(ls ${{ github.workspace }}/baranium/); do mv "${{ github.workspace }}/baranium/$filename" "${{ github.workspace }}/baranium/${filename//latest-/}"; done
     - name: Upload to a single artifact
       uses: actions/upload-artifact@v4
       with:

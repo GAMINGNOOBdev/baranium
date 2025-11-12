@@ -12,6 +12,7 @@ set(barSources
 
 add_executable(bar ${barSources})
 target_link_libraries(bar baranium-s)
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
 if (UNIX)
     target_link_libraries(bar m)

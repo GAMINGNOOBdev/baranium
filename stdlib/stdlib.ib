@@ -1,6 +1,11 @@
-####################
-# STANDARD LIBRARY #
-####################
+############################
+###                      ###
+###   STANDARD LIBRARY   ###
+###                      ###
+############################
 
+# execute a command
 define system(string command) = void;
+
+# exit the program
 define exit() = void;

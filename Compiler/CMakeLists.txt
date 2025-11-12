@@ -11,6 +11,7 @@ set(barcSources
 
 add_executable(barc ${barcSources})
 target_link_libraries(barc baranium-s)
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
 if( MSVC )
     if(${CMAKE_VERSION} VERSION_LESS "3.6.0")

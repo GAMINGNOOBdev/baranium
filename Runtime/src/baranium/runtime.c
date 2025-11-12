@@ -17,7 +17,7 @@
 
 static baranium_runtime* current_active_runtime = NULL;
 
-baranium_runtime* baranium_init(void)
+baranium_runtime* baranium_init_runtime(void)
 {
     bcpu_opcodes_init();
 
@@ -182,15 +182,13 @@ baranium_handle* baranium_open_handle(const char* source)
 
     memset(handle, 0, sizeof(baranium_handle));
     handle->file = file;
-    handle->path = malloc(strlen(source)+1);
+    handle->path = strdup(source);
     if (!handle->path)
     {
         LOGERROR("Couldn't create handle, insufficient memory");
         free(handle);
         return NULL;
     }
-    strcpy(handle->path, source);
-    handle->path[strlen(source)] = 0;
 
     if (current_active_runtime->start == NULL)
     {

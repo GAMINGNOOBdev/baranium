@@ -19,7 +19,8 @@ extern "C" {
 typedef void (*baranium_file_util_iteration_callback_t)(const char* filename);
 
 /**
- * Iterate over the contents of the given directory
+ * @brief Iterate over the contents of the given directory
+ * 
  * @note This function may take a while to complete since it will retrieve all files from subfolders as well if requested
  * 
  * @param path Path to the directory
@@ -29,7 +30,24 @@ typedef void (*baranium_file_util_iteration_callback_t)(const char* filename);
 BARANIUMAPI void baranium_file_util_iterate_directory(const char* path, int mask, baranium_file_util_iteration_callback_t callback);
 
 /**
- * Gets the contents of the given directory
+ * @brief Check if given path is a directory and exists
+ * 
+ * @param path Path to the directory
+ * 
+ * @returns 0 if no, 1 if yes
+ */
+BARANIUMAPI uint8_t baranium_file_util_directory_exists(const char* path);
+
+/**
+ * @brief Create a directory
+ * 
+ * @param path Path to the directory
+ */
+BARANIUMAPI void baranium_file_util_create_directory(const char* path);
+
+/**
+ * @brief Gets the contents of the given directory
+ * 
  * @note This function may take a while to complete since it will retrieve all files from subfolders as well if specified
  * 
  * @param out Output string list

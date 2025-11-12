@@ -27,7 +27,7 @@
 #   define OS_DELIMITER '/'
 #endif
 
-#define PRINT_VERSION printf("Baranium runtime version %d.%d.%d %s\n", BARANIUM_VERSION_YEAR, BARANIUM_VERSION_MONTH, BARANIUM_VERSION_DATE, BARANIUM_VERSION_PHASE)
+#define PRINT_VERSION printf("Baranium Runtime Version %d.%d.%d %s\n", BARANIUM_VERSION_YEAR, BARANIUM_VERSION_MONTH, BARANIUM_VERSION_DATE, BARANIUM_VERSION_PHASE)
 
 uint8_t debug_mode_enabled;
 
@@ -45,7 +45,7 @@ void print_help_message(void)
 
 char* get_executable_working_directory(void)
 {
-    char* result = (char*)malloc(0x1000);
+    static char result[0x1000];
 
     #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
         DWORD status = GetModuleFileNameA(NULL, &result[0], 0x1000);
@@ -77,52 +77,53 @@ int main(int argc, const char** argv)
         return exit_code;
     }
 
-    argument_parser* parser = argument_parser_init();
-    argument_parser_add(parser, Argument_Type_Flag, "-h", "--help");
-    argument_parser_add(parser, Argument_Type_Flag, "-d", "--debug");
-    argument_parser_add(parser, Argument_Type_Flag, "-stdout", "--enable-stdout");
-    argument_parser_add(parser, Argument_Type_Flag, "-v", "--version");
-    argument_parser_parse(parser, argc, argv);
+    argument_parser_t parser;
+    argument_parser_init(&parser);
+    argument_parser_add(&parser, ARGUMENT_TYPE_FLAG, "-h", "--help");
+    argument_parser_add(&parser, ARGUMENT_TYPE_FLAG, "-d", "--debug");
+    argument_parser_add(&parser, ARGUMENT_TYPE_FLAG, "-stdout", "--enable-stdout");
+    argument_parser_add(&parser, ARGUMENT_TYPE_FLAG, "-v", "--version");
+    argument_parser_parse(&parser, argc, argv);
 
-    if (argument_parser_has(parser, "-h"))
+    if (argument_parser_has(&parser, "-h"))
     {
         print_help_message();
-        argument_parser_dispose(parser);
+        argument_parser_dispose(&parser);
         return exit_code;
     }
 
-    if (argument_parser_has(parser, "-v"))
+    if (argument_parser_has(&parser, "-v"))
     {
         PRINT_VERSION;
-        argument_parser_dispose(parser);
+        argument_parser_dispose(&parser);
         return exit_code;
     }
 
-    debug_mode_enabled = argument_parser_has(parser, "-d");
+    debug_mode_enabled = argument_parser_has(&parser, "-d");
     if (debug_mode_enabled)
         PRINT_VERSION;
     log_enable_debug_msgs(debug_mode_enabled);
-    log_enable_stdout(argument_parser_has(parser, "-stdout"));
+    log_enable_stdout(argument_parser_has(&parser, "-stdout"));
     FILE* logOutput = fopen("runtime.log", "wb+");
     log_set_stream(logOutput);
 
     if (debug_mode_enabled)
         LOGINFO("Debug messages enabled");
 
-    if (parser->unparsed->size != 1)
+    if (parser.unparsed.size != 1)
     {
         print_help_message();
-        LOGERROR("Invalid number of files passed, expected one, got %ld", parser->unparsed->size);
-        argument_parser_dispose(parser);
+        LOGERROR("Invalid number of files passed, expected one, got %ld", parser.unparsed.size);
+        argument_parser_dispose(&parser);
         fclose(logOutput);
         exit_code = -1;
         return exit_code;
     }
 
-    const char* filePath = parser->unparsed->start->values[0];
-    argument_parser_dispose(parser);
+    const char* filePath = parser.unparsed.data[0].values[0];
+    argument_parser_dispose(&parser);
 
-    baranium_runtime* runtime = baranium_init();
+    baranium_runtime* runtime = baranium_init_runtime();
     baranium_set_runtime(runtime);
 
     char* executableFilePath = get_executable_working_directory();
@@ -148,8 +149,17 @@ int main(int argc, const char** argv)
     index_t mainIndex = baranium_script_get_id_of(script, "main");
 
     baranium_function* main = baranium_script_get_function_by_id(script, mainIndex);
-    baranium_function_call(main, NULL, NULL, 0);
-    exit_code = main->return_value.snum32;
+    baranium_function_call_data_t args = {
+        .data = (baranium_value_t[]){
+            (baranium_value_t){.str=""}
+        },
+        .types = (baranium_variable_type_t[]){
+            BARANIUM_VARIABLE_TYPE_STRING
+        },
+        .count = 0
+    };
+    baranium_function_call(main, args);
+    exit_code = main->return_data.value.snum32;
     baranium_function_dispose(main);
 
 end:
@@ -157,7 +167,6 @@ end:
     baranium_close_handle(handle);
 
     baranium_dispose_runtime(runtime);
-    free(executableFilePath);
     fclose(logOutput);
 
     return exit_code;

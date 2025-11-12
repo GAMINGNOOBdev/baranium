@@ -14,7 +14,7 @@ extern "C" {
  * 
  * @returns An instance of the runtime and it's data
  */
-BARANIUMAPI baranium_runtime* baranium_init(void);
+BARANIUMAPI baranium_runtime* baranium_init_runtime(void);
 
 /**
  * @brief Set the current global runtime

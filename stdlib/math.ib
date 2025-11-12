@@ -1,6 +1,8 @@
-#########################
-# STANDARD MATH LIBRARY #
-#########################
+#################################
+###                           ###
+###   STANDARD MATH LIBRARY   ###
+###                           ###
+#################################
 
 +define MATH_PI 3.14159265359
 
@@ -12,4 +14,3 @@ define acos(float f) = float;
 define atan(float f) = float;
 define log(float f) = float;
 define log10(float f) = float;
-

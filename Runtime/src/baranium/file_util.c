@@ -10,6 +10,7 @@
 #   include <stdlib.h>
 #else
 #   include <dirent.h>
+#   include <sys/stat.h>
 #endif
 
 void baranium_file_util_concat_path_vectors(baranium_string_list* output, baranium_string_list* input, const char* prefix)
@@ -33,8 +34,7 @@ void baranium_file_util_iterate_directory(const char* tmppath, int mask, baraniu
     if (!tmppath || !callback)
         return;
 
-    char* path = malloc(strlen(tmppath)+1);
-    strcpy(path, tmppath);
+    char* path = strdup(tmppath);
 
     if (path[strlen(path)-1] == '/' || path[strlen(path)-1] == '\\')
         path[strlen(path)-1] = 0;
@@ -45,6 +45,7 @@ void baranium_file_util_iterate_directory(const char* tmppath, int mask, baraniu
 
     if ((hFind = FindFirstFileA(stringf("%s\\*.*", path), &fdFile)) == INVALID_HANDLE_VALUE)
     {
+        LOGERROR("could not find folder '%s'", path);
         free(path);
         return;
     }
@@ -170,6 +171,50 @@ void baranium_file_util_iterate_directory(const char* tmppath, int mask, baraniu
     free(path);
 }
 
+uint8_t baranium_file_util_directory_exists(const char* tmppath)
+{
+    if (!tmppath)
+        return 0;
+
+    char* path = strdup(tmppath);
+
+    if (path[strlen(path)-1] == '/' || path[strlen(path)-1] == '\\')
+        path[strlen(path)-1] = 0;
+
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
+    WIN32_FIND_DATAA fdFile;
+    HANDLE hFind = NULL;
+
+    if ((hFind = FindFirstFileA(stringf("%s\\*.*", path), &fdFile)) == INVALID_HANDLE_VALUE)
+    {
+        free(path);
+        return 0;
+    }
+
+    FindClose(hFind);
+#else
+    DIR* directory = opendir(path);
+    if (directory == NULL)
+    {
+        free(path);
+        return 0;
+    }
+
+    closedir(directory);
+#endif
+    free(path);
+    return 1;
+}
+
+void baranium_file_util_create_directory(const char* path)
+{
+#if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
+    _mkdir(path);
+#else
+    mkdir(path, 0700);
+#endif
+}
+
 baranium_string_list baranium_file_util_get_directory_contents(const char* tmppath, int mask)
 {
     baranium_string_list result = baranium_string_list_init();
@@ -177,8 +222,7 @@ baranium_string_list baranium_file_util_get_directory_contents(const char* tmppa
     if (!tmppath)
         return result;
 
-    char* path = malloc(strlen(tmppath)+1);
-    strcpy(path, tmppath);
+    char* path = strdup(tmppath);
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
     WIN32_FIND_DATAA fdFile;

@@ -1,6 +1,7 @@
 #include <baranium/backend/varmath.h>
 #include <baranium/variable.h>
 #include <baranium/callback.h>
+#include <baranium/logging.h>
 #include <baranium/runtime.h>
 #include <baranium/bcpu.h>
 #include <assert.h>
@@ -72,17 +73,84 @@ size_t getline(char **buffer, size_t *buffersz, FILE *stream)
 }
 #endif
 
-void print_baranium(baranium_callback_data_list_t* data)
+BARANIUM_CALLBACK_DEFINE(fopen)
 {
-    BARANIUM_CALLBACK_INIT(data, 1, 1);
+    BARANIUM_CALLBACK_INIT(2, 2);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(char*, filename, NULL, BARANIUM_VARIABLE_TYPE_STRING, 0);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(char*, filemode, NULL, BARANIUM_VARIABLE_TYPE_STRING, 1);
+
+    FILE* file = NULL;
+    if (filename != NULL && filemode != NULL)
+        file = fopen(filename, filemode);
+
+    baranium_compiled_variable result = {BARANIUM_VARIABLE_TYPE_OBJECT, {.ptr = file}, baranium_variable_get_size_of_type(BARANIUM_VARIABLE_TYPE_OBJECT)};
+    BARANIUM_CALLBACK_RETURN_VARIABLE(result);
+}
+
+BARANIUM_CALLBACK_DEFINE(fclose)
+{
+    BARANIUM_CALLBACK_INIT(1, 1);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(FILE*, file, NULL, BARANIUM_VARIABLE_TYPE_OBJECT, 0);
+
+    if (file)
+        fclose(file);
+}
+
+BARANIUM_CALLBACK_DEFINE(fseek)
+{
+    BARANIUM_CALLBACK_INIT(3, 3);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(FILE*, file, NULL, BARANIUM_VARIABLE_TYPE_OBJECT, 0);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(int, off, 0, BARANIUM_VARIABLE_TYPE_INT32, 1);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(int, whence, 0, BARANIUM_VARIABLE_TYPE_INT32, 2);
+
+    if (file != NULL)
+        fseek(file, off, whence);
+}
+
+
+BARANIUM_CALLBACK_DEFINE(print)
+{
+    BARANIUM_CALLBACK_INIT(1, 1);
     BARANIUM_CALLBACK_GET_VARIABLE_VALUE(char*, string, NULL, BARANIUM_VARIABLE_TYPE_STRING, 0);
 
     printf("%s", string);
 }
 
-void input_baranium(baranium_callback_data_list_t* data)
+BARANIUM_CALLBACK_DEFINE(log_info)
 {
-    BARANIUM_CALLBACK_INIT(data, 0, 0);
+    BARANIUM_CALLBACK_INIT(1, 1);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(char*, string, NULL, BARANIUM_VARIABLE_TYPE_STRING, 0);
+
+    LOGINFO(string);
+}
+
+BARANIUM_CALLBACK_DEFINE(log_debug)
+{
+    BARANIUM_CALLBACK_INIT(1, 1);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(char*, string, NULL, BARANIUM_VARIABLE_TYPE_STRING, 0);
+
+    LOGDEBUG(string);
+}
+
+BARANIUM_CALLBACK_DEFINE(log_error)
+{
+    BARANIUM_CALLBACK_INIT(1, 1);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(char*, string, NULL, BARANIUM_VARIABLE_TYPE_STRING, 0);
+
+    LOGERROR(string);
+}
+
+BARANIUM_CALLBACK_DEFINE(log_warning)
+{
+    BARANIUM_CALLBACK_INIT(1, 1);
+    BARANIUM_CALLBACK_GET_VARIABLE_VALUE(char*, string, NULL, BARANIUM_VARIABLE_TYPE_STRING, 0);
+
+    LOGWARNING(string);
+}
+
+BARANIUM_CALLBACK_DEFINE(input)
+{
+    BARANIUM_CALLBACK_INIT(0, 0);
 
     size_t bufferSize = 0;
     char* line = NULL;
@@ -105,25 +173,25 @@ void input_baranium(baranium_callback_data_list_t* data)
     free(buffer);
 }
 
-void system_baranium(baranium_callback_data_list_t* data)
+BARANIUM_CALLBACK_DEFINE(system)
 {
-    BARANIUM_CALLBACK_INIT(data, 1, 1);
+    BARANIUM_CALLBACK_INIT(1, 1);
     BARANIUM_CALLBACK_GET_VARIABLE_VALUE(char*, command, NULL, BARANIUM_VARIABLE_TYPE_STRING, 0);
 
     system(command);
 }
 
-void exit_baranium(baranium_callback_data_list_t* data)
+BARANIUM_CALLBACK_DEFINE(exit)
 {
-    BARANIUM_CALLBACK_INIT(data, 0, 0);
+    BARANIUM_CALLBACK_INIT(0, 0);
 
     baranium_get_runtime()->cpu->flags.FORCED_KILL = 1;
     baranium_get_runtime()->cpu->kill_triggered = 1;
 }
 
-void math_function_baranium(baranium_callback_data_list_t* data, float(*funcptr)(float))
+void baranium_callback_math_function(baranium_callback_data_list_t* data, float(*funcptr)(float))
 {
-    BARANIUM_CALLBACK_INIT(data, 1, 1);
+    BARANIUM_CALLBACK_INIT(1, 1);
     if (funcptr == NULL)
         return;
 
@@ -134,27 +202,34 @@ void math_function_baranium(baranium_callback_data_list_t* data, float(*funcptr)
     BARANIUM_CALLBACK_RETURN_VARIABLE(number);
 }
 
-void sin_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, sinf); }
-void cos_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, cosf); }
-void tan_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, tanf); }
-void asin_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, asinf); }
-void acos_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, acosf); }
-void atan_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, atanf); }
-void log_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, logf); }
-void log10_baranium(baranium_callback_data_list_t* data) { math_function_baranium(data, log10f); }
+BARANIUM_CALLBACK_DEFINE(sin) { baranium_callback_math_function(data, sinf); }
+BARANIUM_CALLBACK_DEFINE(cos) { baranium_callback_math_function(data, cosf); }
+BARANIUM_CALLBACK_DEFINE(tan) { baranium_callback_math_function(data, tanf); }
+BARANIUM_CALLBACK_DEFINE(asin) { baranium_callback_math_function(data, asinf); }
+BARANIUM_CALLBACK_DEFINE(acos) { baranium_callback_math_function(data, acosf); }
+BARANIUM_CALLBACK_DEFINE(atan) { baranium_callback_math_function(data, atanf); }
+BARANIUM_CALLBACK_DEFINE(log) { baranium_callback_math_function(data, logf); }
+BARANIUM_CALLBACK_DEFINE(log10) { baranium_callback_math_function(data, log10f); }
 
 void setup_callbacks(void)
 {
-    baranium_callback_add(baranium_get_id_of_name("print"), print_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("input"), input_baranium, 0);
-    baranium_callback_add(baranium_get_id_of_name("system"), system_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("exit"), exit_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("sin"), sin_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("cos"), cos_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("tan"), tan_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("asin"), asin_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("acos"), acos_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("atan"), atan_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("log"), log_baranium, 1);
-    baranium_callback_add(baranium_get_id_of_name("log10"), log10_baranium, 1);
+    BARANIUM_CALLBACK_ADD(fopen, 2);
+    BARANIUM_CALLBACK_ADD(fseek, 3);
+    BARANIUM_CALLBACK_ADD(fclose, 1);
+    BARANIUM_CALLBACK_ADD(log_info, 1);
+    BARANIUM_CALLBACK_ADD(log_debug, 1);
+    BARANIUM_CALLBACK_ADD(log_error, 1);
+    BARANIUM_CALLBACK_ADD(log_warning, 1);
+    BARANIUM_CALLBACK_ADD(print, 1);
+    BARANIUM_CALLBACK_ADD(input, 0);
+    BARANIUM_CALLBACK_ADD(system, 1);
+    BARANIUM_CALLBACK_ADD(exit, 1);
+    BARANIUM_CALLBACK_ADD(sin, 1);
+    BARANIUM_CALLBACK_ADD(cos, 1);
+    BARANIUM_CALLBACK_ADD(tan, 1);
+    BARANIUM_CALLBACK_ADD(asin, 1);
+    BARANIUM_CALLBACK_ADD(acos, 1);
+    BARANIUM_CALLBACK_ADD(atan, 1);
+    BARANIUM_CALLBACK_ADD(log, 1);
+    BARANIUM_CALLBACK_ADD(log10, 1);
 }

@@ -1,14 +1,24 @@
-#################################
-# STANDARD INPUT OUTPUT LIBRARY #
-#################################
+#########################################
+###                                   ###
+###   STANDARD INPUT OUTPUT LIBRARY   ###
+###                                   ###
+#########################################
+
++define file_t object
 
 # file operations
-# define fopen(string path, string mode) = object;
-# define fread(object fileptr, ) = byte[];
+define fopen(string path, string mode) = object;
+define fseek(object fileptr, int off, int whence) = void;
+define fclose(object fileptr) = void;
+# define fread(object fileptr, ) = uint8[];
 # define fwrite(object fileptr, ) = void;
-# define fseek(object fileptr, int cur, int off) = void;
-#  define fclose(object fileptr) = void;
 
-# stdin/stdout operations
+###
+### stdin/stdout operations
+###
+
+# print a string to stdout
 define print(string str) = void;
+
+# accept input (until enter)
 define input() = string;

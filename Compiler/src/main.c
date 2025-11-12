@@ -33,20 +33,11 @@
 #   define OS_DELIMITER '/'
 #endif
 
-#define PRINT_VERSION printf("Baranium runtime version %d.%d.%d %s\n", BARANIUM_VERSION_YEAR, BARANIUM_VERSION_MONTH, BARANIUM_VERSION_DATE, BARANIUM_VERSION_PHASE)
+#define PRINT_VERSION printf("Baranium Compiler Version %d.%d.%d %s\n", BARANIUM_VERSION_YEAR, BARANIUM_VERSION_MONTH, BARANIUM_VERSION_DATE, BARANIUM_VERSION_PHASE)
 
 void print_usage(void);
 
 uint8_t g_debug_mode = 0;
-
-const char* strptr(const char* src)
-{
-    size_t len = strlen(src)+1;
-    char* result = malloc(len);
-    memcpy(result,src,len-1);
-    result[len-1]=0;
-    return (const char*)result;
-}
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
 size_t getdelimv2(char **buffer, size_t *buffersz, FILE *stream, char delim) {
@@ -137,7 +128,7 @@ void read_includes_file(const char* path, uint8_t freepath)
 
 char* get_executable_working_directory(void)
 {
-    char* result = (char*)malloc(0x1000);
+    static char result[0x1000];
 
     #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
         DWORD status = GetModuleFileNameA(NULL, &result[0], 0x1000);
@@ -172,31 +163,34 @@ int main(const int argc, const char** argv)
         return 0;
     }
 
-    argument_parser* parser = argument_parser_init();
-    argument_parser_add(parser, Argument_Type_Flag, "-h", "--help");
-    argument_parser_add(parser, Argument_Type_Flag, "-d", "--debug");
-    argument_parser_add(parser, Argument_Type_Flag, "-v", "--version");
-    argument_parser_add(parser, Argument_Type_Flag, "-e", "--export");
-    argument_parser_add(parser, Argument_Type_Value, "-l", "--link");
-    argument_parser_add(parser, Argument_Type_Value, "-o", "--output");
-    argument_parser_add(parser, Argument_Type_Value, "-I", "--include");
-    argument_parser_parse(parser, argc, argv);
+    argument_parser_t parser;
+    argument_parser_init(&parser);
+    argument_parser_add(&parser, ARGUMENT_TYPE_FLAG, "-h", "--help");
+    argument_parser_add(&parser, ARGUMENT_TYPE_FLAG, "-d", "--debug");
+    argument_parser_add(&parser, ARGUMENT_TYPE_FLAG, "-v", "--version");
+    argument_parser_add(&parser, ARGUMENT_TYPE_FLAG, "-e", "--export");
+    argument_parser_add(&parser, ARGUMENT_TYPE_VALUE, "-l", "--link");
+    argument_parser_add(&parser, ARGUMENT_TYPE_VALUE, "-o", "--output");
+    argument_parser_add(&parser, ARGUMENT_TYPE_VALUE, "-i", "--include");
+    argument_parser_add(&parser, ARGUMENT_TYPE_VALUE, "-I", "--includes");
+    argument_parser_parse(&parser, argc, argv);
 
-    if (argument_parser_has(parser, "-h"))
+    if (argument_parser_has(&parser, "-h"))
     {
         print_usage();
-        argument_parser_dispose(parser);
+        argument_parser_dispose(&parser);
         return 0;
     }
 
-    if (argument_parser_has(parser, "-v"))
+    if (argument_parser_has(&parser, "-v"))
     {
         PRINT_VERSION;
-        argument_parser_dispose(parser);
+        argument_parser_dispose(&parser);
         return 0;
     }
 
-    g_debug_mode = argument_parser_has(parser, "-d");
+    PRINT_VERSION;
+    g_debug_mode = argument_parser_has(&parser, "-d");
     log_enable_debug_msgs(g_debug_mode);
     log_enable_stdout(1); // should always be on
     FILE* logOutput = fopen("compiler.log", "wb+");
@@ -205,9 +199,10 @@ int main(const int argc, const char** argv)
     char* output = "output.bin";
     uint8_t is_library = 0;
 
-    uint8_t outputPathPresent = argument_parser_has(parser, "-o");
-    argument* userIncludes = argument_parser_get(parser, "-I");
-    is_library = argument_parser_has(parser, "-e");
+    uint8_t outputPathPresent = argument_parser_has(&parser, "-o");
+    argument_t* userIncludeFile = argument_parser_get(&parser, "-I");
+    argument_t* userInclude = argument_parser_get(&parser, "-i");
+    is_library = argument_parser_has(&parser, "-e");
 
     baranium_compiler_context* context = baranium_compiler_context_init();
 
@@ -235,8 +230,13 @@ int main(const int argc, const char** argv)
     read_includes_file(strsubstr(stringf("%setc/include.paths", executableFilePath),0,-1), 1);
     read_includes_file(strsubstr(stringf("%sinclude.paths", executableFilePath),0,-1), 1);
 
-    if (userIncludes != NULL)
-        read_includes_file(userIncludes->values[0], 0);
+    if (userIncludeFile != NULL)
+        read_includes_file(userIncludeFile->values[0], 0);
+    if (userInclude != NULL)
+    {
+        for (int i = 0; i < userInclude->value_count; i++)
+            baranium_preprocessor_add_include_path(userInclude->values[i]);
+    }
 
     //////////////////////
     /// Error handling ///
@@ -244,7 +244,7 @@ int main(const int argc, const char** argv)
 
     if (outputPathPresent)
     {
-        argument* outputArg = argument_parser_get(parser, "-o");
+        argument_t* outputArg = argument_parser_get(&parser, "-o");
         output = (char*)outputArg->values[0];
     }
 
@@ -261,17 +261,24 @@ int main(const int argc, const char** argv)
             output[outputLastSeperatorIndex] = 0;
     }
 
-    argument* libraries = argument_parser_get(parser, "-l");
+    argument_t* libraries = argument_parser_get(&parser, "-l");
     for (int i = 0; libraries != NULL && i < libraries->value_count; i++)
+    {
+        LOGDEBUG("Adding library '%s' to current context", libraries->values[i]);
         baranium_compiler_context_add_library(context, libraries->values[i]);
+    }
 
     /////////////////////////////////////////
     /// Lexing and parsing of the sources ///
     /////////////////////////////////////////
 
-    for (argument* file = parser->unparsed->start; file != NULL; file = file->next)
+    LOGDEBUG("arg parser: 0x%x, unparsed: 0x%x (%d in count), parsed: 0x%x (%d in count)", &parser, &parser.unparsed, parser.unparsed.size, &parser.parsed, parser.parsed.size);
+    for (size_t i = 0; i < parser.unparsed.size; i++)
     {
-        char* sourceFileDirectory = (char*)file->values[0];
+        argument_t file = parser.unparsed.data[i];
+        const char* filename = file.values[0];
+        LOGDEBUG("File: '%s'", filename);
+        char* sourceFileDirectory = (char*)filename;
         size_t sourceFileDirectorySeperatorIndex = str_index_of(sourceFileDirectory, '/');
         size_t sourceFileDirectorySeperatorIndex2 = str_index_of(sourceFileDirectory, '\\');
         if (sourceFileDirectorySeperatorIndex < sourceFileDirectorySeperatorIndex2 && sourceFileDirectorySeperatorIndex2 != (size_t)-1)
@@ -281,18 +288,19 @@ int main(const int argc, const char** argv)
             sourceFileDirectory = ".";
         else
             sourceFileDirectory[sourceFileDirectorySeperatorIndex] = 0;
+        LOGDEBUG("adding include path");
         baranium_preprocessor_add_include_path(sourceFileDirectory);
         if (sourceFileDirectorySeperatorIndex != (size_t)-1)
             sourceFileDirectory[sourceFileDirectorySeperatorIndex] = OS_DELIMITER;
 
-        FILE* inputFile = fopen(file->values[0], "r");
+        FILE* inputFile = fopen(filename, "r");
         if (inputFile == NULL)
         {
-            LOGERROR("Error: file '%s' doesn't exist", file->values[0]);
+            LOGERROR("Error: file '%s' doesn't exist", filename);
             continue;
         }
-        LOGINFO("Compiling file '%s'...", file->values[0]);
-        baranium_compiler_context_add_source(context, inputFile);
+        LOGINFO("Compiling file '%s'...", filename);
+        baranium_compiler_context_add_source(context, inputFile, filename);
 
         fclose(inputFile);
 
@@ -306,8 +314,7 @@ int main(const int argc, const char** argv)
     baranium_compiler_context_compile(context, output, is_library);
     baranium_compiler_context_dispose(context);
 
-    free(executableFilePath);
-    argument_parser_dispose(parser);
+    argument_parser_dispose(&parser);
     fclose(logOutput);
 
     return 0;
@@ -321,6 +328,7 @@ void print_usage(void)
     printf("\t-h\t\tShow this help message\n");
     printf("\t-e\tCompile as a library\n");
     printf("\t-l <name>\tLink against a library named `name`\n");
+    printf("\t-i <path>\tSpecify a custom user include directory\n");
     printf("\t-I <file>\tSpecify file containing all custom user include directories\n");
     printf("\t-d\t\tPrint debug messages (only useful for debugging the compiler itself!)\n\n");
 }

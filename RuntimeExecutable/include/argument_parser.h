@@ -4,47 +4,46 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef enum
-{
-    Argument_Type_Invalid,
-    Argument_Type_Value,
-    Argument_Type_Flag
-} argument_type;
+#define ARGUMENT_LIST_BUFFER_SIZE 0xA
 
-typedef struct argument
+#define ARGUMENT_TYPE_INVALID   0
+#define ARGUMENT_TYPE_VALUE     1
+#define ARGUMENT_TYPE_FLAG      2
+
+typedef int argument_type_t;
+
+typedef struct
 {
-    struct argument* prev;
-    argument_type type;
+    argument_type_t type;
     const char* name;
     const char* second_name;
-    const char* values[20];
     uint8_t value_count;
-    struct argument* next;
-} argument;
+    const char** values;
+} argument_t;
 
 typedef struct
 {
-    argument* start;
-    argument* end;
+    argument_t* data;
+    size_t buffer_size;
     size_t size;
-} argument_list;
+} argument_list_t;
 
 typedef struct
 {
-    argument_list* unparsed;
-    argument_list* parsed;
-    argument_list* lookup;
-} argument_parser;
+    argument_list_t unparsed;
+    argument_list_t parsed;
+    argument_list_t lookup;
+} argument_parser_t;
 
 /**
  * @brief Create a new argument parser
  */
-argument_parser* argument_parser_init(void);
+void argument_parser_init(argument_parser_t* obj);
 
 /**
  * @brief Dispose an argument parser object
  */
-void argument_parser_dispose(argument_parser* obj);
+void argument_parser_dispose(argument_parser_t* obj);
 
 /**
  * @brief Add an argument to the parser
@@ -54,7 +53,7 @@ void argument_parser_dispose(argument_parser* obj);
  * @param name Argument name
  * @param alternateName Alternative argument name
  */
-void argument_parser_add(argument_parser* obj, argument_type type, const char* name, const char* alternateName);
+void argument_parser_add(argument_parser_t* obj, argument_type_t type, const char* name, const char* alternateName);
 
 /**
  * @brief Parse the command line arguments
@@ -65,7 +64,7 @@ void argument_parser_add(argument_parser* obj, argument_type type, const char* n
  * @param argc Argument count
  * @param argv Arguments
  */
-void argument_parser_parse(argument_parser* obj, int argc, const char** argv);
+void argument_parser_parse(argument_parser_t* obj, int argc, const char** argv);
 
 /**
  * @brief Get a parsed argument (if available)
@@ -73,7 +72,7 @@ void argument_parser_parse(argument_parser* obj, int argc, const char** argv);
  * @param obj Parser object
  * @param name Argument name (either normal or alternative one)
  */
-argument* argument_parser_get(argument_parser* obj, const char* name);
+argument_t* argument_parser_get(argument_parser_t* obj, const char* name);
 
 /**
  * @brief Check if an argument is parsed/existent
@@ -81,6 +80,6 @@ argument* argument_parser_get(argument_parser* obj, const char* name);
  * @param obj Parser object
  * @param name Argument name (either normal or alternative one)
  */
-uint8_t argument_parser_has(argument_parser* obj, const char* name);
+uint8_t argument_parser_has(argument_parser_t* obj, const char* name);
 
 #endif

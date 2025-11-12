@@ -21,39 +21,43 @@ extern "C" {
 #   define baranium_compiled_variable_convert_to_type baranium_compiled_variable_convert_to_type
 #endif
 
-#define BARANIUM_CALLBACK_INIT(data, expectedVariableMinimum, expectedVariableMaximum) \
+#define BARANIUM_CALLBACK_ADD(name, numParams) baranium_callback_add(baranium_get_id_of_name(#name), baranium_callback_##name , numParams)
+
+#define BARANIUM_CALLBACK_DEFINE(name) void baranium_callback_##name (baranium_callback_data_list_t* data)
+
+#define BARANIUM_CALLBACK_INIT(expectedVariableMinimum, expectedVariableMaximum) \
     assert((data != NULL)); \
-    baranium_value_t* dataptr = data->dataptr; \
-    baranium_variable_type_t* datatypes = data->datatypes; \
-    int num_data = data->num_data; \
-    assert(num_data <= expectedVariableMaximum && num_data >= expectedVariableMinimum); \
+    baranium_value_t* dataptr = data->data; \
+    baranium_variable_type_t* datatypes = data->types; \
+    int count = data->count; \
+    assert(count <= expectedVariableMaximum && count >= expectedVariableMinimum); \
     if (expectedVariableMinimum != 0) assert((dataptr != NULL) && (datatypes != NULL))
 
 #define BARANIUM_CALLBACK_GET_VARIABLE(name, target_type, param_index) \
     baranium_compiled_variable name = {0,{0},0}; \
-    if (param_index >= 0 && param_index < num_data && datatypes[param_index] != BARANIUM_VARIABLE_TYPE_VOID && datatypes[param_index] != BARANIUM_VARIABLE_TYPE_INVALID) \
+    if (param_index >= 0 && param_index < count && datatypes[count-1-param_index] != BARANIUM_VARIABLE_TYPE_VOID && datatypes[count-1-param_index] != BARANIUM_VARIABLE_TYPE_INVALID) \
     {\
-        size_t dataSize = baranium_variable_get_size_of_type(datatypes[param_index]); \
+        size_t dataSize = baranium_variable_get_size_of_type(datatypes[count-1-param_index]); \
+        name = (baranium_compiled_variable){.type=datatypes[count-1-param_index], .value=dataptr[count-1-param_index], .size=dataSize}; \
         if (dataSize == (size_t)-1) \
-            dataSize = strlen((const char*)dataptr[param_index].ptr); \
-        name = (baranium_compiled_variable){datatypes[param_index], dataptr[param_index], dataSize}; \
+            name.size = strlen((const char*)dataptr[count-1-param_index].ptr); \
         baranium_compiled_variable_convert_to_type(&name, target_type); \
-        dataptr[param_index] = name.value; \
-        datatypes[param_index] = name.type; \
+        dataptr[count-1-param_index] = name.value; \
+        datatypes[count-1-param_index] = name.type; \
     }
 
 #define BARANIUM_CALLBACK_GET_VARIABLE_VALUE(type_def, name, defaultvalue, target_type, param_index) \
     type_def name = defaultvalue; \
     baranium_compiled_variable variable_##name = {0,{0},0}; \
-    if (param_index >= 0 && param_index < num_data && datatypes[param_index] != BARANIUM_VARIABLE_TYPE_VOID && datatypes[param_index] != BARANIUM_VARIABLE_TYPE_INVALID) \
+    if (param_index >= 0 && param_index < count && datatypes[count-1-param_index] != BARANIUM_VARIABLE_TYPE_VOID && datatypes[count-1-param_index] != BARANIUM_VARIABLE_TYPE_INVALID) \
     {\
-        size_t dataSize = baranium_variable_get_size_of_type(datatypes[param_index]); \
+        size_t dataSize = baranium_variable_get_size_of_type(datatypes[count-1-param_index]); \
+        variable_##name = (baranium_compiled_variable){.type=datatypes[count-1-param_index], .value=dataptr[count-1-param_index], .size=dataSize}; \
         if (dataSize == (size_t)-1) \
-            dataSize = strlen((const char*)dataptr[param_index].ptr); \
-        variable_##name = (baranium_compiled_variable){datatypes[param_index], dataptr[param_index], dataSize}; \
+            variable_##name.size = strlen((const char*)dataptr[count-1-param_index].ptr); \
         baranium_compiled_variable_convert_to_type(&variable_##name, target_type); \
-        dataptr[param_index] = variable_##name.value; \
-        datatypes[param_index] = variable_##name.type; \
+        dataptr[count-1-param_index] = variable_##name.value; \
+        datatypes[count-1-param_index] = variable_##name.type; \
         if (variable_##name.type == BARANIUM_VARIABLE_TYPE_STRING) \
             name = (type_def)(uintptr_t)variable_##name.value.ptr;\
         else if (variable_##name.type == BARANIUM_VARIABLE_TYPE_FLOAT) \
@@ -66,9 +70,9 @@ extern "C" {
 
 typedef struct baranium_callback_data_list_t
 {
-    baranium_value_t* dataptr;
-    baranium_variable_type_t* datatypes;
-    int num_data;
+    baranium_value_t* data;
+    baranium_variable_type_t* types;
+    int count;
 } baranium_callback_data_list_t;
 
 typedef void(*baranium_callback_t)(baranium_callback_data_list_t* callbackdata);
