@@ -60,7 +60,7 @@ static int baranium_preprocessor_define_list_get_index(baranium_preprocessor_def
 
 static void baranium_preprocessor_define_list_set(baranium_preprocessor_define_list* list, int index, const char* replacement)
 {
-    if (list == NULL || index < 0 || index >= list->count || replacement == NULL)
+    if (list == NULL || index < 0 || (size_t)index >= list->count || replacement == NULL)
         return;
 
     baranium_source_token_list replacementTokens;

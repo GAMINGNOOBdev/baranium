@@ -5,7 +5,8 @@
 #include <config.h>
 #include <util.h>
 
-void print_help_message(void);
+extern void print_help_message(void);
+
 void cmd_help(cmd_args_t* _)
 {
     print_help_message();

@@ -392,7 +392,7 @@ parseHex:
             string_to_num_tmp |= c-'0';
         else if((c >= 'a' && c <= 'f'))
             string_to_num_tmp |= 10 + c - 'a';
-        else if((c >= 'A' || c <= 'F'))
+        else if((c >= 'A' && c <= 'F'))
             string_to_num_tmp |= 10 + c - 'A';
         else return 0;
     }

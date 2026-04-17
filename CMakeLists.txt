@@ -27,7 +27,7 @@ if (UNIX)
     set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
     add_compile_options(
-        "-Wall" "-Wextra" "-Wpedantic" "-fexceptions" "-Wl,--export-dynamic"
+        "-Wall" "-Wextra" "-Wno-pedantic" "-Wno-unused-parameter" "-fexceptions" "-Wl,--export-dynamic"
     )
 endif()
 

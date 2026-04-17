@@ -1,5 +1,6 @@
 #include <baranium/compiler/language/abstract_syntax_tree.h>
 #include <baranium/compiler/language/language.h>
+#include <baranium/compiler/compiler_context.h>
 #include <baranium/compiler/source_token.h>
 #include <baranium/string_util.h>
 #include <baranium/logging.h>
@@ -226,7 +227,7 @@ void baranium_preinpostfix_token_parser_map_dispose(baranium_preinpostfix_token_
 ///                      ///
 ////////////////////////////
 
-baranium_abstract_syntax_tree_node* baranium_ast_generic_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_generic_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
     baranium_abstract_syntax_tree_node* result = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
     if (result == NULL)
@@ -239,7 +240,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_generic_parser(baranium_source_
     return result;
 }
 
-baranium_abstract_syntax_tree_node* baranium_ast_string_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_string_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
     baranium_abstract_syntax_tree_node* result = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
     if (result == NULL)
@@ -265,12 +266,15 @@ baranium_abstract_syntax_tree_node* baranium_ast_string_parser(baranium_source_t
     if (!baranium_source_token_list_next_matches(tokens, BARANIUM_SOURCE_TOKEN_TYPE_DOUBLEQUOTE))
     {
         LOGERROR("Line %d: missing '\"' at the end of string", result->left->contents.line_number);
+        baranium_compiler_context* ctx = baranium_get_compiler_context();
+        if (ctx)
+            ctx->error_occurred = 1;
         return NULL;
     }
     return result;
 }
 
-baranium_abstract_syntax_tree_node*  baranium_ast_prefix_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node*  baranium_ast_prefix_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
     baranium_abstract_syntax_tree_node* result = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
     if (result == NULL)
@@ -288,19 +292,13 @@ baranium_abstract_syntax_tree_node*  baranium_ast_prefix_operator_parser(baraniu
     return result;
 }
 
-baranium_abstract_syntax_tree_node* baranium_ast_indecrement_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_indecrement_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
-    if (parent_node == NULL)
-    {
-        LOGERROR("Parent node was null (how)");
-        return NULL;
-    }
-
     baranium_abstract_syntax_tree_node* result = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
     if (result == NULL)
         return NULL;
     memset(result, 0, sizeof(baranium_abstract_syntax_tree_node));
-    result->contents = *baranium_source_token_list_next(tokens);
+    result->contents = *baranium_source_token_list_current(tokens);
     baranium_source_token_type_t type;
     uint8_t was_special_char = 0;
     int64_t operationIndex = baranium_abstract_syntax_tree_get_operation_index(result->contents, &type, &was_special_char);
@@ -310,21 +308,57 @@ baranium_abstract_syntax_tree_node* baranium_ast_indecrement_operator_parser(bar
     if (result->left == NULL)
         return NULL;
     memset(result->left, 0, sizeof(baranium_abstract_syntax_tree_node));
-    result->left->contents = *baranium_source_token_list_current(tokens);
-    operationIndex = baranium_abstract_syntax_tree_get_operation_index(result->contents, &type, &was_special_char);
+    result->left->contents = *baranium_source_token_list_next(tokens);
+    operationIndex = baranium_abstract_syntax_tree_get_operation_index(result->left->contents, &type, &was_special_char);
     result->left->operation = operationIndex;
     result->left->special_char = was_special_char;
 
     if (result->left->contents.type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
     {
-        LOGERROR("Line %d: Invalid assignment, expected variable name, got '%s'", result->left->contents.line_number, result->left->contents.contents);
+        LOGERROR("Line %d: Invalid in-/decrementation, expected variable name, got '%s'", result->left->contents.line_number, result->left->contents.contents);
+        baranium_compiler_context* ctx = baranium_get_compiler_context();
+        if (ctx)
+            ctx->error_occurred = 1;
         return NULL;
     }
 
     return result;
 }
 
-baranium_abstract_syntax_tree_node* baranium_ast_parenthesis_order_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_array_length_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* _, power_t __)
+{
+    baranium_abstract_syntax_tree_node* result = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
+    if (result == NULL)
+        return NULL;
+    memset(result, 0, sizeof(baranium_abstract_syntax_tree_node));
+    result->contents = *baranium_source_token_list_current(tokens);
+    baranium_source_token_type_t type;
+    uint8_t was_special_char = 0;
+    int64_t operationIndex = baranium_abstract_syntax_tree_get_operation_index(result->contents, &type, &was_special_char);
+    result->operation = operationIndex;
+    result->special_char = was_special_char;
+    result->left = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
+    if (result->left == NULL)
+        return NULL;
+    memset(result->left, 0, sizeof(baranium_abstract_syntax_tree_node));
+    result->left->contents = *baranium_source_token_list_next(tokens);
+    operationIndex = baranium_abstract_syntax_tree_get_operation_index(result->left->contents, &type, &was_special_char);
+    result->left->operation = operationIndex;
+    result->left->special_char = was_special_char;
+
+    if (result->left->contents.type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
+    {
+        LOGERROR("Line %d: Invalid assignment, expected variable name, got '%s'", result->left->contents.line_number, result->left->contents.contents);
+        baranium_compiler_context* ctx = baranium_get_compiler_context();
+        if (ctx)
+            ctx->error_occurred = 1;
+        return NULL;
+    }
+
+    return result;
+}
+
+baranium_abstract_syntax_tree_node* baranium_ast_parenthesis_order_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* _, power_t __)
 {
     baranium_abstract_syntax_tree_node* result = baranium_abstract_syntax_tree_parse_tokens(tokens, BARANIUM_BINDING_POWER_NONE);
 
@@ -333,13 +367,16 @@ baranium_abstract_syntax_tree_node* baranium_ast_parenthesis_order_parser(barani
     if (closing_token.type != BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISCLOSE)
     {
         LOGERROR("Line %d: Expected ')', got '%s'", closing_token.line_number, closing_token.contents);
+        baranium_compiler_context* ctx = baranium_get_compiler_context();
+        if (ctx)
+            ctx->error_occurred = 1;
         return NULL;
     }
 
     return result;
 }
 
-baranium_abstract_syntax_tree_node* baranium_ast_array_indexing_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_array_indexing_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
     baranium_abstract_syntax_tree_node* result = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
     if (result == NULL)
@@ -362,6 +399,9 @@ baranium_abstract_syntax_tree_node* baranium_ast_array_indexing_parser(baranium_
         if (!baranium_source_token_list_next_matches(tokens, BARANIUM_SOURCE_TOKEN_TYPE_BRACKETCLOSE))
         {
             LOGERROR("Line %d: Missing ']'", baranium_source_token_list_current(tokens)->line_number);
+            baranium_compiler_context* ctx = baranium_get_compiler_context();
+            if (ctx)
+                ctx->error_occurred = 1;
             return NULL;
         }
     }
@@ -373,7 +413,14 @@ baranium_abstract_syntax_tree_node* baranium_ast_array_indexing_parser(baranium_
     return result;
 }
 
-baranium_abstract_syntax_tree_node* baranium_ast_function_call_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_array_initialization_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
+{
+    /// TODO: --- implement ---
+    LOGWARNING("NOT IMPLEMENTED");
+    return NULL;
+}
+
+baranium_abstract_syntax_tree_node* baranium_ast_function_call_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
     baranium_abstract_syntax_tree_node* result = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
     if (result == NULL)
@@ -400,6 +447,9 @@ baranium_abstract_syntax_tree_node* baranium_ast_function_call_parser(baranium_s
         if (!baranium_source_token_list_next_matches(tokens, BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISCLOSE))
         {
             LOGERROR("Line %d: Missing ')'", baranium_source_token_list_current(tokens)->line_number);
+            baranium_compiler_context* ctx = baranium_get_compiler_context();
+            if (ctx)
+                ctx->error_occurred = 1;
             return NULL;
         }
     }
@@ -411,7 +461,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_function_call_parser(baranium_s
     return result;
 }
 
-baranium_abstract_syntax_tree_node* baranium_ast_comparison_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_comparison_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
     baranium_abstract_syntax_tree_node* result = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
     if (result == NULL)
@@ -436,7 +486,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_comparison_operator_parser(bara
     return result;
 }
 
-baranium_abstract_syntax_tree_node* baranium_ast_combined_comparison_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_combined_comparison_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
     baranium_abstract_syntax_tree_node* result = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
     if (result == NULL)
@@ -444,7 +494,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_combined_comparison_operator_pa
     memset(result, 0, sizeof(baranium_abstract_syntax_tree_node));
     result->contents = *baranium_source_token_list_current(tokens);
     LOGDEBUG("Previous token: '%s'", parent_node->contents.contents);
-    LOGDEBUG("Current token: '%s'", *baranium_source_token_list_current(tokens)->contents);
+    LOGDEBUG("Current token: '%s'", result->contents.contents);
     LOGDEBUG("Next token: '%s'", baranium_source_token_list_peek(tokens)->contents);
     baranium_source_token_type_t type;
     uint8_t was_special_char = 0;
@@ -491,7 +541,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_infix_operator_parser(baranium_
     return result;
 }
 
-baranium_abstract_syntax_tree_node* baranium_ast_assignment_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_assignment_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
     if (parent_node == NULL)
     {
@@ -502,6 +552,9 @@ baranium_abstract_syntax_tree_node* baranium_ast_assignment_operator_parser(bara
     if (parent_node->contents.type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
     {
         LOGERROR("Line %d: Invalid assignment, expected variable/field name, got '%s'", parent_node->contents.line_number, parent_node->contents.contents);
+        baranium_compiler_context* ctx = baranium_get_compiler_context();
+        if (ctx)
+            ctx->error_occurred = 1;
         return NULL;
     }
 
@@ -519,7 +572,10 @@ baranium_abstract_syntax_tree_node* baranium_ast_assignment_operator_parser(bara
 
     result->left = (baranium_abstract_syntax_tree_node*)malloc(sizeof(baranium_abstract_syntax_tree_node));
     if (result->left == NULL)
+    {
+        free(result);
         return NULL;
+    }
     // copy the parent node, which will probably be the function name, well hopefully
     memcpy(result->left, parent_node, sizeof(baranium_abstract_syntax_tree_node));
     if (parent_node != NULL)
@@ -528,7 +584,7 @@ baranium_abstract_syntax_tree_node* baranium_ast_assignment_operator_parser(bara
     return result;
 }
 
-baranium_abstract_syntax_tree_node* baranium_ast_postfix_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t power)
+baranium_abstract_syntax_tree_node* baranium_ast_postfix_operator_parser(baranium_source_token_list* tokens, baranium_abstract_syntax_tree_node* parent_node, power_t _)
 {
     if (parent_node == NULL)
     {
@@ -539,6 +595,9 @@ baranium_abstract_syntax_tree_node* baranium_ast_postfix_operator_parser(baraniu
     if (parent_node->contents.type != BARANIUM_SOURCE_TOKEN_TYPE_TEXT)
     {
         LOGERROR("Line %d: Invalid in-/decrementation, expected variable name, got '%s'", parent_node->contents.line_number, parent_node->contents.contents);
+        baranium_compiler_context* ctx = baranium_get_compiler_context();
+        if (ctx)
+            ctx->error_occurred = 1;
         return NULL;
     }
 
@@ -602,17 +661,23 @@ void baranium_abstract_syntax_tree_init(void)
     baranium_abstract_syntax_tree_register_prefix(BARANIUM_SOURCE_TOKEN_TYPE_PLUSPLUS, baranium_ast_indecrement_operator_parser);
     baranium_abstract_syntax_tree_register_prefix(BARANIUM_SOURCE_TOKEN_TYPE_MINUSMINUS, baranium_ast_indecrement_operator_parser);
 
+    //////////////////////////////
+    /// Array length operation ///
+    //////////////////////////////
+    baranium_abstract_syntax_tree_register_prefix(BARANIUM_SOURCE_TOKEN_TYPE_MODMOD, baranium_ast_array_length_operator_parser);
+
     /////////////////////////////////
     /// Parenthesis order reading ///
     /////////////////////////////////
 
     baranium_abstract_syntax_tree_register_prefix(BARANIUM_SOURCE_TOKEN_TYPE_PARENTHESISOPEN, baranium_ast_parenthesis_order_parser);
 
-    ////////////////////////////////////////
-    /// Array indexing operation reading ///
-    ////////////////////////////////////////
+    ////////////////////////
+    /// Array operations ///
+    ////////////////////////
 
     baranium_abstract_syntax_tree_register_infix(BARANIUM_SOURCE_TOKEN_TYPE_BRACKETOPEN, BARANIUM_BINDING_POWER_INDEXINGOPERATION, baranium_ast_array_indexing_parser);
+    baranium_abstract_syntax_tree_register_prefix(BARANIUM_SOURCE_TOKEN_TYPE_CURLYBRACKETOPEN, baranium_ast_array_initialization_parser);
 
     /////////////////////////////
     /// Function call reading ///
@@ -707,10 +772,12 @@ baranium_abstract_syntax_tree_node* baranium_abstract_syntax_tree_parse_tokens(b
 
     baranium_abstract_syntax_tree_node* left = NULL;
     baranium_source_token* token = baranium_source_token_list_next(tokens);
+    if (token == NULL)
+        return NULL;
 
     if(baranium_preinpostfix_token_parser_map_get_index(baranium_ast_prefix_map, token->type) == -1)
     {
-        LOGERROR("Invalid prefix '%s'", token->contents);
+        LOGERROR("Line %d: Invalid prefix '%s'", token->line_number, token->contents);
         return NULL;
     }
 
@@ -722,7 +789,7 @@ baranium_abstract_syntax_tree_node* baranium_abstract_syntax_tree_parse_tokens(b
     {
         token = baranium_source_token_list_next(tokens);
         parser = baranium_preinpostfix_token_parser_map_get(baranium_ast_infix_map, token->type);
-    
+
         if (parser.handle != NULL)
             left = parser.handle(tokens, left, parser.power);
     }
@@ -752,22 +819,22 @@ int64_t baranium_abstract_syntax_tree_get_operation_index(baranium_source_token 
 
     for (uint64_t i = 0; baranium_special_operators[i].name != 0; i++)
     {
-        if (token.type == baranium_special_operators[i].type)
-        {
-            *operation_type = baranium_special_operators[i].type;
-            *was_special_char = 0;
-            return i;
-        }
+        if (token.type != baranium_special_operators[i].type)
+            continue;
+
+        *operation_type = baranium_special_operators[i].type;
+        *was_special_char = 0;
+        return i;
     }
 
     for (uint64_t i = 0; baranium_special_operation_characters[i].name != 0; i++)
     {
-        if (token.type == baranium_special_operation_characters[i].type)
-        {
-            *operation_type = baranium_special_operation_characters[i].type;
-            *was_special_char = 1;
-            return i;
-        }
+        if (token.type != baranium_special_operation_characters[i].type)
+            continue;
+
+        *operation_type = baranium_special_operation_characters[i].type;
+        *was_special_char = 1;
+        return i;
     }
 
     return (int64_t)-1;

@@ -3,8 +3,7 @@
 # @brief This is a test for calculating fibanocci numbers and printing the sequence
 # 
 
-+include stdio
-+include stdlib
++include stdio, stdlib
 
 define main() = int
 {
@@ -19,33 +18,39 @@ define print_fibanocci_num(uint64 num)
     print("'" + num + "'");
 }
 
+define fibanocci(uint64 num) = uint64
+{
+    uint64 result = 0;
+    uint64 last = 0;
+    for (uint64 current = 0; current < num; current++)
+    {
+        result += current;
+    }
+
+    return result;
+}
+
 define print_fibanocci_sequence(int max)
 {
     if (max <= 0)
     {
-        print("Enter a positive number, smh\n");
+        print("Enter a positive non-zero number, smh\n");
         return;
     }
 
-    uint64 a = 0;
-    uint64 b = 1;
-    uint64 count = 0;
-    uint64 next = 0;
-
-    if (max >= 1)
+    if (max == 1)
     {
-        print_fibanocci_num(a);
-        count++;
+        print_fibanocci_num(fibanocci(0));
+        print("\n");
+        return;
     }
-
-    while (count < max)
+    
+    uint64 result = 0;
+    for (uint64 i = 0; i < max; i++)
     {
-        next = a + b;
+        result = fibanocci(i);
         print(",");
-        print_fibanocci_num(next);
-        a = b;
-        b = next;
-        count++;
+        print_fibanocci_num(result);
     }
     print("\n");
 }

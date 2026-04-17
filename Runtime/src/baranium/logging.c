@@ -85,19 +85,15 @@ void log_msg(loglevel_t lvl, const char* msg, const char* file, int line)
     if (lvl >= LOG_COLOR_COUNT - 1 || msg == NULL) return;
     if (!logging_debug_messages_enabled && lvl == LOGLEVEL_DEBUG) return;
 
-    time_t local_time = time(NULL);
-    struct tm* tm = localtime(&local_time);
-
     if (strcmp(mLastLogMessage, msg) == 0)
     {
-        
         if (mLastLogMessageRepeats < 4)
             mLastLogMessageRepeats++;
         else if (mLastLogMessageRepeats == 4)
         {
             LOGINFO("Last message repeated 5 times, skipping repeats...");
             strcpy(mLastLogMessage, msg);
-            mLastLogMessageRepeats = 5;
+            mLastLogMessageRepeats++;
             return;
         }
         else
@@ -108,6 +104,9 @@ void log_msg(loglevel_t lvl, const char* msg, const char* file, int line)
         strcpy(mLastLogMessage, msg);
         mLastLogMessageRepeats = 0;
     }
+
+    time_t local_time = time(NULL);
+    struct tm* tm = localtime(&local_time);
 
 #if BARANIUM_PLATFORM != BARANIUM_PLATFORM_WINDOWS
 
