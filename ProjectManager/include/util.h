@@ -1,7 +1,7 @@
 #ifndef __UTIL_H_
 #define __UTIL_H_ 1
 
-#include <config.h>
+#include <toml.h>
 
 /**
  * @brief Name of the current executable
@@ -22,7 +22,7 @@ char* get_current_working_directory(void);
  * @param path Path to file
  * @returns 1 on success, 0 on failure
  */
-int open_project_file_from(config_file_t* file, const char* path);
+int open_project_file_from(toml_file_t* file, const char* path);
 
 /**
  * @brief Open a project file from the current working directory
@@ -30,7 +30,7 @@ int open_project_file_from(config_file_t* file, const char* path);
  * @param file Project file output
  * @returns 1 on success, 0 on failure
  */
-int open_project_file(config_file_t* file);
+int open_project_file(toml_file_t* file);
 
 /**
  * @brief Save a project file to the current working directory
@@ -38,7 +38,7 @@ int open_project_file(config_file_t* file);
  * @param file Project file output
  * @returns 1 on success, 0 on failure
  */
-int save_project_file(config_file_t* file);
+int save_project_file(toml_file_t* file);
 
 /**
  * @brief Open a project file from a specific path
@@ -56,6 +56,6 @@ int copy(const char* input, const char* output);
  * @param path Path to file
  * @returns 1 on success, 0 on failure
  */
-const char* get_property_value_string(config_property_t* property);
+const char* get_property_value_string(toml_property_t* property);
 
 #endif

@@ -2,7 +2,6 @@
 #include <baranium/logging.h>
 #include <operations.h>
 #include <commands.h>
-#include <config.h>
 #include <util.h>
 
 extern void print_help_message(void);

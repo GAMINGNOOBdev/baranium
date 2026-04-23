@@ -2,9 +2,9 @@
 #include <baranium/logging.h>
 #include <operations.h>
 #include <commands.h>
-#include <config.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <toml.h>
 #include <util.h>
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
@@ -24,10 +24,10 @@ void cmd_create(cmd_args_t* userparam)
 
     const char* project_name = args.values[0];
     const char* target = args.count > 1 ? args.values[1] : project_name;
-    FILE* config_file = fopen(stringf("%s/barproject.toml", target), "r");
-    if (config_file != NULL)
+    FILE* toml_file = fopen(stringf("%s/barproject.toml", target), "r");
+    if (toml_file != NULL)
     {
-        fclose(config_file);
+        fclose(toml_file);
         LOGERROR("Already existing project file in '%s', can't create project", target);
         return;
     }
@@ -36,16 +36,16 @@ void cmd_create(cmd_args_t* userparam)
     if (!baranium_file_util_directory_exists(stringf("%s/%s", cwd, target)))
         baranium_file_util_create_directory(stringf("%s/%s", cwd, target));
 
-    config_file = fopen(stringf("%s/%s/barproject.toml", cwd, target), "wb+");
-    config_file_t cfg = {0, 0, 0, 0};
-    config_file_add_section(&cfg, "libraries");
-    config_file_add_section(&cfg, "defines");
-    config_file_add_section(&cfg, "build");
-    config_property_t* project_name_property = config_file_add_property(&cfg, "build.project_name");
-    config_property_set_string(project_name_property, project_name);
-    config_file_save(&cfg, config_file);
-    config_file_close(&cfg);
-    fclose(config_file);
+    toml_file = fopen(stringf("%s/%s/barproject.toml", cwd, target), "wb+");
+    toml_file_t cfg = {0, 0, 0, 0};
+    toml_file_add_section(&cfg, "libraries");
+    toml_file_add_section(&cfg, "defines");
+    toml_file_add_section(&cfg, "build");
+    toml_property_t* project_name_property = toml_file_add_property(&cfg, "build.project_name");
+    toml_property_set_string(project_name_property, project_name);
+    toml_file_save(&cfg, toml_file);
+    toml_file_close(&cfg);
+    fclose(toml_file);
 
     baranium_file_util_create_directory(stringf("%s/%s/src", cwd, target));
 }

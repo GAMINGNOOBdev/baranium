@@ -51,38 +51,38 @@ char* get_current_working_directory(void)
     return cwd;
 }
 
-int open_project_file_from(config_file_t* file, const char* path)
+int open_project_file_from(toml_file_t* file, const char* path)
 {
-    FILE* config_file = fopen(path, "r");
-    if (config_file == NULL)
+    FILE* toml_file = fopen(path, "r");
+    if (toml_file == NULL)
         return 0;
 
-    config_file_open(file, config_file);
-    fclose(config_file);
+    toml_file_open(file, toml_file);
+    fclose(toml_file);
     return 1;
 }
 
-int open_project_file(config_file_t* file)
+int open_project_file(toml_file_t* file)
 {
     char* cwd = get_current_working_directory();
-    FILE* config_file = fopen(stringf("%s/barproject.toml", cwd), "r");
-    if (config_file == NULL)
+    FILE* toml_file = fopen(stringf("%s/barproject.toml", cwd), "r");
+    if (toml_file == NULL)
         return 0;
 
-    config_file_open(file, config_file);
-    fclose(config_file);
+    toml_file_open(file, toml_file);
+    fclose(toml_file);
     return 1;
 }
 
-int save_project_file(config_file_t* file)
+int save_project_file(toml_file_t* file)
 {
     char* cwd = get_current_working_directory();
-    FILE* config_file = fopen(stringf("%s/barproject.toml", cwd), "wb+");
-    if (config_file == NULL)
+    FILE* toml_file = fopen(stringf("%s/barproject.toml", cwd), "wb+");
+    if (toml_file == NULL)
         return 0;
 
-    config_file_save(file, config_file);
-    fclose(config_file);
+    toml_file_save(file, toml_file);
+    fclose(toml_file);
     return 1;
 }
 
@@ -120,23 +120,23 @@ int copy(const char* input, const char* output)
     return 0;
 }
 
-const char* get_property_value_string(config_property_t* property)
+const char* get_property_value_string(toml_property_t* property)
 {
     if (property == NULL)
         return strdup("default");
 
     switch (property->type)
     {
-    case CONFIG_PROPERTY_VALUE_TYPE_INT:
+    case TOML_PROPERTY_VALUE_TYPE_INT:
         return strdup(stringf("%d", property->value.intValue));
 
-    case CONFIG_PROPERTY_VALUE_TYPE_FLOAT:
+    case TOML_PROPERTY_VALUE_TYPE_FLOAT:
         return strdup(stringf("%f", property->value.floatValue));
 
-    case CONFIG_PROPERTY_VALUE_TYPE_BOOL:
+    case TOML_PROPERTY_VALUE_TYPE_BOOL:
         return strdup(property->value.boolValue ? "true" : "false");
 
-    case CONFIG_PROPERTY_VALUE_TYPE_ARRAY:
+    case TOML_PROPERTY_VALUE_TYPE_ARRAY:
     {
         char result[0x100];
         result[0] = '[';
@@ -154,8 +154,8 @@ const char* get_property_value_string(config_property_t* property)
         return strdup(result);
     }
 
-    case CONFIG_PROPERTY_VALUE_TYPE_UNKNOWN:
-    case CONFIG_PROPERTY_VALUE_TYPE_STRING:
+    case TOML_PROPERTY_VALUE_TYPE_UNKNOWN:
+    case TOML_PROPERTY_VALUE_TYPE_STRING:
     {
         if (property->value.stringValue != NULL && strlen(property->value.stringValue) > 0)
             return strdup(stringf("'%s'", property->value.stringValue));

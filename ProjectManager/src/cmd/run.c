@@ -2,9 +2,9 @@
 #include <baranium/logging.h>
 #include <operations.h>
 #include <commands.h>
-#include <config.h>
 #include <string.h>
 #include <stdlib.h>
+#include <toml.h>
 #include <util.h>
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
@@ -17,22 +17,22 @@ void cmd_run(cmd_args_t* userparam)
 {
     cmd_args_t args = *userparam;
 
-    config_file_t cfg = {0, 0, 0, 0};
+    toml_file_t cfg = {0, 0, 0, 0};
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
         return;
     }
-    config_property_t* property = config_file_get(&cfg, "build.project_name");
+    toml_property_t* property = toml_file_get(&cfg, "build.project_name");
     if (!property)
     {
-        config_file_close(&cfg);
+        toml_file_close(&cfg);
         LOGERROR("Invalid project file, missing 'project_name' property");
         return;
     }
     const char* project_name = property->value.stringValue;
     const char* output_directory = "bin";
-    property = config_file_get(&cfg, "build.output");
+    property = toml_file_get(&cfg, "build.output");
     if (property)
         output_directory = property->value.stringValue;
 
@@ -52,5 +52,5 @@ void cmd_run(cmd_args_t* userparam)
     system(cmd);
     execname_dirname[0] = OS_DELIMITER;
 
-    config_file_close(&cfg);
+    toml_file_close(&cfg);
 }

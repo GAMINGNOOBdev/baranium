@@ -15,7 +15,7 @@ set(barrelSources
     src/cmd/run.c
 
     src/operations.c
-    src/config.c
+    src/toml.c
     src/util.c
     src/main.c
     )

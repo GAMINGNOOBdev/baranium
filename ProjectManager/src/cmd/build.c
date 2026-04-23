@@ -2,10 +2,10 @@
 #include <baranium/logging.h>
 #include <operations.h>
 #include <commands.h>
-#include <config.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <toml.h>
 #include <util.h>
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
@@ -14,7 +14,7 @@
 #   define OS_DELIMITER '/'
 #endif
 
-void cmd_build_clone_library(config_property_t* library, int* status)
+void cmd_build_clone_library(toml_property_t* library, int* status)
 {
     const char* target = library->name;
     const char* source = library->value.stringValue;
@@ -31,7 +31,7 @@ void cmd_build_clone_library(config_property_t* library, int* status)
     system(stringf("cd .build/%s && %s build && %s install", target, executablename, executablename));
 }
 
-void cmd_build_create_defines_file(config_section_t* section)
+void cmd_build_create_defines_file(toml_section_t* section)
 {
     FILE* defines_file = fopen(".build/defines.bar", "wb+");
     if (!defines_file)
@@ -65,14 +65,14 @@ void cmd_build_compile_file_callback(const char* path)
         free((void*)tmp);
 }
 
-char* cmd_build_get_build_command(config_file_t* cfg, const char* execdir, const char* outputdir, const char* includedir)
+char* cmd_build_get_build_command(toml_file_t* cfg, const char* execdir, const char* outputdir, const char* includedir)
 {
     char* result = NULL;
-    config_property_t* property = config_file_get(cfg, "build.library");
+    toml_property_t* property = toml_file_get(cfg, "build.library");
     int is_library = (property ? (property->value.boolValue ? 1 : 0) : 0);
 
     char* libraries = strdup("");
-    config_section_t* libraries_section = config_file_get_section(cfg, "libraries");
+    toml_section_t* libraries_section = toml_file_get_section(cfg, "libraries");
     FOREACH_PROPERTY(lib, libraries_section,
     {
         char* tmp;
@@ -89,7 +89,7 @@ char* cmd_build_get_build_command(config_file_t* cfg, const char* execdir, const
         return NULL;
     }
 
-    const char* project_name = config_file_get(cfg, "build.project_name")->value.stringValue;
+    const char* project_name = toml_file_get(cfg, "build.project_name")->value.stringValue;
     if (strlen(execdir) != 0)
         result = strdup(stringf("%s%cbarc -d -o %s%c%s -i %s %s%s%s", execdir, OS_DELIMITER, outputdir, OS_DELIMITER, project_name, includedir, is_library ? "-e " : "", libraries ? libraries : "", cmd_build_files));
     else
@@ -107,16 +107,16 @@ void cmd_build(cmd_args_t* userparam)
         LOGINFO("`build` commands takes no arguments");
 
     int status = 0;
-    config_file_t cfg = {0, 0, 0, 0};
+    toml_file_t cfg = {0, 0, 0, 0};
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
         return;
     }
 
-    if (!config_file_has_property(&cfg, "build.project_name"))
+    if (!toml_file_has_property(&cfg, "build.project_name"))
     {
-        config_file_close(&cfg);
+        toml_file_close(&cfg);
         LOGERROR("Invalid project file, missing 'project_name' property");
         return;
     }
@@ -127,18 +127,18 @@ void cmd_build(cmd_args_t* userparam)
     if (!baranium_file_util_directory_exists(".build/library-bin"))
         baranium_file_util_create_directory(".build/library-bin");
 
-    config_property_t* property = NULL;
-    config_section_t* section = NULL;
+    toml_property_t* property = NULL;
+    toml_section_t* section = NULL;
 
-    property = config_file_get(&cfg, "build.prebuild_commands");
+    property = toml_file_get(&cfg, "build.prebuild_commands");
     if (property)
     {
         for (int i = 0; i < property->arrayLength; i++)
-            if (property->value.arrayValue[i].type == CONFIG_PROPERTY_VALUE_TYPE_STRING)
+            if (property->value.arrayValue[i].type == TOML_PROPERTY_VALUE_TYPE_STRING)
                 system(property->value.arrayValue[i].value.stringValue);
     }
 
-    section = config_file_get_section(&cfg, "libraries");
+    section = toml_file_get_section(&cfg, "libraries");
     if (section)
         FOREACH_PROPERTY(library, section, cmd_build_clone_library(library, &status);)
 
@@ -146,17 +146,17 @@ void cmd_build(cmd_args_t* userparam)
         goto build_end;
 
     const char* output_directory = "bin";
-    property = config_file_get(&cfg, "build.output");
+    property = toml_file_get(&cfg, "build.output");
     if (property)
         output_directory = property->value.stringValue;
 
     if (!baranium_file_util_directory_exists(output_directory))
         baranium_file_util_create_directory(output_directory);
 
-    cmd_build_create_defines_file(config_file_get_section(&cfg, "defines"));
+    cmd_build_create_defines_file(toml_file_get_section(&cfg, "defines"));
 
     const char* includedir = "src";
-    property = config_file_get(&cfg, "build.include");
+    property = toml_file_get(&cfg, "build.include");
     if (property)
         includedir = property->value.stringValue;
 
@@ -171,5 +171,5 @@ void cmd_build(cmd_args_t* userparam)
     free((void*)build_command);
 
 build_end:
-    config_file_close(&cfg);
+    toml_file_close(&cfg);
 }

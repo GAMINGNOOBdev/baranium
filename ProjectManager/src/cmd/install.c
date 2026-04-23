@@ -2,9 +2,9 @@
 #include <baranium/logging.h>
 #include <operations.h>
 #include <commands.h>
-#include <config.h>
 #include <string.h>
 #include <stdlib.h>
+#include <toml.h>
 #include <util.h>
 
 #if BARANIUM_PLATFORM == BARANIUM_PLATFORM_WINDOWS
@@ -35,20 +35,20 @@ void cmd_install(cmd_args_t* userparam)
     if (args.count != 0)
         LOGINFO("`build` commands takes no arguments");
 
-    config_file_t cfg = {0, 0, 0, 0};
+    toml_file_t cfg = {0, 0, 0, 0};
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
         return;
     }
 
-    config_property_t* property = config_file_get(&cfg, "build.library");
+    toml_property_t* property = toml_file_get(&cfg, "build.library");
     int is_library = (property ? (property->value.boolValue ? 1 : 0) : 0);
-    property = config_file_get(&cfg, "build.project_name");
+    property = toml_file_get(&cfg, "build.project_name");
     if (property == NULL)
     {
         LOGERROR("Invalid project file, could not find 'build.project_name' config property");
-        config_file_close(&cfg);
+        toml_file_close(&cfg);
         return;
     }
     const char* project_name = property->value.stringValue;
@@ -56,12 +56,12 @@ void cmd_install(cmd_args_t* userparam)
     if (!is_library)
     {
         LOGWARNING("Project '%s' is not a library, skipping installation.", property->value.stringValue);
-        config_file_close(&cfg);
+        toml_file_close(&cfg);
         return;
     }
 
     cmd_install_output_path = "bin";
-    property = config_file_get(&cfg, "build.output");
+    property = toml_file_get(&cfg, "build.output");
     if (property)
         cmd_install_output_path = property->value.stringValue;
 
@@ -84,5 +84,5 @@ void cmd_install(cmd_args_t* userparam)
         LOGERROR("cannot find built files for library '%s'", project_name);
 
     free((void*)cmd_install_output_target_path);
-    config_file_close(&cfg);
+    toml_file_close(&cfg);
 }
