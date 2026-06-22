@@ -14,7 +14,7 @@
 #   define OS_DELIMITER '/'
 #endif
 
-void cmd_library_add(cmd_args_t* argsptr, toml_file_t* cfg)
+void cmd_library_add(cmd_args_t* argsptr, toml_section* cfg)
 {
     cmd_args_t args = *argsptr;
     if (args.count != 2)
@@ -25,31 +25,38 @@ void cmd_library_add(cmd_args_t* argsptr, toml_file_t* cfg)
     const char* name = args.values[0];
     const char* source = args.values[1];
 
-    toml_property_t* library_property = toml_file_add_property(cfg, stringf("libraries.%s", name));
+    int type = toml_estimate_value_type(source);
+    if (type != TOML_PROPERTY_TYPE_STRING && type != TOML_PROPERTY_TYPE_UNKNOWN)
+    {
+        LOGERROR("Invalid source");
+        return;
+    }
+
+    toml_property* library_property = toml_section_add_property(cfg, stringf("libraries.%s", name));
     toml_property_set_value_from_string(library_property, source);
 
-    LOGINFO("Added library '%s'", name);
+    LOGINFO("Added library '%s' at remote '%s'", name, source);
 
     save_project_file(cfg);
 }
 
-void cmd_library_remove(cmd_args_t* argsptr, toml_file_t* cfg)
+void cmd_library_remove(cmd_args_t* argsptr, toml_section* cfg)
 {
     cmd_args_t args = *argsptr;
     if (args.count != 1)
     {
-        LOGERROR("Please only specify library name");
+        LOGERROR("Please specify library name");
         return;
     }
     const char* name = args.values[0];
 
-    if (!toml_file_has_property(cfg, stringf("libraries.%s", name)))
+    if (!toml_section_has_property(cfg, stringf("libraries.%s", name)))
     {
         LOGERROR("Library '%s' was not found", name);
         return;
     }
 
-    toml_file_remove_property(cfg, stringf("libraries.%s", name));
+    toml_section_remove_property(cfg, stringf("libraries.%s", name));
     LOGINFO("Removed library '%s'", name);
 
     save_project_file(cfg);
@@ -61,10 +68,7 @@ void cmd_library(cmd_args_t* userparam)
     if (args.count == 0)
         LOGINFO("Specify what to do, aka `add` or `remove`");
 
-    const char* command = args.values[0];
-    cmd_args_t args2 = {args.count-1, args.values+1};
-
-    toml_file_t cfg = {0, 0, 0, 0};
+    toml_section cfg = TOML_SECTION_EMPTY;
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
@@ -74,30 +78,33 @@ void cmd_library(cmd_args_t* userparam)
     if (args.count == 0)
         goto show_libraries;
 
+    const char* command = args.values[0];
+    toml_section* libraries_section = NULL;
+    cmd_args_t args2 = {args.count-1, args.values+1};
+
     if (strcmp(command, "add") == 0)
     {
         cmd_library_add(&args2, &cfg);
-        toml_file_close(&cfg);
+        toml_section_dispose(&cfg);
         return;
     }
     else if (strcmp(command, "remove") == 0)
-    {
         cmd_library_remove(&args2, &cfg);
-        toml_file_close(&cfg);
-        return;
-    }
     else
         LOGERROR("Invalid command '%s'\n", command);
 
 show_libraries:
-    LOGINFO("Current libraries:");
-    toml_section_t* libraries_section = toml_file_get_section(&cfg, "libraries");
-    for (size_t i = 0; i < libraries_section->propertyCount; i++)
+    libraries_section = toml_section_get_section(&cfg, "libraries");
+
+    if (libraries_section)
+        LOGINFO("Current libraries:");
+
+    for (size_t i = 0; libraries_section && i < libraries_section->propertyCount; i++)
     {
         const char* value = get_property_value_string(&libraries_section->properties[i]);
-        LOGINFO("%s at %s", libraries_section->properties[i].name, value);
+        LOGINFO("'%s' at %s", libraries_section->properties[i].name, value);
         free((void*)value);
     }
 
-    toml_file_close(&cfg);
+    toml_section_dispose(&cfg);
 }

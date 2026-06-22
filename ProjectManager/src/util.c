@@ -1,3 +1,4 @@
+#include "toml.h"
 #include <baranium/logging.h>
 #include <string.h>
 #include <stdlib.h>
@@ -51,37 +52,37 @@ char* get_current_working_directory(void)
     return cwd;
 }
 
-int open_project_file_from(toml_file_t* file, const char* path)
+int open_project_file_from(toml_section* file, const char* path)
 {
     FILE* toml_file = fopen(path, "r");
     if (toml_file == NULL)
         return 0;
 
-    toml_file_open(file, toml_file);
+    *file = toml_file_open(toml_file);
     fclose(toml_file);
     return 1;
 }
 
-int open_project_file(toml_file_t* file)
+int open_project_file(toml_section* file)
 {
     char* cwd = get_current_working_directory();
     FILE* toml_file = fopen(stringf("%s/barproject.toml", cwd), "r");
     if (toml_file == NULL)
         return 0;
 
-    toml_file_open(file, toml_file);
+    *file = toml_file_open(toml_file);
     fclose(toml_file);
     return 1;
 }
 
-int save_project_file(toml_file_t* file)
+int save_project_file(toml_section* file)
 {
     char* cwd = get_current_working_directory();
     FILE* toml_file = fopen(stringf("%s/barproject.toml", cwd), "wb+");
     if (toml_file == NULL)
         return 0;
 
-    toml_file_save(file, toml_file);
+    toml_section_save(file, toml_file, NULL);
     fclose(toml_file);
     return 1;
 }
@@ -120,47 +121,12 @@ int copy(const char* input, const char* output)
     return 0;
 }
 
-const char* get_property_value_string(toml_property_t* property)
+const char* get_property_value_string(toml_property* property)
 {
     if (property == NULL)
         return strdup("default");
 
-    switch (property->type)
-    {
-    case TOML_PROPERTY_VALUE_TYPE_INT:
-        return strdup(stringf("%d", property->value.intValue));
-
-    case TOML_PROPERTY_VALUE_TYPE_FLOAT:
-        return strdup(stringf("%f", property->value.floatValue));
-
-    case TOML_PROPERTY_VALUE_TYPE_BOOL:
-        return strdup(property->value.boolValue ? "true" : "false");
-
-    case TOML_PROPERTY_VALUE_TYPE_ARRAY:
-    {
-        char result[0x100];
-        result[0] = '[';
-        result[1] = ' ';
-        result[2] = '\0';
-        for (int i = 0; i < property->arrayLength; i++)
-        {
-            const char* value = get_property_value_string(&property->value.arrayValue[i]);
-            strcat(result, value);
-            free((void*)value);
-            if (i != property->arrayLength-1)
-                strcat(result, ", ");
-        }
-        strcat(result, " ]");
-        return strdup(result);
-    }
-
-    case TOML_PROPERTY_VALUE_TYPE_UNKNOWN:
-    case TOML_PROPERTY_VALUE_TYPE_STRING:
-    {
-        if (property->value.stringValue != NULL && strlen(property->value.stringValue) > 0)
-            return strdup(stringf("'%s'", property->value.stringValue));
-    }
-    }
-
-    return strdup("");
+    char result[0x1000] = {0};
+    toml_property_as_str(property, result, 0x1000);
+    return strdup(result);
 }

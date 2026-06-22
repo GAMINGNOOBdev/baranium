@@ -18,7 +18,7 @@ typedef struct project_manager_operation
 
 /**
  * @brief Get the corresponding operation according to the user input
- * 
+ *
  * @param name Name of the input operation
  * @returns Resulting operation pointer
  */

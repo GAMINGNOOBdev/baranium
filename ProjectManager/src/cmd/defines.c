@@ -14,7 +14,7 @@
 #   define OS_DELIMITER '/'
 #endif
 
-void cmd_define_add(cmd_args_t* argsptr, toml_file_t* cfg)
+void cmd_define_add(cmd_args_t* argsptr, toml_section* cfg)
 {
     cmd_args_t args = *argsptr;
     if (args.count < 1)
@@ -25,7 +25,7 @@ void cmd_define_add(cmd_args_t* argsptr, toml_file_t* cfg)
     const char* name = args.values[0];
     const char* value = args.values[1];
 
-    toml_property_t* define_property = toml_file_add_property(cfg, stringf("defines.%s", name));
+    toml_property* define_property = toml_section_add_property(cfg, stringf("defines.%s", name));
     if (args.count > 1)
         toml_property_set_value_from_string(define_property, value);
 
@@ -34,7 +34,7 @@ void cmd_define_add(cmd_args_t* argsptr, toml_file_t* cfg)
     save_project_file(cfg);
 }
 
-void cmd_define_remove(cmd_args_t* argsptr, toml_file_t* cfg)
+void cmd_define_remove(cmd_args_t* argsptr, toml_section* cfg)
 {
     cmd_args_t args = *argsptr;
     if (args.count != 1)
@@ -44,13 +44,13 @@ void cmd_define_remove(cmd_args_t* argsptr, toml_file_t* cfg)
     }
     const char* name = args.values[0];
 
-    if (!toml_file_has_property(cfg, stringf("defines.%s", name)))
+    if (!toml_section_has_property(cfg, stringf("defines.%s", name)))
     {
         LOGERROR("Define '%s' was not found", name);
         return;
     }
 
-    toml_file_remove_property(cfg, stringf("defines.%s", name));
+    toml_section_remove_property(cfg, stringf("defines.%s", name));
     LOGINFO("Removed define '%s'", name);
 
     save_project_file(cfg);
@@ -62,10 +62,7 @@ void cmd_defines(cmd_args_t* userparam)
     if (args.count == 0)
         LOGINFO("Specify what to do, aka `add` or `remove`");
 
-    const char* command = args.values[0];
-    cmd_args_t args2 = {args.count-1, args.values+1};
-
-    toml_file_t cfg = {0, 0, 0, 0};
+    toml_section cfg = TOML_SECTION_EMPTY;
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
@@ -74,28 +71,35 @@ void cmd_defines(cmd_args_t* userparam)
     if (args.count == 0)
         goto show_defines;
 
+    toml_section* defines_section = NULL;
+    const char* command = args.values[0];
+    cmd_args_t args2 = {args.count-1, args.values+1};
+
     if (strcmp(command, "add") == 0)
     {
         cmd_define_add(&args2, &cfg);
-        toml_file_close(&cfg);
+        toml_section_dispose(&cfg);
         return;
     }
     else if (strcmp(command, "remove") == 0)
     {
         cmd_define_remove(&args2, &cfg);
-        toml_file_close(&cfg);
+        toml_section_dispose(&cfg);
         return;
     }
 
 show_defines:
-    LOGINFO("Current defines:");
-    toml_section_t* defines_section = toml_file_get_section(&cfg, "defines");
-    for (size_t i = 0; i < defines_section->propertyCount; i++)
+    defines_section = toml_section_get_section(&cfg, "defines");
+
+    if (defines_section)
+        LOGINFO("Current defines:");
+
+    for (size_t i = 0; defines_section && i < defines_section->propertyCount; i++)
     {
         const char* value = get_property_value_string(&defines_section->properties[i]);
-        LOGINFO("%s = %s", defines_section->properties[i].name, value);
+        LOGINFO("'%s' = %s", defines_section->properties[i].name, value);
         free((void*)value);
     }
 
-    toml_file_close(&cfg);
+    toml_section_dispose(&cfg);
 }

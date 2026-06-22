@@ -1,15 +1,18 @@
 /**
  * @file toml.h
  * @author GAMINGNOOBdev (https://github.com/GAMINGNOOBdev)
- * @brief A simple toml-like config file parser/writer utility
- * @version 1.0
- * 
+ * @brief A simple toml-like toml file parser/writer utility
+ *
  * @note Define TOML_IMPLEMENTATION in ONE!! file where you include this header
- * 
+ *
  * @copyright Copyright (c) GAMINGNOOBdev
  */
 #ifndef __TOML_H_
 #define __TOML_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 #include <stdio.h>
@@ -20,40 +23,39 @@
 ///             ///
 ///////////////////
 
-#define TOML_PROPERTY_INIT(_name, _type, _value, _arrayLength, _parent) (toml_property_t){.name=_name, .type=_type, .value=_value, .arrayLength=_arrayLength, .parent=_parent}
+#define TOML_PROPERTY_INIT(_name, _type, _value, _arrayLength, _parent) (toml_property){.name=_name, .type=_type, .value=_value, .arrayLength=_arrayLength, .parent=_parent}
 #define TOML_PROPERTY_EMPTY TOML_PROPERTY_INIT(0, 0, {0}, 0, 0)
-#define TOML_SECTION_EMPTY (toml_section_t){.name=(const char*)0, .parent=(toml_section_t*)0, .sections=(toml_section_t*)0, .sectionCount=0, .properties=(toml_property_t*)0, .propertyCount=0}
-#define TOML_FILE_EMPTY (toml_file_t){.sections=(toml_section_t*)0, .sectionCount=0, .properties=(toml_property_t*)0, .propertyCount=0}
+#define TOML_SECTION_EMPTY (toml_section){.name=(const char*)0, .parent=(toml_section*)0, .sections=(toml_section*)0, .sectionCount=0, .properties=(toml_property*)0, .propertyCount=0}
 
-#define FOREACH_PROPERTY(name, containerptr, handle) for (size_t i##name = 0; i##name < containerptr->propertyCount; i##name++) { toml_property_t* name = &containerptr->properties[i##name]; handle }
-#define FOREACH_SECTION(name, containerptr, handle) for (size_t i##name = 0; i##name < containerptr->sectionCount; i##name++) { toml_section_t* name = &containerptr->sections[i##name]; handle }
+#define FOREACH_PROPERTY(name, containerptr, handle) for (size_t i##name = 0; containerptr && i##name < containerptr->propertyCount; i##name++) { toml_property* name = &containerptr->properties[i##name]; handle }
+#define FOREACH_SECTION(name, containerptr, handle) for (size_t i##name = 0; containerptr && i##name < containerptr->sectionCount; i##name++) { toml_section* name = &containerptr->sections[i##name]; handle }
 
-#define TOML_PROPERTY_VALUE_TYPE_UNKNOWN  ((int)0)
-#define TOML_PROPERTY_VALUE_TYPE_STRING   ((int)1)
-#define TOML_PROPERTY_VALUE_TYPE_FLOAT    ((int)2)
-#define TOML_PROPERTY_VALUE_TYPE_BOOL     ((int)3)
-#define TOML_PROPERTY_VALUE_TYPE_INT      ((int)4)
-#define TOML_PROPERTY_VALUE_TYPE_ARRAY    ((int)5)
+#define TOML_PROPERTY_TYPE_UNKNOWN  ((int)0)
+#define TOML_PROPERTY_TYPE_STRING   ((int)1)
+#define TOML_PROPERTY_TYPE_FLOAT    ((int)2)
+#define TOML_PROPERTY_TYPE_BOOL     ((int)3)
+#define TOML_PROPERTY_TYPE_INT      ((int)4)
+#define TOML_PROPERTY_TYPE_ARRAY    ((int)5)
 
-struct toml_section_t;
+struct toml_section;
 
 //////////////////////////
 ///                    ///
-///   Util functions   ///
+///   util functions   ///
 ///                    ///
 //////////////////////////
 
 /**
  * @brief Estimate/guess value type from string
- * 
+ *
  * @param value Value string
  * @returns Value type
  */
 int toml_estimate_value_type(const char* value);
 
 /**
- * @brief Config property type as string
- * 
+ * @brief toml property type as string
+ *
  * @param type Type
  * @returns Type name as string
  */
@@ -61,453 +63,323 @@ const char* toml_property_value_type_as_string(int type);
 
 /////////////////////////
 ///                   ///
-///   Toml Property   ///
+///   toml property   ///
 ///                   ///
 /////////////////////////
 
-typedef struct toml_property_t
+typedef struct toml_property
 {
     const char* name;
     int type;
     union {
-        struct toml_property_t* arrayValue;
+        struct toml_property* arrayValue;
         const char* stringValue;
         float floatValue;
-        int intValue;
+        int64_t intValue;
         uint8_t boolValue;
     } value;
     int arrayLength;
+    char quoteCharacter;
 
-    struct toml_section_t* parent;
-} toml_property_t;
+    struct toml_section* parent;
+} toml_property;
 
 /**
- * @brief Dispose a config property
- * 
- * @param property Config property
+ * @brief Dispose a toml property
+ *
+ * @param property toml property
  */
-void toml_property_dispose(toml_property_t* property);
+void toml_property_dispose(toml_property* property);
 
 /**
  * @brief Duplicates all contents of a property
- * 
+ *
  * @note Returned property has to be disposed with `toml_property_dispose()`
- * 
- * @param property Config property
+ *
+ * @param property toml property
  * @returns The property with all duplicated contents
  */
-toml_property_t toml_property_duplicate(toml_property_t* property);
+toml_property toml_property_duplicate(toml_property* property);
 
 /**
- * @brief Get full config property name
- * 
+ * @brief Get full toml property name
+ *
  * @note Returned string has to be manually cleaned up by the used using `free()`
- * 
- * @param property Config property
+ *
+ * @param property toml property
  * @returns Property name
  */
-const char* toml_property_get_full_name(toml_property_t* property);
+const char* toml_property_get_full_name(toml_property* property);
 
 /**
  * @brief Add an array element to this property (if it is of the array type)
- * 
- * @param property Config property
+ *
+ * @param property toml property
  * @param other Other property
  */
-void toml_property_array_add(toml_property_t* property, toml_property_t* other);
+void toml_property_array_add(toml_property* property, toml_property* other);
 
 /**
  * @brief Insert an array element to this property at the given index (pushes values at the index towards the end) (if it is of the array type)
- * 
- * @param property Config property
+ *
+ * @param property toml property
  * @param index Index
  * @param other Other property
  */
-void toml_property_array_insert_at(toml_property_t* property, int index, toml_property_t* other);
+void toml_property_array_insert_at(toml_property* property, int index, toml_property* other);
 
 /**
  * @brief Remove an array element from this property (if it is of the array type)
- * 
- * @param property Config property
+ *
+ * @param property toml property
  * @param index Index
  */
-void toml_property_array_remove(toml_property_t* property, int index);
+void toml_property_array_remove(toml_property* property, int index);
 
 /**
- * @brief Set config property value from a string
- * 
+ * @brief Set toml property value from a string
+ *
  * @note `value` should be modifyable and will stay modified after use
- * 
- * @param property Config property
+ *
+ * @param property toml property
  * @param value Value string
  */
-void toml_property_set_value_from_string(toml_property_t* property, const char* value);
+void toml_property_set_value_from_string(toml_property* property, const char* value);
 
 /**
- * @brief Set config property value
- * 
+ * @brief Set toml property value
+ *
  * @note `value` should be modifyable and will stay modified after use
- * 
- * @param property Config property
+ *
+ * @param property toml property
  * @param value Value
  */
-void toml_property_set_string(toml_property_t* property, const char* value);
+void toml_property_set_string(toml_property* property, const char* value);
 
 /**
- * @brief Set config property value
- * 
- * @param property Config property
+ * @brief Set toml property value
+ *
+ * @param property toml property
  * @param value Value
  */
-void toml_property_set_float(toml_property_t* property, float value);
+void toml_property_set_float(toml_property* property, float value);
 
 /**
- * @brief Set config property value
- * 
- * @param property Config property
+ * @brief Set toml property value
+ *
+ * @param property toml property
  * @param value Value
  */
-void toml_property_set_bool(toml_property_t* property, uint8_t value);
+void toml_property_set_bool(toml_property* property, uint8_t value);
 
 /**
- * @brief Set config property value
- * 
- * @param property Config property
+ * @brief Set toml property value
+ *
+ * @param property toml property
  * @param value Value
  */
-void toml_property_set_int(toml_property_t* property, int value);
+void toml_property_set_int(toml_property* property, int64_t value);
 
 /**
- * @brief Set config property value
- * 
- * @param property Config property
+ * @brief Set toml property value
+ *
+ * @param property toml property
  * @param len Array length
  * @param array Array of values
  */
-void toml_property_set_array(toml_property_t* property, int len, toml_property_t array[]);
+void toml_property_set_array(toml_property* property, int len, toml_property array[]);
 
 /**
  * @brief Save property to a file
- * 
- * @param property Config property
+ *
+ * @param property toml property
  * @param file Output file
  */
-void toml_property_save(toml_property_t* property, FILE* file);
+void toml_property_save(toml_property* property, FILE* file);
+
+/**
+ * @brief Save property to a file
+ *
+ * @note MAKE SURE THE BUFFER IS BIG ENOUGH
+ *
+ * @param property toml property
+ * @param buf Output buffer
+ * @param maxlen Max Buffer length
+ */
+void toml_property_as_str(toml_property* property, char* buf, size_t maxlen);
 
 /**
  * @brief Compare two properties to each other
- * 
+ *
  * @param a First property
  * @param b Second property
  * @returns Comparison result, 0 if equal
  */
-int toml_property_cmp(toml_property_t* a, toml_property_t* b);
+int toml_property_cmp(toml_property* a, toml_property* b);
 
 ////////////////////////
 ///                  ///
-///   Toml Section   ///
+///   toml section   ///
 ///                  ///
 ////////////////////////
 
-typedef struct toml_section_t
+typedef struct toml_section
 {
     const char* name;
-    struct toml_section_t* parent;
+    struct toml_section* parent;
 
-    struct toml_section_t* sections;
+    struct toml_section* sections;
     size_t sectionCount;
 
-    struct toml_property_t* properties;
+    struct toml_property* properties;
     size_t propertyCount;
-} toml_section_t;
+} toml_section;
 
 /**
- * @brief Dispose a config section
- * 
- * @param section Config section
+ * @brief Dispose a toml section
+ *
+ * @param section toml section
  */
-void toml_section_dispose(toml_section_t* section);
+void toml_section_dispose(toml_section* section);
 
 /**
- * @brief Get full config section name
- * 
+ * @brief Invalidate parents of a section
+ */
+void toml_section_invalidate_parents(toml_section* parent, toml_section* section);
+
+/**
+ * @brief Get full toml section name
+ *
  * @note Returned string has to be manually cleaned up by the used using `free()`
- * 
- * @param section Config section
+ *
+ * @param section toml section
  * @returns Section name
  */
-const char* toml_section_get_full_name(toml_section_t* section);
+const char* toml_section_get_full_name(toml_section* section);
 
 /**
- * @brief Save config section to a file
- * 
- * @param section Config section
+ * @brief Save toml section to a file
+ *
+ * @param section toml section
  * @param file Output file
  * @param prefix Section name prefix
  */
-void toml_section_save(toml_section_t* section, FILE* file, const char* prefix);
+void toml_section_save(toml_section* section, FILE* file, const char* prefix);
 
 /**
  * @brief Get a property inside this section
- * 
- * @param section Config section
+ *
+ * @param section toml section
  * @param name Property name
- * @returns The desired config property
+ * @returns The desired toml property
  */
-toml_property_t* toml_section_get(toml_section_t* section, const char* name);
+toml_property* toml_section_get(toml_section* section, const char* name);
 
 /**
  * @brief Get a section inside this section
- * 
- * @param section Config section
+ *
+ * @param section toml section
  * @param name Section name
- * @returns The desired config section
+ * @returns The desired toml section
  */
-toml_section_t* toml_section_get_section(toml_section_t* section, const char* name);
+toml_section* toml_section_get_section(toml_section* section, const char* name);
 
 /**
  * @brief Get whether a property exists in this section
- * 
- * @param section Config section
+ *
+ * @param section toml section
  * @param name Property name
  * @returns 0 if no, 1 if yes
  */
-int toml_section_has_property(toml_section_t* section, const char* name);
+int toml_section_has_property(toml_section* section, const char* name);
 
 /**
  * @brief Get whether a section exists in this section
- * 
- * @param section Config section
+ *
+ * @param section toml section
  * @param name Section name
  * @returns 0 if no, 1 if yes
  */
-int toml_section_has_section(toml_section_t* section, const char* name);
+int toml_section_has_section(toml_section* section, const char* name);
 
 /**
  * @brief Add a property to this section
- * 
- * @param section Config section
+ *
+ * @param section toml section
  * @param name Property name
  * @returns The newly created property
  */
-toml_property_t* toml_section_add_property(toml_section_t* section, const char* name);
+toml_property* toml_section_add_property(toml_section* section, const char* name);
 
 /**
  * @brief Add a section to this section
- * 
- * @param section Config section
+ *
+ * @param section toml section
  * @param name Section name
  * @returns The newly created section
  */
-toml_section_t* toml_section_add_section(toml_section_t* section, const char* name);
+toml_section* toml_section_add_section(toml_section* section, const char* name);
 
 /**
  * @brief Remove a property from this section
- * 
- * @param section Config section
+ *
+ * @param section toml section
  * @param name Property name
  */
-void toml_section_remove_property(toml_section_t* section, const char* name);
+void toml_section_remove_property(toml_section* section, const char* name);
 
 /**
  * @brief Remove a section from this section
- * 
- * @param section Config section
+ *
+ * @param section toml section
  * @param name Section name
  */
-void toml_section_remove_section(toml_section_t* section, const char* name);
+void toml_section_remove_section(toml_section* section, const char* name);
 
 /**
  * @brief Compare two sections to each other
- * 
+ *
  * @param a First section
  * @param b Second section
  * @returns Comparison result, 0 if equal
  */
-int toml_section_cmp(toml_section_t* a, toml_section_t* b);
+int toml_section_cmp(toml_section* a, toml_section* b);
 
-///////////////////////
-///                 ///
-///   Config File   ///
-///                 ///
-///////////////////////
-
-typedef struct toml_file_t
-{
-    struct toml_section_t* sections;
-    size_t sectionCount;
-
-    struct toml_property_t* properties;
-    size_t propertyCount;
-} toml_file_t;
+/////////////////////
+///               ///
+///   toml file   ///
+///               ///
+/////////////////////
 
 /**
- * @brief Close a config file
- * 
- * @note Should ALWAYS be called after completing usage of a `toml_file_t` object
- * 
- * @param config Config file
- */
-void toml_file_close(toml_file_t* config);
-
-/**
- * @brief Open and parse a config file
- * 
- * @param config Config file
+ * @brief Open and parse a toml file
+ *
  * @param file Input file
+ * @returns parsed toml file
  */
-void toml_file_open(toml_file_t* config, FILE* file);
+toml_section toml_file_open(FILE* file);
 
-/**
- * @brief Save a config file
- * 
- * @param config Config file
- * @param file Output file
- */
-void toml_file_save(toml_file_t* config, FILE* file);
-
-/**
- * @brief Get a property inside this file
- * 
- * @param config Config file
- * @param name Property name
- * @returns The desired config property
- */
-toml_property_t* toml_file_get(toml_file_t* config, const char* name);
-
-/**
- * @brief Get a section inside this file
- * 
- * @param config Config file
- * @param name Section name
- * @returns The desired config section
- */
-toml_section_t* toml_file_get_section(toml_file_t* config, const char* name);
-
-/**
- * @brief Get whether a property exists in this file
- * 
- * @param config Config file
- * @param name Property name
- * @returns 0 if no, 1 if yes
- */
-int toml_file_has_property(toml_file_t* config, const char* name);
-
-/**
- * @brief Get whether a section exists in this file
- * 
- * @param config Config file
- * @param name Section name
- * @returns 0 if no, 1 if yes
- */
-int toml_file_has_section(toml_file_t* config, const char* name);
-
-/**
- * @brief Add a property to this file
- * 
- * @param config Config file
- * @param name Property name
- * @returns The newly created property
- */
-toml_property_t* toml_file_add_property(toml_file_t* config, const char* name);
-
-/**
- * @brief Add a section to this file
- * 
- * @param config Config file
- * @param name Section name
- * @returns The newly created section
- */
-toml_section_t* toml_file_add_section(toml_file_t* config, const char* name);
-
-/**
- * @brief Remove a property from this file
- * 
- * @param config Config file
- * @param name Property name
- */
-void toml_file_remove_property(toml_file_t* config, const char* name);
-
-/**
- * @brief Remove a section from this file
- * 
- * @param config Config file
- * @param name Section name
- */
-void toml_file_remove_section(toml_file_t* config, const char* name);
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef TOML_IMPLEMENTATION
 
+#include <stdint.h>
 #include <memory.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <ctype.h>
 
 //////////////////////////
 ///                    ///
-///   Util functions   ///
+///   util functions   ///
 ///                    ///
 //////////////////////////
 
 // free a block of memory IF not null
-void iffree(void* block)
-{
-    if (!block)
-        return;
-
-    free(block);
-}
-
-// modifies the given `src` string (no realloc)
-void strtrim(char* src)
-{
-    if (src == NULL)
-        return;
-
-    int len = strlen(src);
-    uint8_t index = 0;
-    for (int i = 0; i < len; i++)
-    {
-        index = !isspace(src[i]) ? 1 : index;
-        if (index)
-            break;
-    }
-
-    if (!index)
-    {
-        src[0] = 0;
-        return;
-    }
-
-    int begin_index = 0;
-    int end_index = 0;
-
-    for (begin_index = 0; begin_index < len; begin_index++)
-    {
-        if (!isspace(src[begin_index]))
-            break;
-    }
-    for (end_index = len-1; end_index > 0; end_index--)
-    {
-        if (!isspace(src[end_index]))
-            break;
-    }
-
-    if (begin_index == 0 && end_index == len-1)
-        return;
-
-    if (end_index == 0 && begin_index == len)
-    {
-        src[0] = 0;
-        return;
-    }
-
-    len = end_index - begin_index + 1;
-    for (int i = 0; i < len; i++)
-        src[i] = src[i + begin_index];
-    src[len] = 0;
-}
+#define safefree(block) if(block) free((void*)block)
 
 int is_bool(const char* str)
 {
@@ -571,74 +443,342 @@ int toml_estimate_value_type(const char* value)
 {
     size_t valueLen = strlen(value);
     if (value == NULL || valueLen == 0)
-        return TOML_PROPERTY_VALUE_TYPE_UNKNOWN;
+        return TOML_PROPERTY_TYPE_UNKNOWN;
 
     if (is_bool(value))
-        return TOML_PROPERTY_VALUE_TYPE_BOOL;
+        return TOML_PROPERTY_TYPE_BOOL;
 
     if (is_integer(value))
-        return TOML_PROPERTY_VALUE_TYPE_INT;
+        return TOML_PROPERTY_TYPE_INT;
 
     if (is_float(value))
-        return TOML_PROPERTY_VALUE_TYPE_FLOAT;
+        return TOML_PROPERTY_TYPE_FLOAT;
 
     if (value[0] == '[' && value[valueLen-1] == ']')
-        return TOML_PROPERTY_VALUE_TYPE_ARRAY;
+        return TOML_PROPERTY_TYPE_ARRAY;
 
     if ((value[0] == '\'' || value[0] == '"') && (value[valueLen-1] == '\'' || value[valueLen-1] == '"'))
-        return TOML_PROPERTY_VALUE_TYPE_STRING;
+        return TOML_PROPERTY_TYPE_STRING;
 
-    return TOML_PROPERTY_VALUE_TYPE_STRING;
+    return TOML_PROPERTY_TYPE_STRING;
 }
 
 const char* toml_property_value_type_as_string(int type)
 {
-    if (type == TOML_PROPERTY_VALUE_TYPE_STRING)
+    if (type == TOML_PROPERTY_TYPE_STRING)
         return "STRING";
 
-    if (type == TOML_PROPERTY_VALUE_TYPE_FLOAT)
+    if (type == TOML_PROPERTY_TYPE_FLOAT)
         return "FLOAT";
 
-    if (type == TOML_PROPERTY_VALUE_TYPE_BOOL)
+    if (type == TOML_PROPERTY_TYPE_BOOL)
         return "BOOL";
 
-    if (type == TOML_PROPERTY_VALUE_TYPE_INT)
+    if (type == TOML_PROPERTY_TYPE_INT)
         return "INT";
 
-    if (type == TOML_PROPERTY_VALUE_TYPE_ARRAY)
+    if (type == TOML_PROPERTY_TYPE_ARRAY)
         return "ARRAY";
 
     return "UNKNOWN";
 }
 
-///////////////////////////
-///                     ///
-///   Config Property   ///
-///                     ///
-///////////////////////////
+//////////////////////////
+///                    ///
+///   toml file dict   ///
+///                    ///
+//////////////////////////
 
-void toml_property_dispose(toml_property_t* property)
+#define TOML_FILE_BUFFER_SIZE 0x10
+
+typedef const char* string;
+
+typedef struct
 {
-    if (property == NULL)
+    size_t bufferSize;
+    string* data;
+    size_t count;
+} toml_dict;
+
+void toml_dict_ensure_buffer(toml_dict* dict)
+{
+    if (dict->count < dict->bufferSize)
         return;
 
-    iffree((void*)property->name);
+    dict->bufferSize += TOML_FILE_BUFFER_SIZE;
+    dict->data = (string*)realloc(dict->data, sizeof(string)*dict->bufferSize);
+}
+
+int toml_dict_add(toml_dict* dict, string element)
+{
+    if (!dict || !element)
+        return -1;
+
+    for (size_t i = 0; i < dict->count; i++)
+    {
+        if (strcmp(element, dict->data[i]) == 0)
+            return i;
+    }
+
+    dict->count++;
+    toml_dict_ensure_buffer(dict);
+    dict->data[dict->count-1] = strdup(element);
+    return dict->count-1;
+}
+
+void toml_dict_dispose(toml_dict* dict)
+{
+    if (!dict || !dict->data)
+        return;
+
+    for (size_t i = 0; i < dict->count; i++)
+        safefree(dict->data[i]);
+
+    safefree(dict->data);
+    memset(dict, 0, sizeof(toml_dict));
+}
+
+///////////////////////////////
+///                         ///
+///   toml file tokenizer   ///
+///                         ///
+///////////////////////////////
+
+#define TOML_TOKEN_TYPE_DEFAULT 0
+#define TOML_TOKEN_TYPE_KEY     1
+#define TOML_TOKEN_TYPE_VALUE   2
+
+typedef struct
+{
+    char c;
+    int type;
+} toml_special_char;
+
+const toml_special_char TOML_SPECIAL_CHARS[] = {
+    {'[', TOML_TOKEN_TYPE_DEFAULT},
+    {']', TOML_TOKEN_TYPE_DEFAULT},
+    {'=', TOML_TOKEN_TYPE_DEFAULT},
+    {',', TOML_TOKEN_TYPE_DEFAULT},
+    {'{', TOML_TOKEN_TYPE_DEFAULT},
+    {'}', TOML_TOKEN_TYPE_DEFAULT},
+    {'\0', -1}
+};
+
+int toml_is_special_char(char c)
+{
+    for (int i = 0; TOML_SPECIAL_CHARS[i].c != '\0'; i++)
+        if (TOML_SPECIAL_CHARS[i].c == c)
+            return TOML_SPECIAL_CHARS[i].type;
+
+    return -1;
+}
+
+typedef struct
+{
+    toml_dict dict;
+    uint64_t* data;
+    size_t bufferSize;
+    size_t count;
+    struct {
+        uint8_t lastQuoteCharacter;
+        size_t bufferIndex;
+        char buffer[4096];
+    } tokenizer;
+} toml_file_tokenizer;
+
+#define TOML_TOKEN(idx, type) ((uint64_t)idx << 32 | (uint64_t)type)
+#define TOML_TOKEN_SPECIAL(idx, type, c) ((uint64_t)idx << 32 | (uint64_t)c << 16 | (uint64_t)type)
+#define TOML_TOKEN_INDEX(num) ((int32_t)(num >> 32))
+#define TOML_TOKEN_TYPE(num) ((int32_t)num & 0xFFFF)
+#define TOML_TOKEN_CHAR(num) ((uint32_t)num & 0xFF0000) >> 16
+
+void toml_file_tokenizer_ensure_buffer(toml_file_tokenizer* file)
+{
+    if (file->count < file->bufferSize)
+        return;
+
+    file->bufferSize += TOML_FILE_BUFFER_SIZE;
+    file->data = (uint64_t*)realloc(file->data, sizeof(uint64_t)*file->bufferSize);
+}
+
+void toml_file_tokenizer_add(toml_file_tokenizer* file, int dictIdx, int type, char c)
+{
+    if (!file)
+        return;
+
+    file->count++;
+    toml_file_tokenizer_ensure_buffer(file);
+    file->data[file->count-1] = TOML_TOKEN_SPECIAL(dictIdx, type, c);
+}
+
+void toml_file_tokenizer_pop(toml_file_tokenizer* file)
+{
+    if (!file)
+        return;
+
+    file->count--;
+}
+
+void toml_file_tokenizer_dispose(toml_file_tokenizer* file)
+{
+    if (!file)
+        return;
+
+    safefree(file->data);
+    toml_dict_dispose(&file->dict);
+    memset(file, 0, sizeof(toml_file_tokenizer));
+}
+
+void toml_file_tokenizer_tokenize_char(toml_file_tokenizer* file, char c)
+{
+    char buf[2] = {c, '\0'};
+    int dictIdx = toml_dict_add(&file->dict, buf);
+    int type = toml_is_special_char(c);
+    toml_file_tokenizer_add(file, dictIdx, type != -1 ? type : TOML_TOKEN_TYPE_DEFAULT, 0);
+}
+
+void toml_file_tokenizer_tokenize_buffer(toml_file_tokenizer* file, string line, uint8_t isString, char usedQuote)
+{
+    if (!line || *line == '\0') return;
+
+    int idx = toml_dict_add(&file->dict, line);
+    int type = isString ? TOML_TOKEN_TYPE_VALUE : TOML_TOKEN_TYPE_KEY;
+    toml_file_tokenizer_add(file, idx, type, usedQuote);
+}
+
+void toml_file_tokenizer_tokenize_line(toml_file_tokenizer* file, string line, size_t len)
+{
+    if (!file || !line || !len)
+        return;
+
+    for (size_t i = 0; i < len; i++)
+    {
+        char c = line[i];
+        if (c == '"' || c == '\'')
+        {
+            if (file->tokenizer.lastQuoteCharacter == c)
+            {
+                file->tokenizer.buffer[file->tokenizer.bufferIndex] = '\0';
+                toml_file_tokenizer_tokenize_buffer(file, file->tokenizer.buffer, 1, c);
+                file->tokenizer.bufferIndex = 0;
+                file->tokenizer.lastQuoteCharacter = 0;
+                continue;
+            }
+            else if (file->tokenizer.lastQuoteCharacter == 0)
+            {
+                file->tokenizer.lastQuoteCharacter = c;
+                continue;
+            }
+            if (file->tokenizer.bufferIndex < sizeof(file->tokenizer.buffer) - 1)
+                file->tokenizer.buffer[file->tokenizer.bufferIndex++] = c;
+
+            continue;
+        }
+
+        if (file->tokenizer.lastQuoteCharacter != 0)
+        {
+            if (file->tokenizer.bufferIndex < sizeof(file->tokenizer.buffer) - 1)
+                file->tokenizer.buffer[file->tokenizer.bufferIndex++] = c;
+            continue;
+        }
+
+        if (c == '#')
+            break;
+
+        if (toml_is_special_char(c) != -1)
+        {
+            if (file->tokenizer.bufferIndex > 0)
+            {
+                file->tokenizer.buffer[file->tokenizer.bufferIndex] = '\0';
+                toml_file_tokenizer_tokenize_buffer(file, file->tokenizer.buffer, 0, 0);
+                file->tokenizer.bufferIndex = 0;
+            }
+            toml_file_tokenizer_tokenize_char(file, c);
+            continue;
+        }
+
+        if (isspace(c))
+        {
+            if (file->tokenizer.bufferIndex > 0)
+            {
+                file->tokenizer.buffer[file->tokenizer.bufferIndex] = '\0';
+                toml_file_tokenizer_tokenize_buffer(file, file->tokenizer.buffer, 0, 0);
+                file->tokenizer.bufferIndex = 0;
+            }
+            continue;
+        }
+
+        if (file->tokenizer.bufferIndex < sizeof(file->tokenizer.buffer) - 1)
+            file->tokenizer.buffer[file->tokenizer.bufferIndex++] = c;
+    }
+
+    if (file->tokenizer.lastQuoteCharacter != 0)
+        return;
+
+    if (file->tokenizer.bufferIndex > 0)
+    {
+        file->tokenizer.buffer[file->tokenizer.bufferIndex] = '\0';
+        toml_file_tokenizer_tokenize_buffer(file, file->tokenizer.buffer, 0, 0);
+        file->tokenizer.bufferIndex = 0;
+    }
+}
+
+size_t toml_file_tokenizer_resolve_path(toml_file_tokenizer* file, size_t tokenIdx, char end, char* output)
+{
+    output[0] = '\0';
+    while (tokenIdx < file->count)
+    {
+        uint64_t token = file->data[tokenIdx];
+        string s = file->dict.data[TOML_TOKEN_INDEX(token)];
+
+        if (TOML_TOKEN_TYPE(token) == TOML_TOKEN_TYPE_DEFAULT && s[0] == end)
+            break;
+
+        strcat(output, s);
+        tokenIdx++;
+    }
+    return tokenIdx;
+}
+
+/////////////////////////
+///                   ///
+///   toml property   ///
+///                   ///
+/////////////////////////
+
+void toml_property_dispose_value(toml_property* property)
+{
+    if (!property)
+        return;
 
     for (int i = 0; i < property->arrayLength; i++)
         toml_property_dispose(&property->value.arrayValue[i]);
 
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_STRING || property->type == TOML_PROPERTY_VALUE_TYPE_UNKNOWN)
-        iffree((void*)property->value.stringValue);
+    if (property->type == TOML_PROPERTY_TYPE_STRING || property->type == TOML_PROPERTY_TYPE_UNKNOWN)
+        safefree((void*)property->value.stringValue);
 
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_ARRAY)
-        iffree((void*)property->value.arrayValue);
+    if (property->type == TOML_PROPERTY_TYPE_ARRAY)
+        safefree((void*)property->value.arrayValue);
 
-    memset(property, 0, sizeof(toml_property_t));
+    property->arrayLength = 0;
+    memset(&property->value, 0, sizeof(property->value));
 }
 
-toml_property_t toml_property_duplicate(toml_property_t* property)
+void toml_property_dispose(toml_property* property)
 {
-    toml_property_t result = TOML_PROPERTY_EMPTY;
+    if (property == NULL)
+        return;
+
+    safefree((void*)property->name);
+
+    toml_property_dispose_value(property);
+
+    memset(property, 0, sizeof(toml_property));
+}
+
+toml_property toml_property_duplicate(toml_property* property)
+{
+    toml_property result = TOML_PROPERTY_EMPTY;
     if (property == NULL)
         return result;
 
@@ -649,15 +789,15 @@ toml_property_t toml_property_duplicate(toml_property_t* property)
     result.parent = property->parent;
     result.value = property->value;
 
-    if (result.type == TOML_PROPERTY_VALUE_TYPE_ARRAY)
+    if (result.type == TOML_PROPERTY_TYPE_ARRAY)
     {
-        result.value.arrayValue = (toml_property_t*)malloc(sizeof(toml_property_t)*result.arrayLength);
+        result.value.arrayValue = (toml_property*)malloc(sizeof(toml_property)*result.arrayLength);
         for (int i = 0; i < result.arrayLength; i++)
             result.value.arrayValue[i] = toml_property_duplicate(&property->value.arrayValue[i]);
         return result;
     }
 
-    if (result.type == TOML_PROPERTY_VALUE_TYPE_UNKNOWN || result.type == TOML_PROPERTY_VALUE_TYPE_STRING)
+    if (result.type == TOML_PROPERTY_TYPE_UNKNOWN || result.type == TOML_PROPERTY_TYPE_STRING)
     {
         result.value.stringValue = strdup(result.value.stringValue);
         return result;
@@ -666,9 +806,9 @@ toml_property_t toml_property_duplicate(toml_property_t* property)
     return result;
 }
 
-const char* toml_property_get_full_name(toml_property_t* property)
+const char* toml_property_get_full_name(toml_property* property)
 {
-    if (property == NULL)
+    if (property == NULL || property->name == NULL)
         return NULL;
 
     if (property->parent == NULL)
@@ -683,25 +823,25 @@ const char* toml_property_get_full_name(toml_property_t* property)
     return parent;
 }
 
-void toml_property_array_add(toml_property_t* property, toml_property_t* other)
+void toml_property_array_add(toml_property* property, toml_property* other)
 {
     if (property == NULL || other == NULL)
         return;
 
-    if (property->type != TOML_PROPERTY_VALUE_TYPE_ARRAY)
+    if (property->type != TOML_PROPERTY_TYPE_ARRAY)
         return;
 
     property->arrayLength++;
-    property->value.arrayValue = (toml_property_t*)realloc(property->value.arrayValue, sizeof(toml_property_t)*property->arrayLength);
+    property->value.arrayValue = (toml_property*)realloc(property->value.arrayValue, sizeof(toml_property)*property->arrayLength);
     property->value.arrayValue[property->arrayLength-1] = toml_property_duplicate(other);
 }
 
-void toml_property_array_insert_at(toml_property_t* property, int index, toml_property_t* other)
+void toml_property_array_insert_at(toml_property* property, int index, toml_property* other)
 {
     if (property == NULL || index < 0 || other == NULL)
         return;
 
-    if (property->type != TOML_PROPERTY_VALUE_TYPE_ARRAY)
+    if (property->type != TOML_PROPERTY_TYPE_ARRAY)
         return;
 
     if ((property->arrayLength == 0 && index == 0) || index == -1)
@@ -714,17 +854,17 @@ void toml_property_array_insert_at(toml_property_t* property, int index, toml_pr
         return;
 
     property->arrayLength++;
-    property->value.arrayValue = (toml_property_t*)realloc(property->value.arrayValue, sizeof(toml_property_t)*property->arrayLength);
-    memmove(&property->value.arrayValue[index+1], &property->value.arrayValue[index], sizeof(toml_property_t)*(property->arrayLength-index-1));
+    property->value.arrayValue = (toml_property*)realloc(property->value.arrayValue, sizeof(toml_property)*property->arrayLength);
+    memmove(&property->value.arrayValue[index+1], &property->value.arrayValue[index], sizeof(toml_property)*(property->arrayLength-index-1));
     property->value.arrayValue[index] = toml_property_duplicate(other);
 }
 
-void toml_property_array_remove(toml_property_t* property, int index)
+void toml_property_array_remove(toml_property* property, int index)
 {
     if (property == NULL)
         return;
 
-    if (property->type != TOML_PROPERTY_VALUE_TYPE_ARRAY)
+    if (property->type != TOML_PROPERTY_TYPE_ARRAY)
         return;
 
     if (property->arrayLength == 0)
@@ -734,142 +874,130 @@ void toml_property_array_remove(toml_property_t* property, int index)
     {
         toml_property_dispose(&property->value.arrayValue[property->arrayLength-1]);
         property->arrayLength--;
-        property->value.arrayValue = (toml_property_t*)realloc(property->value.arrayValue, sizeof(toml_property_t)*property->arrayLength);
+        property->value.arrayValue = (toml_property*)realloc(property->value.arrayValue, sizeof(toml_property)*property->arrayLength);
         return;
     }
     else if (index == 0)
     {
-        toml_property_t tmp = property->value.arrayValue[0];
+        toml_property tmp = property->value.arrayValue[0];
         toml_property_dispose(&tmp);
-        memmove(property->value.arrayValue, &property->value.arrayValue[1], sizeof(toml_property_t)*property->arrayLength-1);
+        memmove(property->value.arrayValue, &property->value.arrayValue[1], sizeof(toml_property)*property->arrayLength-1);
         property->arrayLength--;
-        property->value.arrayValue = (toml_property_t*)realloc(property->value.arrayValue, sizeof(toml_property_t)*property->arrayLength);
+        property->value.arrayValue = (toml_property*)realloc(property->value.arrayValue, sizeof(toml_property)*property->arrayLength);
         return;
     }
     else if (index >= property->arrayLength)
         return;
 
-    toml_property_t tmp = property->value.arrayValue[index];
+    toml_property tmp = property->value.arrayValue[index];
     toml_property_dispose(&tmp);
-    memmove(&property->value.arrayValue[index], &property->value.arrayValue[index+1], sizeof(toml_property_t)*(property->arrayLength-index-1));
+    memmove(&property->value.arrayValue[index], &property->value.arrayValue[index+1], sizeof(toml_property)*(property->arrayLength-index-1));
     property->arrayLength--;
-    property->value.arrayValue = (toml_property_t*)realloc(property->value.arrayValue, sizeof(toml_property_t)*property->arrayLength);
+    property->value.arrayValue = (toml_property*)realloc(property->value.arrayValue, sizeof(toml_property)*property->arrayLength);
 }
 
-void toml_property_set_value_from_string(toml_property_t* property, const char* string)
+void toml_property_parse_primitive(toml_property* property, const char* valStr)
+{
+    char* tmp;
+    property->type = toml_estimate_value_type(valStr);
+
+    switch (property->type)
+    {
+        case TOML_PROPERTY_TYPE_INT:
+            property->value.intValue = strtol(valStr, &tmp, 10);
+            break;
+        case TOML_PROPERTY_TYPE_FLOAT:
+            property->value.floatValue = strtof(valStr, &tmp);
+            break;
+        case TOML_PROPERTY_TYPE_BOOL:
+            property->value.boolValue = (strcmp(valStr, "true") == 0 || strcmp(valStr, "True") == 0);
+            break;
+        case TOML_PROPERTY_TYPE_STRING:
+        default:
+            property->value.stringValue = strdup(valStr);
+            break;
+    }
+}
+
+size_t toml_property_parse_value(toml_file_tokenizer* tokenizer, size_t tokenIdx, toml_property* property)
+{
+    if (tokenIdx >= tokenizer->count) return tokenIdx;
+
+    uint64_t token = tokenizer->data[tokenIdx];
+    uint8_t tokenType = TOML_TOKEN_TYPE(token);
+    string valStr = tokenizer->dict.data[TOML_TOKEN_INDEX(token)];
+
+    if (tokenType != TOML_TOKEN_TYPE_DEFAULT || valStr[0] != '[')
+    {
+        char tokenChar = TOML_TOKEN_CHAR(token);
+        if (tokenChar)
+        {
+            toml_property_set_string(property, valStr);
+            property->quoteCharacter = tokenChar;
+            return tokenIdx + 1;
+        }
+        toml_property_parse_primitive(property, valStr);
+        if (property->type == TOML_PROPERTY_TYPE_STRING) // failsafe
+        {
+            tokenChar = '"';
+            property->quoteCharacter = tokenChar;
+        }
+        return tokenIdx + 1;
+    }
+    property->type = TOML_PROPERTY_TYPE_ARRAY;
+    tokenIdx++;
+
+    while (tokenIdx < tokenizer->count)
+    {
+        token = tokenizer->data[tokenIdx];
+        tokenType = TOML_TOKEN_TYPE(token);
+        string currentStr = tokenizer->dict.data[TOML_TOKEN_INDEX(token)];
+
+        if (tokenType == TOML_TOKEN_TYPE_DEFAULT && currentStr[0] == ']')
+            return tokenIdx + 1;
+
+        if (tokenType == TOML_TOKEN_TYPE_DEFAULT && currentStr[0] == ',')
+        {
+            tokenIdx++;
+            continue;
+        }
+
+        toml_property element = TOML_PROPERTY_EMPTY;
+        tokenIdx = toml_property_parse_value(tokenizer, tokenIdx, &element);
+
+        toml_property_array_add(property, &element);
+        toml_property_dispose(&element);
+    }
+    return tokenIdx;
+}
+
+void toml_property_set_value_from_string(toml_property* property, const char* string)
 {
     if (property == NULL || string == NULL)
         return;
 
-    char* value = strdup(string);
-    char* valueog = value; // in case we modify it if the `value` pointer
-    strtrim(value);
-    property->type = toml_estimate_value_type(value);
-    char* tmp;
-    switch (property->type)
+    toml_file_tokenizer tokenizer = {};
+    toml_file_tokenizer_tokenize_line(&tokenizer, string, strlen(string));
+    if (tokenizer.count == 0)
     {
-    case TOML_PROPERTY_VALUE_TYPE_INT:
-    {
-        property->value.intValue = strtol(value, &tmp, 10);
-        break;
+        toml_file_tokenizer_dispose(&tokenizer);
+        return;
     }
 
-    case TOML_PROPERTY_VALUE_TYPE_FLOAT:
-    {
-        property->value.floatValue = strtof(value, &tmp);
-        break;
-    }
-
-    case TOML_PROPERTY_VALUE_TYPE_BOOL:
-    {
-        property->value.boolValue = 0;
-        if (strcmp(value, "true") == 0 || strcmp(value, "True") == 0)
-            property->value.boolValue = 1;
-        break;
-    }
-
-    case TOML_PROPERTY_VALUE_TYPE_ARRAY:
-    {
-        if (value[0] == '[')
-            value++;
-        size_t valueLen = strlen(value);
-        if (value[valueLen-1] == ']')
-            value[valueLen-1] = 0;
-        strtrim(value);
-
-        char* value2 = strchr(value, ',');
-        if (!value2)
-        {
-            if (strlen(value) == 0)
-                break;
-            property->arrayLength++;
-            property->value.arrayValue = (toml_property_t*)realloc(property->value.arrayValue, sizeof(toml_property_t)*property->arrayLength);
-            toml_property_t tmp = TOML_PROPERTY_EMPTY;
-            toml_property_set_value_from_string(&tmp, value);
-            memcpy(&property->value.arrayValue[property->arrayLength-1], &tmp, sizeof(toml_property_t));
-        }
-        else
-        {
-            value2[0] = 0;
-            value2++;
-            property->arrayLength++;
-            property->value.arrayValue = (toml_property_t*)realloc(property->value.arrayValue, sizeof(toml_property_t)*property->arrayLength);
-            toml_property_t tmp = TOML_PROPERTY_EMPTY;
-            toml_property_set_value_from_string(&tmp, value);
-            memcpy(&property->value.arrayValue[property->arrayLength-1], &tmp, sizeof(toml_property_t));
-            for (;;)
-            {
-                char* value3 = strchr(value2, ',');
-                if (value3 == NULL)
-                    break;
-                value3[0] = 0;
-                value3++;
-                property->arrayLength++;
-                property->value.arrayValue = (toml_property_t*)realloc(property->value.arrayValue, sizeof(toml_property_t)*property->arrayLength);
-                tmp = TOML_PROPERTY_EMPTY;
-                toml_property_set_value_from_string(&tmp, value2);
-                memcpy(&property->value.arrayValue[property->arrayLength-1], &tmp, sizeof(toml_property_t));
-                value2 = value3;
-            }
-
-            property->arrayLength++;
-            property->value.arrayValue = (toml_property_t*)realloc(property->value.arrayValue, sizeof(toml_property_t)*property->arrayLength);
-            tmp = TOML_PROPERTY_EMPTY;
-            toml_property_set_value_from_string(&tmp, value2);
-            memcpy(&property->value.arrayValue[property->arrayLength-1], &tmp, sizeof(toml_property_t));
-        }
-        break;
-    }
-
-    case TOML_PROPERTY_VALUE_TYPE_UNKNOWN:
-    case TOML_PROPERTY_VALUE_TYPE_STRING:
-    {
-        if (value[0] == '\'' || value[0] == '"')
-            value++;
-        size_t valueLen = strlen(value);
-        if (value[valueLen-1] == '\'' || value[valueLen-1] == '"')
-            value[valueLen-1] = 0;
-
-        property->value.stringValue = strdup(value);
-        break;
-    }
-    }
-    free((void*)valueog);
+    toml_property_dispose_value(property);
+    toml_property_parse_value(&tokenizer, 0, property);
+    toml_file_tokenizer_dispose(&tokenizer);
 }
 
-void toml_property_set_string(toml_property_t* property, const char* value)
+void toml_property_set_string(toml_property* property, const char* value)
 {
     if (property == NULL)
         return;
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_STRING || property->type == TOML_PROPERTY_VALUE_TYPE_UNKNOWN)
-        iffree((void*)property->value.stringValue);
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_ARRAY)
-        iffree((void*)property->value.arrayValue);
+    toml_property_dispose_value(property);
 
     property->arrayLength = 0;
-    property->type = TOML_PROPERTY_VALUE_TYPE_STRING;
+    property->type = TOML_PROPERTY_TYPE_STRING;
+    property->quoteCharacter = '"';
     if (value == NULL)
     {
         property->value.stringValue = NULL;
@@ -879,103 +1007,83 @@ void toml_property_set_string(toml_property_t* property, const char* value)
     property->value.stringValue = strdup(value);
 }
 
-void toml_property_set_float(toml_property_t* property, float value)
+void toml_property_set_float(toml_property* property, float value)
 {
     if (property == NULL)
         return;
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_STRING || property->type == TOML_PROPERTY_VALUE_TYPE_UNKNOWN)
-        iffree((void*)property->value.stringValue);
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_ARRAY)
-        iffree((void*)property->value.arrayValue);
+    toml_property_dispose_value(property);
 
     property->arrayLength = 0;
-    property->type = TOML_PROPERTY_VALUE_TYPE_FLOAT;
+    property->type = TOML_PROPERTY_TYPE_FLOAT;
     property->value.floatValue = value;
 }
 
-void toml_property_set_bool(toml_property_t* property, uint8_t value)
+void toml_property_set_bool(toml_property* property, uint8_t value)
 {
     if (property == NULL)
         return;
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_STRING || property->type == TOML_PROPERTY_VALUE_TYPE_UNKNOWN)
-        iffree((void*)property->value.stringValue);
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_ARRAY)
-        iffree((void*)property->value.arrayValue);
+    toml_property_dispose_value(property);
 
     property->arrayLength = 0;
-    property->type = TOML_PROPERTY_VALUE_TYPE_BOOL;
+    property->type = TOML_PROPERTY_TYPE_BOOL;
     property->value.boolValue = value;
 }
 
-void toml_property_set_int(toml_property_t* property, int value)
+void toml_property_set_int(toml_property* property, int64_t value)
 {
     if (property == NULL)
         return;
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_STRING || property->type == TOML_PROPERTY_VALUE_TYPE_UNKNOWN)
-        iffree((void*)property->value.stringValue);
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_ARRAY)
-        iffree((void*)property->value.arrayValue);
+    toml_property_dispose_value(property);
 
     property->arrayLength = 0;
-    property->type = TOML_PROPERTY_VALUE_TYPE_INT;
+    property->type = TOML_PROPERTY_TYPE_INT;
     property->value.intValue = value;
 }
 
-void toml_property_set_array(toml_property_t* property, int len, toml_property_t array[])
+void toml_property_set_array(toml_property* property, int len, toml_property array[])
 {
     if (property == NULL)
         return;
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_STRING || property->type == TOML_PROPERTY_VALUE_TYPE_UNKNOWN)
-        iffree((void*)property->value.stringValue);
-
-    if (property->type == TOML_PROPERTY_VALUE_TYPE_ARRAY)
-        iffree((void*)property->value.arrayValue);
+    toml_property_dispose_value(property);
 
     property->arrayLength = len;
-    property->type = TOML_PROPERTY_VALUE_TYPE_ARRAY;
-    property->value.arrayValue = (toml_property_t*)malloc(sizeof(toml_property_t)*len);
+    property->type = TOML_PROPERTY_TYPE_ARRAY;
+    property->value.arrayValue = (toml_property*)malloc(sizeof(toml_property)*len);
     for (int i = 0; i < len; i++)
         property->value.arrayValue[i] = toml_property_duplicate(&array[i]);
 }
 
-void toml_property_save_value(toml_property_t* property, FILE* file)
+void toml_property_save_value(toml_property* property, FILE* file)
 {
     if (property == NULL || file == NULL)
         return;
 
     switch (property->type)
     {
-    case TOML_PROPERTY_VALUE_TYPE_INT:
+    case TOML_PROPERTY_TYPE_INT:
     {
-        fprintf(file, "%d", property->value.intValue);
+        fprintf(file, "%ld", property->value.intValue);
         break;
     }
 
-    case TOML_PROPERTY_VALUE_TYPE_FLOAT:
+    case TOML_PROPERTY_TYPE_FLOAT:
     {
         fprintf(file, "%f", property->value.floatValue);
         break;
     }
 
-    case TOML_PROPERTY_VALUE_TYPE_BOOL:
+    case TOML_PROPERTY_TYPE_BOOL:
     {
         fprintf(file, "%s", property->value.boolValue ? "true" : "false");
         break;
     }
 
-    case TOML_PROPERTY_VALUE_TYPE_ARRAY:
+    case TOML_PROPERTY_TYPE_ARRAY:
     {
         fprintf(file, "[ ");
         for (int i = 0; i < property->arrayLength; i++)
         {
-            toml_property_t* tmp = &property->value.arrayValue[i];
+            toml_property* tmp = &property->value.arrayValue[i];
             toml_property_save_value(tmp, file);
             if (i != property->arrayLength - 1)
                 fprintf(file, ", ");
@@ -984,19 +1092,28 @@ void toml_property_save_value(toml_property_t* property, FILE* file)
         break;
     }
 
-    case TOML_PROPERTY_VALUE_TYPE_UNKNOWN:
-    case TOML_PROPERTY_VALUE_TYPE_STRING:
+    case TOML_PROPERTY_TYPE_UNKNOWN:
+    case TOML_PROPERTY_TYPE_STRING:
     {
-        if (property->value.stringValue == NULL || strlen(property->value.stringValue) < 1)
+        if (!property->quoteCharacter)
+            property->quoteCharacter = '"';
+
+        string value = property->value.stringValue;
+        if (value == NULL)
+        {
             fprintf(file, "''");
-        else
-            fprintf(file, "'%s'", property->value.stringValue);
+            break;
+        }
+        size_t len = strlen(value);
+        if (value[len-1] == '\n')
+            memset((void*)&value[len-1], 0, 1);
+        fprintf(file, "%c%s%c", property->quoteCharacter, value, property->quoteCharacter);
         break;
     }
     }
 }
 
-void toml_property_save(toml_property_t* property, FILE* file)
+void toml_property_save(toml_property* property, FILE* file)
 {
     if (property == NULL || file == NULL)
         return;
@@ -1007,7 +1124,69 @@ void toml_property_save(toml_property_t* property, FILE* file)
     fflush(file);
 }
 
-int toml_property_cmp(toml_property_t* a, toml_property_t* b)
+void toml_property_as_str(toml_property* property, char* buf, size_t maxlen)
+{
+    if (property == NULL || buf == NULL || !maxlen)
+        return;
+
+    switch (property->type)
+    {
+    case TOML_PROPERTY_TYPE_INT:
+    {
+        snprintf(buf, maxlen, "%ld", property->value.intValue);
+        break;
+    }
+
+    case TOML_PROPERTY_TYPE_FLOAT:
+    {
+        snprintf(buf, maxlen, "%f", property->value.floatValue);
+        break;
+    }
+
+    case TOML_PROPERTY_TYPE_BOOL:
+    {
+        snprintf(buf, maxlen, "%s", property->value.boolValue ? "true" : "false");
+        break;
+    }
+
+    case TOML_PROPERTY_TYPE_ARRAY:
+    {
+        char buffer[0x1000] = {0};
+        char buffer2[0x1000] = {0};
+        for (int i = 0; i < property->arrayLength; i++)
+        {
+            toml_property* tmp = &property->value.arrayValue[i];
+            toml_property_as_str(tmp, buffer2, 0x1000);
+            strcat(buffer, buffer2);
+            if (i != property->arrayLength - 1)
+                strcat(buffer, ", ");
+        }
+        snprintf(buf, maxlen, "[ %s ]", buffer);
+        break;
+    }
+
+    case TOML_PROPERTY_TYPE_UNKNOWN:
+    case TOML_PROPERTY_TYPE_STRING:
+    {
+        if (!property->quoteCharacter)
+            property->quoteCharacter = '"';
+
+        string value = property->value.stringValue;
+        if (value == NULL)
+        {
+            snprintf(buf, maxlen, "''");
+            break;
+        }
+        size_t len = strlen(value);
+        if (value[len-1] == '\n')
+            memset((void*)&value[len-1], 0, 1);
+        snprintf(buf, maxlen, "%c%s%c", property->quoteCharacter, value, property->quoteCharacter);
+        break;
+    }
+    }
+}
+
+int toml_property_cmp(toml_property* a, toml_property* b)
 {
     if (a == NULL || b == NULL)
         return -1;
@@ -1018,13 +1197,13 @@ int toml_property_cmp(toml_property_t* a, toml_property_t* b)
     return strcmp(a->name, b->name);
 }
 
-//////////////////////////
-///                    ///
-///   Config Section   ///
-///                    ///
-//////////////////////////
+////////////////////////
+///                  ///
+///   toml section   ///
+///                  ///
+////////////////////////
 
-void toml_section_dispose(toml_section_t* section)
+void toml_section_dispose(toml_section* section)
 {
     if (section == NULL)
         return;
@@ -1035,22 +1214,35 @@ void toml_section_dispose(toml_section_t* section)
     for (size_t i = 0; i < section->propertyCount; i++)
         toml_property_dispose(&section->properties[i]);
 
-    iffree((void*)section->name);
-    iffree((void*)section->properties);
-    iffree((void*)section->sections);
+    safefree((void*)section->name);
+    safefree((void*)section->properties);
+    safefree((void*)section->sections);
 
-    memset(section, 0, sizeof(toml_section_t));
+    memset(section, 0, sizeof(toml_section));
 }
 
-const char* toml_section_get_full_name(toml_section_t* section)
+void toml_section_invalidate_parents(toml_section* parent, toml_section* section)
 {
-    if (section == NULL)
+    section->parent = parent;
+    for (size_t i = 0; i < section->sectionCount; i++)
+        toml_section_invalidate_parents(section, &section->sections[i]);
+
+    for (size_t i = 0; i < section->propertyCount; i++)
+        section->properties[i].parent = section;
+}
+
+const char* toml_section_get_full_name(toml_section* section)
+{
+    if (section == NULL || section->name == NULL)
         return NULL;
 
     if (section->parent == NULL)
         return strdup(section->name);
 
     char* parentSectionName = (char*)toml_section_get_full_name(section->parent);
+    if (parentSectionName == NULL)
+        return strdup(section->name);
+
     char* parent = strdup(parentSectionName);
     parent = (char*)realloc(parent, strlen(parent) + strlen(section->name) + 2);
     free(parentSectionName);
@@ -1059,22 +1251,24 @@ const char* toml_section_get_full_name(toml_section_t* section)
     return parent;
 }
 
-void toml_section_save(toml_section_t* section, FILE* file, const char* prefix)
+void toml_section_save(toml_section* section, FILE* file, const char* prefix)
 {
     if (section == NULL || file == NULL)
         return;
 
-    fprintf(file, "[");
-    if (prefix != NULL)
-        fprintf(file, "%s.", prefix);
-    fprintf(file, "%s]\n", section->name);
-
-    if (section->propertyCount != 0)
+    if (section->name && section->propertyCount)
     {
-        for (size_t i = 0; i < section->propertyCount; i++)
-            toml_property_save(&section->properties[i], file);
+        fprintf(file, "[");
+        if (prefix != NULL)
+            fprintf(file, "%s.", prefix);
+        fprintf(file, "%s]\n", section->name);
     }
-    fprintf(file, "\n");
+
+    for (size_t i = 0; i < section->propertyCount; i++)
+        toml_property_save(&section->properties[i], file);
+
+    if (section->propertyCount)
+        fprintf(file, "\n");
 
     if (section->sectionCount == 0)
     {
@@ -1082,23 +1276,33 @@ void toml_section_save(toml_section_t* section, FILE* file, const char* prefix)
         return;
     }
 
-    char* newSectionPrefix = strdup("");
+    char* newSectionPrefix = NULL;
     if (prefix != NULL)
     {
         newSectionPrefix = strdup(prefix);
         newSectionPrefix = (char*)realloc(newSectionPrefix, strlen(prefix)+2);
         newSectionPrefix = strcat(newSectionPrefix, ".");
     }
-    newSectionPrefix = (char*)realloc(newSectionPrefix, strlen(newSectionPrefix) + strlen(section->name) + 1);
-    newSectionPrefix = strcat(newSectionPrefix, section->name);
+    if (section->name)
+    {
+        if (newSectionPrefix)
+        {
+            newSectionPrefix = (char*)realloc(newSectionPrefix, strlen(newSectionPrefix) + strlen(section->name) + 1);
+            newSectionPrefix = strcat(newSectionPrefix, section->name);
+        }
+        else
+            newSectionPrefix = strdup(section->name);
+    }
+
     for (size_t i = 0; i < section->sectionCount; i++)
         toml_section_save(&section->sections[i], file, newSectionPrefix);
-    free(newSectionPrefix);
+
+    safefree(newSectionPrefix);
 
     fflush(file);
 }
 
-toml_property_t* toml_section_get(toml_section_t* section, const char* name)
+toml_property* toml_section_get(toml_section* section, const char* name)
 {
     if (section == NULL || name == NULL || strlen(name) == 0)
         return NULL;
@@ -1127,13 +1331,13 @@ toml_property_t* toml_section_get(toml_section_t* section, const char* name)
         return 0;
     }
 
-    toml_section_t* subSection = toml_section_get_section(section, str);
-    toml_property_t* result = toml_section_get(subSection, sectionDivider);
+    toml_section* subSection = toml_section_get_section(section, str);
+    toml_property* result = toml_section_get(subSection, sectionDivider);
     free(str);
     return result;
 }
 
-toml_section_t* toml_section_get_section(toml_section_t* section, const char* name)
+toml_section* toml_section_get_section(toml_section* section, const char* name)
 {
     if (section == NULL || name == NULL || strlen(name) == 0)
         return NULL;
@@ -1162,13 +1366,13 @@ toml_section_t* toml_section_get_section(toml_section_t* section, const char* na
         return NULL;
     }
 
-    toml_section_t* subSection = toml_section_get_section(section, str);
-    toml_section_t* result = toml_section_get_section(subSection, sectionDivider);
+    toml_section* subSection = toml_section_get_section(section, str);
+    toml_section* result = toml_section_get_section(subSection, sectionDivider);
     free(str);
     return result;
 }
 
-int toml_section_has_property(toml_section_t* section, const char* name)
+int toml_section_has_property(toml_section* section, const char* name)
 {
     if (section == NULL || name == NULL || strlen(name) == 0)
         return 0;
@@ -1191,19 +1395,19 @@ int toml_section_has_property(toml_section_t* section, const char* name)
 
     sectionDivider[0] = 0;
     sectionDivider++;
-    if (!toml_section_has_section(section, name))
+    if (!toml_section_has_section(section, str))
     {
         free(str);
         return 0;
     }
 
-    toml_section_t* subSection = toml_section_get_section(section, name);
+    toml_section* subSection = toml_section_get_section(section, str);
     int result = toml_section_has_property(subSection, sectionDivider);
     free(str);
     return result;
 }
 
-int toml_section_has_section(toml_section_t* section, const char* name)
+int toml_section_has_section(toml_section* section, const char* name)
 {
     if (section == NULL || name == NULL || strlen(name) == 0)
         return 0;
@@ -1232,13 +1436,13 @@ int toml_section_has_section(toml_section_t* section, const char* name)
         return 0;
     }
 
-    toml_section_t* subSection = toml_section_get_section(section, str);
+    toml_section* subSection = toml_section_get_section(section, str);
     int result = toml_section_has_section(subSection, sectionDivider);
     free(str);
     return result;
 }
 
-toml_property_t* toml_section_add_property(toml_section_t* section, const char* name)
+toml_property* toml_section_add_property(toml_section* section, const char* name)
 {
     if (section == NULL || name == NULL || strlen(name) == 0)
         return NULL;
@@ -1249,8 +1453,8 @@ toml_property_t* toml_section_add_property(toml_section_t* section, const char* 
     if (toml_section_has_property(section, name))
         return toml_section_get(section, name);
 
-    toml_property_t propertry = TOML_PROPERTY_EMPTY;
-    toml_property_t* propertryPtr = NULL;
+    toml_property propertry = TOML_PROPERTY_EMPTY;
+    toml_property* propertryPtr = NULL;
 
     char* str = strdup(name);
     char* sectionDivider = (char*)strchr(str, '.');
@@ -1260,20 +1464,15 @@ toml_property_t* toml_section_add_property(toml_section_t* section, const char* 
         propertry.parent = section;
 
         section->propertyCount++;
-        section->properties = (toml_property_t*)realloc(section->properties, section->propertyCount*sizeof(toml_property_t));
+        section->properties = (toml_property*)realloc(section->properties, section->propertyCount*sizeof(toml_property));
         propertryPtr = &section->properties[section->propertyCount-1];
-        memcpy(propertryPtr, &propertry, sizeof(toml_property_t));
+        memcpy(propertryPtr, &propertry, sizeof(toml_property));
     }
     else
     {
         sectionDivider[0] = 0;
         sectionDivider++;
-        toml_section_t* nextSection = NULL;
-        if (!toml_section_has_section(section, str))
-            nextSection = toml_section_add_section(section, str);
-        else
-            nextSection = toml_section_get_section(section, str);
-
+        toml_section* nextSection = toml_section_add_section(section, str);
         if (nextSection == NULL)
         {
             free(str);
@@ -1287,7 +1486,7 @@ toml_property_t* toml_section_add_property(toml_section_t* section, const char* 
     return propertryPtr;
 }
 
-toml_section_t* toml_section_add_section(toml_section_t* section, const char* name)
+toml_section* toml_section_add_section(toml_section* section, const char* name)
 {
     if (section == NULL || name == NULL || strlen(name) == 0)
         return NULL;
@@ -1295,8 +1494,8 @@ toml_section_t* toml_section_add_section(toml_section_t* section, const char* na
     if (toml_section_has_section(section, name))
         return toml_section_get_section(section, name);
 
-    toml_section_t newSection = TOML_SECTION_EMPTY;
-    toml_section_t* newSectionPtr = NULL;
+    toml_section newSection = TOML_SECTION_EMPTY;
+    toml_section* newSectionPtr = NULL;
 
     char* str = strdup(name);
     char* sectionDivider = (char*)strchr(str, '.');
@@ -1306,20 +1505,16 @@ toml_section_t* toml_section_add_section(toml_section_t* section, const char* na
         newSection.parent = section;
 
         section->sectionCount++;
-        section->sections = (toml_section_t*)realloc(section->sections, section->sectionCount*sizeof(toml_section_t));
+        section->sections = (toml_section*)realloc(section->sections, section->sectionCount*sizeof(toml_section));
         newSectionPtr = &section->sections[section->sectionCount-1];
-        memcpy(newSectionPtr, &newSection, sizeof(toml_section_t));
+        memcpy(newSectionPtr, &newSection, sizeof(toml_section));
     }
     else
     {
         sectionDivider[0] = 0;
         sectionDivider++;
-        toml_section_t* nextSection = NULL;
-        if (!toml_section_has_section(section, str))
-            nextSection = toml_section_add_section(section, str);
-        else
-            nextSection = toml_section_get_section(section, str);
 
+        toml_section* nextSection = toml_section_add_section(section, str);
         if (nextSection == NULL)
         {
             free(str);
@@ -1329,11 +1524,13 @@ toml_section_t* toml_section_add_section(toml_section_t* section, const char* na
         newSectionPtr = toml_section_add_section(nextSection, sectionDivider);
     }
 
+    toml_section_invalidate_parents(section->parent, section);
+
     free(str);
     return newSectionPtr;
 }
 
-void toml_section_remove_property(toml_section_t* section, const char* name)
+void toml_section_remove_property(toml_section* section, const char* name)
 {
     if (section == NULL || name == NULL || strlen(name) == 0)
         return;
@@ -1357,19 +1554,19 @@ void toml_section_remove_property(toml_section_t* section, const char* name)
         toml_property_dispose(&section->properties[index]);
         if (index != section->propertyCount-1)
         {
-            toml_property_t tmp = section->properties[section->propertyCount-1];
+            toml_property tmp = section->properties[section->propertyCount-1];
             section->properties[section->propertyCount-1] = section->properties[index];
             section->properties[index] = tmp;
         }
 
         section->propertyCount--;
-        section->properties = (toml_property_t*)realloc(section->properties, section->propertyCount*sizeof(toml_property_t));
+        section->properties = (toml_property*)realloc(section->properties, section->propertyCount*sizeof(toml_property));
     }
     else
     {
         sectionDivider[0] = 0;
         sectionDivider++;
-        toml_section_t* nextSection = toml_section_get_section(section, str);
+        toml_section* nextSection = toml_section_get_section(section, str);
         if (nextSection == NULL)
         {
             free(str);
@@ -1382,7 +1579,7 @@ void toml_section_remove_property(toml_section_t* section, const char* name)
     free(str);
 }
 
-void toml_section_remove_section(toml_section_t* section, const char* name)
+void toml_section_remove_section(toml_section* section, const char* name)
 {
     if (section == NULL || name == NULL || strlen(name) == 0)
         return;
@@ -1403,19 +1600,19 @@ void toml_section_remove_section(toml_section_t* section, const char* name)
         toml_section_dispose(&section->sections[index]);
         if (index != section->sectionCount-1)
         {
-            toml_section_t tmp = section->sections[section->sectionCount-1];
+            toml_section tmp = section->sections[section->sectionCount-1];
             section->sections[section->sectionCount-1] = section->sections[index];
             section->sections[index] = tmp;
         }
 
         section->sectionCount--;
-        section->sections = (toml_section_t*)realloc(section->sections, section->sectionCount*sizeof(toml_section_t));
+        section->sections = (toml_section*)realloc(section->sections, section->sectionCount*sizeof(toml_section));
     }
     else
     {
         sectionDivider[0] = 0;
         sectionDivider++;
-        toml_section_t* nextSection = toml_section_get_section(section, str);
+        toml_section* nextSection = toml_section_get_section(section, str);
         if (nextSection == NULL)
         {
             free(str);
@@ -1428,7 +1625,7 @@ void toml_section_remove_section(toml_section_t* section, const char* name)
     free(str);
 }
 
-int toml_section_cmp(toml_section_t* a, toml_section_t* b)
+int toml_section_cmp(toml_section* a, toml_section* b)
 {
     if (a == NULL || b == NULL)
         return -1;
@@ -1442,436 +1639,62 @@ int toml_section_cmp(toml_section_t* a, toml_section_t* b)
     return strcmp(a->name, b->name);
 }
 
+////////////////////////////
+///                      ///
+///   toml file parser   ///
+///                      ///
+////////////////////////////
 
-///////////////////////
-///                 ///
-///   Config File   ///
-///                 ///
-///////////////////////
-
-void toml_file_close(toml_file_t* config)
+toml_section toml_file_open(FILE* file)
 {
-    if (config == NULL)
-        return;
+    if (file == NULL)
+        return TOML_SECTION_EMPTY;
 
-    for (size_t i = 0; i < config->sectionCount; i++)
-        toml_section_dispose(&config->sections[i]);
-
-    for (size_t i = 0; i < config->propertyCount; i++)
-        toml_property_dispose(&config->properties[i]);
-
-    iffree(config->sections);
-    iffree(config->properties);
-
-    memset(config, 0, sizeof(toml_file_t));
-}
-
-void toml_file_open(toml_file_t* config, FILE* file)
-{
-    if (config == NULL || file == NULL)
-        return;
-
-    toml_section_t* currentSection = NULL;
-    char* split0 = NULL;
-    char* split1 = NULL;
+    toml_file_tokenizer tokenizer = {};
 
     char line[4096];
     size_t lineLength = 0;
     while (fgets(line, 4096, file) != NULL)
     {
-        strtrim(line);
         lineLength = strlen(line);
         if (lineLength == 0)
             continue;
 
-        if (strcmp(line, "[]") == 0)
+        toml_file_tokenizer_tokenize_line(&tokenizer, line, lineLength);
+    }
+
+    toml_section root = TOML_SECTION_EMPTY;
+    toml_section* currentSection = &root;
+
+    for (size_t index = 0; index < tokenizer.count; )
+    {
+        uint64_t token = tokenizer.data[index];
+        uint8_t tokenType = TOML_TOKEN_TYPE(token);
+        string s = tokenizer.dict.data[TOML_TOKEN_INDEX(token)];
+        if (tokenType == TOML_TOKEN_TYPE_DEFAULT && s[0] == '[')
         {
-            currentSection = NULL;
+            char path[1024];
+            index = toml_file_tokenizer_resolve_path(&tokenizer, index + 1, ']', path) + 1;
+            currentSection = toml_section_add_section(&root, path);
             continue;
         }
-
-        if (line[0] == '[' && line[lineLength-1] == ']')
+        if (tokenType == TOML_TOKEN_TYPE_KEY)
         {
-            memmove(line, &line[1], lineLength-2);
-            line[lineLength-2] = 0;
-            lineLength -= 2;
+            char keyPath[1024];
+            index = toml_file_tokenizer_resolve_path(&tokenizer, index, '=', keyPath) + 1;
 
-            if (toml_file_has_section(config, line))
-                currentSection = toml_file_get_section(config, line);
-            else
-                currentSection = toml_file_add_section(config, line);
-
+            toml_property* p = toml_section_add_property(currentSection, keyPath);
+            index = toml_property_parse_value(&tokenizer, index, p);
             continue;
         }
-
-        split0 = line;
-        split1 = strchr(line, '=');
-        if (!split1)
-            continue;
-
-        split1[0] = 0;
-        split1++;
-
-        strtrim(split0);
-        strtrim(split1);
-
-        toml_property_t* property = NULL;
-        if (currentSection != NULL)
-            property = toml_section_add_property(currentSection, split0);
-        else
-            property = toml_file_add_property(config, split0);
-
-        toml_property_set_value_from_string(property, split1);
+        index++;
     }
+
+    toml_section_invalidate_parents(NULL, &root);
+
+    toml_file_tokenizer_dispose(&tokenizer);
+    return root;
 }
-
-void toml_file_save(toml_file_t* config, FILE* file)
-{
-    if (config == NULL || file == NULL)
-        return;
-
-    for (size_t i = 0; i < config->propertyCount; i++)
-        toml_property_save(&config->properties[i], file);
-
-    if (config->propertyCount != 0)
-        fprintf(file, "\n");
-
-    fflush(file);
-
-    for (size_t i = 0; i < config->sectionCount; i++)
-        toml_section_save(&config->sections[i], file, NULL);
-
-    fflush(file);
-}
-
-toml_property_t* toml_file_get(toml_file_t* config, const char* name)
-{
-    if (config == NULL || name == NULL || strlen(name) == 0)
-        return NULL;
-
-    char* str = strdup(name);
-    char* sectionDivider = (char*)strchr(str, '.');
-    if (sectionDivider == NULL)
-    {
-        for (size_t i = 0; i < config->propertyCount; i++)
-        {
-            if (strcmp(config->properties[i].name, name) != 0)
-                continue;
-
-            free(str);
-            return &config->properties[i];
-        }
-        free(str);
-        return NULL;
-    }
-
-    sectionDivider[0] = 0;
-    sectionDivider++;
-    if (!toml_file_has_section(config, str))
-    {
-        free(str);
-        return NULL;
-    }
-
-    toml_section_t* subSection = toml_file_get_section(config, str);
-    toml_property_t* result = toml_section_get(subSection, sectionDivider);
-    free(str);
-    return result;
-}
-
-toml_section_t* toml_file_get_section(toml_file_t* config, const char* name)
-{
-    if (config == NULL || name == NULL || strlen(name) == 0)
-        return NULL;
-
-    char* str = strdup(name);
-    char* sectionDivider = (char*)strchr(str, '.');
-    if (sectionDivider == NULL)
-    {
-        for (size_t i = 0; i < config->sectionCount; i++)
-        {
-            if (strcmp(config->sections[i].name, name) != 0)
-                continue;
-
-            free(str);
-            return &config->sections[i];
-        }
-        free(str);
-        return NULL;
-    }
-
-    sectionDivider[0] = 0;
-    sectionDivider++;
-    if (!toml_file_has_section(config, str))
-    {
-        free(str);
-        return NULL;
-    }
-
-    toml_section_t* subSection = toml_file_get_section(config, str);
-    toml_section_t* result = toml_section_get_section(subSection, sectionDivider);
-    free(str);
-    return result;
-}
-
-int toml_file_has_property(toml_file_t* config, const char* name)
-{
-    if (config == NULL || name == NULL || strlen(name) == 0)
-        return 0;
-
-    char* str = strdup(name);
-    char* sectionDivider = (char*)strchr(str, '.');
-    if (sectionDivider == NULL)
-    {
-        for (size_t i = 0; i < config->propertyCount; i++)
-        {
-            if (strcmp(config->properties[i].name, name) != 0)
-                continue;
-
-            free(str);
-            return 1;
-        }
-        free(str);
-        return 0;
-    }
-
-    sectionDivider[0] = 0;
-    sectionDivider++;
-    if (!toml_file_has_section(config, str))
-    {
-        free(str);
-        return 0;
-    }
-
-    toml_section_t* subSection = toml_file_get_section(config, str);
-    int result = toml_section_has_property(subSection, sectionDivider);
-    free(str);
-    return result;
-}
-
-int toml_file_has_section(toml_file_t* config, const char* name)
-{
-    if (config == NULL || name == NULL || strlen(name) == 0)
-        return 0;
-
-    char* str = strdup(name);
-    char* sectionDivider = (char*)strchr(str, '.');
-    if (sectionDivider == NULL)
-    {
-        for (size_t i = 0; i < config->sectionCount; i++)
-        {
-            if (strcmp(config->sections[i].name, name) != 0)
-                continue;
-
-            free(str);
-            return 1;
-        }
-        free(str);
-        return 0;
-    }
-
-    sectionDivider[0] = 0;
-    sectionDivider++;
-    if (!toml_file_has_section(config, str))
-    {
-        free(str);
-        return 0;
-    }
-
-    toml_section_t* subSection = toml_file_get_section(config, str);
-    int result = toml_section_has_section(subSection, sectionDivider);
-    free(str);
-    return result;
-}
-
-toml_property_t* toml_file_add_property(toml_file_t* config, const char* name)
-{
-    if (config == NULL || name == NULL || strlen(name) == 0)
-        return NULL;
-
-    if (toml_file_has_section(config, name))
-        return NULL;
-
-    if (toml_file_has_property(config, name))
-        return toml_file_get(config, name);
-
-    toml_property_t propertry = TOML_PROPERTY_EMPTY;
-    toml_property_t* propertryPtr = NULL;
-
-    char* str = strdup(name);
-    char* sectionDivider = (char*)strchr(str, '.');
-    if (sectionDivider == NULL)
-    {
-        propertry.name = strdup(name);
-
-        config->propertyCount++;
-        config->properties = (toml_property_t*)realloc(config->properties, config->propertyCount*sizeof(toml_property_t));
-        propertryPtr = &config->properties[config->propertyCount-1];
-        memcpy(propertryPtr, &propertry, sizeof(toml_property_t));
-    }
-    else
-    {
-        sectionDivider[0] = 0;
-        sectionDivider++;
-        toml_section_t* nextSection = NULL;
-        if (!toml_file_has_section(config, str))
-            nextSection = toml_file_add_section(config, str);
-        else
-            nextSection = toml_file_get_section(config, str);
-
-        if (nextSection == NULL)
-        {
-            free(str);
-            return NULL;
-        }
-
-        propertryPtr = toml_section_add_property(nextSection, sectionDivider);
-    }
-
-    free(str);
-    return propertryPtr;
-}
-
-toml_section_t* toml_file_add_section(toml_file_t* config, const char* name)
-{
-    if (config == NULL || name == NULL || strlen(name) == 0)
-        return NULL;
-
-    if (toml_file_has_section(config, name))
-        return toml_file_get_section(config, name);
-
-    toml_section_t newSection = TOML_SECTION_EMPTY;
-    toml_section_t* newSectionPtr = NULL;
-
-    char* str = strdup(name);
-    char* sectionDivider = (char*)strchr(str, '.');
-    if (sectionDivider == NULL)
-    {
-        newSection.name = strdup(name);
-
-        config->sectionCount++;
-        config->sections = (toml_section_t*)realloc(config->sections, config->sectionCount*sizeof(toml_section_t));
-        newSectionPtr = &config->sections[config->sectionCount-1];
-        memcpy(newSectionPtr, &newSection, sizeof(toml_section_t));
-    }
-    else
-    {
-        sectionDivider[0] = 0;
-        sectionDivider++;
-        toml_section_t* nextSection = NULL;
-        if (!toml_file_has_section(config, str))
-            nextSection = toml_file_add_section(config, str);
-        else
-            nextSection = toml_file_get_section(config, str);
-
-        if (nextSection == NULL)
-        {
-            free(str);
-            return NULL;
-        }
-
-        newSectionPtr = toml_section_add_section(nextSection, sectionDivider);
-    }
-
-    free(str);
-    return newSectionPtr;
-}
-
-void toml_file_remove_property(toml_file_t* config, const char* name)
-{
-    if (config == NULL || name == NULL || strlen(name) == 0)
-        return;
-
-    if (toml_file_has_section(config, name))
-        return;
-
-    if (!toml_file_has_property(config, name))
-        return;
-
-    char* str = strdup(name);
-    char* sectionDivider = (char*)strchr(str, '.');
-    if (sectionDivider == NULL)
-    {
-        size_t index = 0;
-        for (; index < config->propertyCount; index++)
-        {
-            if (strcmp(name, config->properties[index].name) == 0)
-                break;
-        }
-        toml_property_dispose(&config->properties[index]);
-        if (index != config->propertyCount-1)
-        {
-            toml_property_t tmp = config->properties[config->propertyCount-1];
-            config->properties[config->propertyCount-1] = config->properties[index];
-            config->properties[index] = tmp;
-        }
-
-        config->propertyCount--;
-        config->properties = (toml_property_t*)realloc(config->properties, config->propertyCount*sizeof(toml_property_t));
-    }
-    else
-    {
-        sectionDivider[0] = 0;
-        sectionDivider++;
-        toml_section_t* nextSection = toml_file_get_section(config, str);
-        if (nextSection == NULL)
-        {
-            free(str);
-            return;
-        }
-
-        toml_section_remove_property(nextSection, sectionDivider);
-    }
-
-    free(str);
-}
-
-void toml_file_remove_section(toml_file_t* config, const char* name)
-{
-    if (config == NULL || name == NULL || strlen(name) == 0)
-        return;
-
-    if (!toml_file_has_section(config, name))
-        return;
-
-    char* str = strdup(name);
-    char* sectionDivider = (char*)strchr(str, '.');
-    if (sectionDivider == NULL)
-    {
-        size_t index = 0;
-        for (; index < config->sectionCount; index++)
-        {
-            if (strcmp(name, config->sections[index].name) == 0)
-                break;
-        }
-        toml_section_dispose(&config->sections[index]);
-        if (index != config->sectionCount-1)
-        {
-            toml_section_t tmp = config->sections[config->sectionCount-1];
-            config->sections[config->sectionCount-1] = config->sections[index];
-            config->sections[index] = tmp;
-        }
-
-        config->sectionCount--;
-        config->sections = (toml_section_t*)realloc(config->sections, config->sectionCount*sizeof(toml_section_t));
-    }
-    else
-    {
-        sectionDivider[0] = 0;
-        sectionDivider++;
-        toml_section_t* nextSection = toml_file_get_section(config, str);
-        if (nextSection == NULL)
-        {
-            free(str);
-            return;
-        }
-
-        toml_section_remove_section(nextSection, sectionDivider);
-    }
-
-    free(str);
-}
-
 
 #endif
 

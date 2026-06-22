@@ -17,22 +17,22 @@ void cmd_run(cmd_args_t* userparam)
 {
     cmd_args_t args = *userparam;
 
-    toml_file_t cfg = {0, 0, 0, 0};
+    toml_section cfg = TOML_SECTION_EMPTY;
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
         return;
     }
-    toml_property_t* property = toml_file_get(&cfg, "build.project_name");
+    toml_property* property = toml_section_get(&cfg, "build.project_name");
     if (!property)
     {
-        toml_file_close(&cfg);
+        toml_section_dispose(&cfg);
         LOGERROR("Invalid project file, missing 'project_name' property");
         return;
     }
     const char* project_name = property->value.stringValue;
     const char* output_directory = "bin";
-    property = toml_file_get(&cfg, "build.output");
+    property = toml_section_get(&cfg, "build.output");
     if (property)
         output_directory = property->value.stringValue;
 
@@ -52,5 +52,5 @@ void cmd_run(cmd_args_t* userparam)
     system(cmd);
     execname_dirname[0] = OS_DELIMITER;
 
-    toml_file_close(&cfg);
+    toml_section_dispose(&cfg);
 }

@@ -16,9 +16,10 @@
 void cmd_create(cmd_args_t* userparam)
 {
     cmd_args_t args = *userparam;
-    if (args.count < 0 || args.count > 2)
+    if (args.count <= 0 || args.count > 2)
     {
         LOGERROR("No project name given for `create` command");
+        LOGINFO("Missing arguments: <project name> [path]");
         return;
     }
 
@@ -37,15 +38,17 @@ void cmd_create(cmd_args_t* userparam)
         baranium_file_util_create_directory(stringf("%s/%s", cwd, target));
 
     toml_file = fopen(stringf("%s/%s/barproject.toml", cwd, target), "wb+");
-    toml_file_t cfg = {0, 0, 0, 0};
-    toml_file_add_section(&cfg, "libraries");
-    toml_file_add_section(&cfg, "defines");
-    toml_file_add_section(&cfg, "build");
-    toml_property_t* project_name_property = toml_file_add_property(&cfg, "build.project_name");
+    toml_section cfg = TOML_SECTION_EMPTY;
+    toml_section_add_section(&cfg, "libraries");
+    toml_section_add_section(&cfg, "defines");
+    toml_section_add_section(&cfg, "build");
+    toml_property* project_name_property = toml_section_add_property(&cfg, "build.project_name");
     toml_property_set_string(project_name_property, project_name);
-    toml_file_save(&cfg, toml_file);
-    toml_file_close(&cfg);
+    toml_section_save(&cfg, toml_file, NULL);
+    toml_section_dispose(&cfg);
     fclose(toml_file);
 
     baranium_file_util_create_directory(stringf("%s/%s/src", cwd, target));
+
+    LOGINFO("Successfully created project '%s' at '%s'", project_name, target);
 }
