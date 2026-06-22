@@ -14,13 +14,13 @@
 #   define OS_DELIMITER '/'
 #endif
 
-void cmd_library_add(cmd_args_t* argsptr, toml_section* cfg)
+cmd_args_t cmd_library_add(cmd_args_t* argsptr, toml_section* cfg)
 {
     cmd_args_t args = *argsptr;
     if (args.count != 2)
     {
         LOGERROR("Please specify library name and git link");
-        return;
+        return EMPTY_CMD_ARGS;
     }
     const char* name = args.values[0];
     const char* source = args.values[1];
@@ -29,7 +29,7 @@ void cmd_library_add(cmd_args_t* argsptr, toml_section* cfg)
     if (type != TOML_PROPERTY_TYPE_STRING && type != TOML_PROPERTY_TYPE_UNKNOWN)
     {
         LOGERROR("Invalid source");
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     toml_property* library_property = toml_section_add_property(cfg, stringf("libraries.%s", name));
@@ -38,6 +38,10 @@ void cmd_library_add(cmd_args_t* argsptr, toml_section* cfg)
     LOGINFO("Added library '%s' at remote '%s'", name, source);
 
     save_project_file(cfg);
+    return (cmd_args_t){
+        args.count-2,
+        args.values+2,
+    };
 }
 
 void cmd_library_remove(cmd_args_t* argsptr, toml_section* cfg)
@@ -62,34 +66,35 @@ void cmd_library_remove(cmd_args_t* argsptr, toml_section* cfg)
     save_project_file(cfg);
 }
 
-void cmd_library(cmd_args_t* userparam)
+cmd_args_t cmd_library(cmd_args_t* userparam)
 {
     cmd_args_t args = *userparam;
-    if (args.count == 0)
+    cmd_args_t endargs = args;
+    if (args.count <= 0)
         LOGINFO("Specify what to do, aka `add` or `remove`");
 
     toml_section cfg = TOML_SECTION_EMPTY;
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
-    if (args.count == 0)
+    if (args.count <= 0)
         goto show_libraries;
 
     const char* command = args.values[0];
     toml_section* libraries_section = NULL;
-    cmd_args_t args2 = {args.count-1, args.values+1};
+    endargs = (cmd_args_t){args.count-1, args.values+1};
 
     if (strcmp(command, "add") == 0)
     {
-        cmd_library_add(&args2, &cfg);
+        endargs = cmd_library_add(&endargs, &cfg);
         toml_section_dispose(&cfg);
-        return;
+        return endargs;
     }
     else if (strcmp(command, "remove") == 0)
-        cmd_library_remove(&args2, &cfg);
+        cmd_library_remove(&endargs, &cfg);
     else
         LOGERROR("Invalid command '%s'\n", command);
 
@@ -107,4 +112,5 @@ show_libraries:
     }
 
     toml_section_dispose(&cfg);
+    return endargs;
 }

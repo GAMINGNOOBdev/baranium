@@ -7,7 +7,9 @@ typedef struct cmd_args_t
     const char** values;
 } cmd_args_t;
 
-typedef void(*project_manager_operation_handle_t)(cmd_args_t* userparam);
+#define EMPTY_CMD_ARGS (cmd_args_t){0,NULL}
+
+typedef cmd_args_t(*project_manager_operation_handle_t)(cmd_args_t* userparam);
 
 typedef struct project_manager_operation
 {

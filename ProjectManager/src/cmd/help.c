@@ -6,7 +6,8 @@
 
 extern void print_help_message(void);
 
-void cmd_help(cmd_args_t* _)
+cmd_args_t cmd_help(cmd_args_t* args)
 {
     print_help_message();
+    return EMPTY_CMD_ARGS;
 }

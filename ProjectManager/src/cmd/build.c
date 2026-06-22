@@ -99,25 +99,22 @@ char* cmd_build_get_build_command(toml_section* cfg, const char* execdir, const 
     return result;
 }
 
-void cmd_build(cmd_args_t* userparam)
+cmd_args_t cmd_build(cmd_args_t* userparam)
 {
     cmd_args_t args = *userparam;
-    if (args.count != 0)
-        LOGINFO("`build` commands takes no arguments");
-
     int status = 0;
     toml_section cfg = TOML_SECTION_EMPTY;
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     if (!toml_section_has_property(&cfg, "build.project_name"))
     {
         toml_section_dispose(&cfg);
         LOGERROR("Invalid project file, missing 'project_name' property");
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     if (!baranium_file_util_directory_exists(".build"))
@@ -172,4 +169,5 @@ void cmd_build(cmd_args_t* userparam)
 
 build_end:
     toml_section_dispose(&cfg);
+    return args;
 }

@@ -70,7 +70,7 @@ To use the provided runtime, just provide a compiled script to the runtime execu
 should run.
 
 ## Using the project manager
-Run `barrel --help`, it'll tell you the basics :p
+Run `barrel help`, it'll tell you the basics :p
 
 ## Embedding the runtime
 For further information please consider reading the [wiki](../../wiki).

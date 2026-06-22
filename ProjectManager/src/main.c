@@ -29,14 +29,15 @@ const char* executablename = NULL;
 
 void print_help_message(void)
 {
-    printf("barrel [operation] <args>\n");
-    printf("Operations:\n");
+    LOGINFO("barrel [operation] <args>");
+    LOGINFO("Operations can be chained, i.e. barrel build help install run");
+    LOGINFO("Operations:");
     for (int i = 0; i < project_manager_operation_count; i++)
     {
         project_manager_operation op = project_manager_operations[i];
-        printf("\t%s\t%s\n", op.name, op.description);
+        LOGINFO("\t%s\t%s", op.name, op.description);
     }
-    printf("\n");
+    LOGINFO("");
 }
 
 size_t str_index_of(const char* string, char delim)
@@ -57,8 +58,8 @@ int main(int argc, const char* argv[])
         return 0;
     }
     cmd_args_t args = (cmd_args_t){
-        .count=argc-2,
-        .values=&argv[2]
+        .count=argc-1,
+        .values=&argv[1]
     };
 
     PRINT_VERSION;
@@ -66,14 +67,22 @@ int main(int argc, const char* argv[])
     log_enable_stdout(1);
     log_set_stream(NULL);
 
-    project_manager_operation* operation = project_manager_operation_get(argv[1]);
-    if (operation == NULL)
-    {
-        print_help_message();
-        return -1;
-    }
+    project_manager_operation* operation;
 
-    operation->handle(&args);
+    // go through the chain of commands
+    while (args.count > 0)
+    {
+        operation = project_manager_operation_get(args.values[0]);
+        args.count--;
+        args.values++;
+        if (operation == NULL)
+        {
+            print_help_message();
+            return -1;
+        }
+
+        args = operation->handle(&args);
+    }
 
     return 0;
 }

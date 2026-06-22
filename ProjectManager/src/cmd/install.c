@@ -29,17 +29,14 @@ void cmd_install_copy_file(const char* path)
     free((void*)output);
 }
 
-void cmd_install(cmd_args_t* userparam)
+cmd_args_t cmd_install(cmd_args_t* userparam)
 {
     cmd_args_t args = *userparam;
-    if (args.count != 0)
-        LOGINFO("`build` commands takes no arguments");
-
     toml_section cfg = TOML_SECTION_EMPTY;
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     toml_property* property = toml_section_get(&cfg, "build.library");
@@ -50,7 +47,7 @@ void cmd_install(cmd_args_t* userparam)
         LOGERROR("Invalid project file, could not find 'build.project_name' config property");
         toml_section_dispose(&cfg);
 
-        return;
+        return EMPTY_CMD_ARGS;
     }
     const char* project_name = property->value.stringValue;
 
@@ -59,7 +56,7 @@ void cmd_install(cmd_args_t* userparam)
         LOGWARNING("Project '%s' is not a library, skipping installation.", property->value.stringValue);
         toml_section_dispose(&cfg);
 
-        return;
+        return args;
     }
 
     cmd_install_output_path = "bin";
@@ -87,4 +84,5 @@ void cmd_install(cmd_args_t* userparam)
 
     free((void*)cmd_install_output_target_path);
     toml_section_dispose(&cfg);
+    return args;
 }

@@ -13,7 +13,7 @@
 #   define OS_DELIMITER '/'
 #endif
 
-void cmd_run(cmd_args_t* userparam)
+cmd_args_t cmd_run(cmd_args_t* userparam)
 {
     cmd_args_t args = *userparam;
 
@@ -21,14 +21,14 @@ void cmd_run(cmd_args_t* userparam)
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
-        return;
+        return EMPTY_CMD_ARGS;
     }
     toml_property* property = toml_section_get(&cfg, "build.project_name");
     if (!property)
     {
         toml_section_dispose(&cfg);
         LOGERROR("Invalid project file, missing 'project_name' property");
-        return;
+        return EMPTY_CMD_ARGS;
     }
     const char* project_name = property->value.stringValue;
     const char* output_directory = "bin";
@@ -36,7 +36,8 @@ void cmd_run(cmd_args_t* userparam)
     if (property)
         output_directory = property->value.stringValue;
 
-    if (args.count != 0)
+    cmd_args_t endargs = args;
+    if (args.count > 0)
     {
         LOGWARNING("Running with command line arguments is currently unsupported");
         ///
@@ -53,4 +54,5 @@ void cmd_run(cmd_args_t* userparam)
     execname_dirname[0] = OS_DELIMITER;
 
     toml_section_dispose(&cfg);
+    return endargs;
 }

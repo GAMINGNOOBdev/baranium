@@ -19,18 +19,23 @@ struct toml_property_pair
     const char* name;
     const char* description;
     int type;
-    void(*handle)(struct toml_property_pair pair, cmd_args_t params, toml_section* config);
+    cmd_args_t(*handle)(struct toml_property_pair pair, cmd_args_t params, toml_section* config);
 };
 
-void toml_handle_value_option_pair(struct toml_property_pair pair, cmd_args_t params, toml_section* config)
+cmd_args_t toml_handle_value_option_pair(struct toml_property_pair pair, cmd_args_t params, toml_section* config)
 {
+    cmd_args_t endargs = {
+        params.count-1,
+        params.values+1
+    };
+
     toml_property* property = toml_section_get(config, stringf("build.%s", pair.name));
     if (params.count == 0)
     {
         const char* value = get_property_value_string(property);
         LOGINFO("%s = %s", pair.name, value);
         free((void*)value);
-        return;
+        return EMPTY_CMD_ARGS;
     }
     const char* value = params.values[0];
     int type = toml_estimate_value_type(value);
@@ -39,25 +44,35 @@ void toml_handle_value_option_pair(struct toml_property_pair pair, cmd_args_t pa
     {
         toml_section_remove_property(config, stringf("build.%s", pair.name));
         LOGINFO("Set 'build.%s' to default value", pair.name);
-        return;
+        return endargs;
     }
     if (type != pair.type)
     {
         LOGERROR("Invalid value type for '%s', expected %s, got %s", pair.name, toml_property_value_type_as_string(pair.type), toml_property_value_type_as_string(type));
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     if (property == NULL)
         property = toml_section_add_property(config, stringf("build.%s", pair.name));
 
+    endargs.count--;
+    endargs.values++;
+
     toml_property_set_value_from_string(property, value);
     char* valuestr = (char*)get_property_value_string(property);
     LOGINFO("Successfully set %s to %s", pair.name, valuestr);
     free(valuestr);
+
+    return endargs;
 }
 
-void toml_handle_array_option_pair(struct toml_property_pair pair, cmd_args_t params, toml_section* config)
+cmd_args_t toml_handle_array_option_pair(struct toml_property_pair pair, cmd_args_t params, toml_section* config)
 {
+    cmd_args_t endargs = {
+        params.count-1,
+        params.values+1
+    };
+
     toml_property* property = toml_section_get(config, stringf("build.%s", pair.name));
     if (params.count == 0)
     {
@@ -65,7 +80,7 @@ void toml_handle_array_option_pair(struct toml_property_pair pair, cmd_args_t pa
         const char* value = get_property_value_string(property);
         LOGINFO("%s = %s", pair.name, value);
         free((void*)value);
-        return;
+        return EMPTY_CMD_ARGS;
     }
     const char* command = params.values[0];
 
@@ -73,13 +88,13 @@ void toml_handle_array_option_pair(struct toml_property_pair pair, cmd_args_t pa
     {
         toml_section_remove_property(config, stringf("build.%s", pair.name));
         LOGINFO("Set %s to default value", pair.name);
-        return;
+        return endargs;
     }
 
     if (params.count != 2)
     {
         LOGERROR("No parameters specified for command '%s'", command);
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     if (property == NULL)
@@ -96,13 +111,17 @@ void toml_handle_array_option_pair(struct toml_property_pair pair, cmd_args_t pa
         toml_property_array_add(property, &tmp);
         toml_property_dispose(&tmp);
         LOGINFO("Successfully added '%s' to %s", value, pair.name);
+
+        endargs.count--;
+        endargs.values++;
+        return endargs;
     }
     else if (strcmp(command, "remove") == 0)
     {
         if (toml_estimate_value_type(value) != TOML_PROPERTY_TYPE_INT)
         {
             LOGERROR("Expected integer index for 'remove' command");
-            return;
+            return EMPTY_CMD_ARGS;
         }
 
         char* tmp;
@@ -110,14 +129,19 @@ void toml_handle_array_option_pair(struct toml_property_pair pair, cmd_args_t pa
         if (index < 0 || index >= property->arrayLength)
         {
             LOGERROR("Index %d is not in range for %s", index, pair.name);
-            return;
+            return EMPTY_CMD_ARGS;
         }
 
         toml_property_array_remove(property, index);
         LOGINFO("Removed element %d of %s", index, pair.name);
+
+        endargs.count--;
+        endargs.values++;
+        return endargs;
     }
-    else
-        LOGERROR("Invalid command %s for property %s of type %s", command, pair.name, toml_property_value_type_as_string(pair.type));
+
+    LOGERROR("Invalid command %s for property %s of type %s", command, pair.name, toml_property_value_type_as_string(pair.type));
+    return EMPTY_CMD_ARGS;
 }
 
 static struct toml_property_pair toml_properties[] = {
@@ -128,10 +152,10 @@ static struct toml_property_pair toml_properties[] = {
     {.name = "prebuild_commands", .description="Commands to execute before building the baranium project (string array)", .type=TOML_PROPERTY_TYPE_ARRAY, .handle=toml_handle_array_option_pair},
 };
 
-void cmd_config(cmd_args_t* userparam)
+cmd_args_t cmd_config(cmd_args_t* userparam)
 {
     cmd_args_t args = *userparam;
-    if (args.count == 0)
+    if (args.count <= 0)
     {
         LOGERROR("Specify what property to change and it's value");
         LOGINFO("to set values back to the defaults just use 'default' instead of the proper value type");
@@ -141,7 +165,7 @@ void cmd_config(cmd_args_t* userparam)
 
         toml_section cfg = TOML_SECTION_EMPTY;
         if (!open_project_file(&cfg))
-            return;
+            return EMPTY_CMD_ARGS;
 
         LOGINFO("Current configs:");
         toml_section* build_section = toml_section_get_section(&cfg, "build");
@@ -153,7 +177,7 @@ void cmd_config(cmd_args_t* userparam)
         }
 
         toml_section_dispose(&cfg);
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     const char* name = args.values[0];
@@ -172,22 +196,24 @@ void cmd_config(cmd_args_t* userparam)
         LOGINFO("Valid config options:");
         for (size_t i = 0; i < sizeof(toml_properties) / sizeof(struct toml_property_pair); i++)
             LOGINFO("\t%s - %s\t%s", toml_properties[i].name, toml_property_value_type_as_string(toml_properties[i].type), toml_properties[i].description);
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     toml_section cfg = TOML_SECTION_EMPTY;
     if (!open_project_file(&cfg))
     {
         LOGERROR("Cannot find project file in current directory");
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     cmd_args_t params = {
         .count=args.count-1,
         .values=args.values+1
     };
-    toml_properties[index].handle(toml_properties[index], params, &cfg);
+    cmd_args_t endargs = toml_properties[index].handle(toml_properties[index], params, &cfg);
 
     save_project_file(&cfg);
     toml_section_dispose(&cfg);
+
+    return endargs;
 }

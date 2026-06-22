@@ -23,3 +23,11 @@
 ## Fixes
 - Fixed string comparisons not working
 - Some very small memory usage improvements for strings
+
+## v2026.6.22
+
+## Additions
+- Project manager now can chain commands (i.e. `barrel build run` will run `build` and then `run`, works with any cmd)
+
+## Fixes
+- Project manager now no longer crashes due to invalid pointers

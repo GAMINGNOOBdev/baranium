@@ -13,14 +13,14 @@
 #   define OS_DELIMITER '/'
 #endif
 
-void cmd_create(cmd_args_t* userparam)
+cmd_args_t cmd_create(cmd_args_t* userparam)
 {
     cmd_args_t args = *userparam;
-    if (args.count <= 0 || args.count > 2)
+    if (args.count <= 0)
     {
         LOGERROR("No project name given for `create` command");
         LOGINFO("Missing arguments: <project name> [path]");
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     const char* project_name = args.values[0];
@@ -30,7 +30,7 @@ void cmd_create(cmd_args_t* userparam)
     {
         fclose(toml_file);
         LOGERROR("Already existing project file in '%s', can't create project", target);
-        return;
+        return EMPTY_CMD_ARGS;
     }
 
     char* cwd = get_current_working_directory();
@@ -51,4 +51,5 @@ void cmd_create(cmd_args_t* userparam)
     baranium_file_util_create_directory(stringf("%s/%s/src", cwd, target));
 
     LOGINFO("Successfully created project '%s' at '%s'", project_name, target);
+    return EMPTY_CMD_ARGS; // realistically nothing else should be after creating a project since the user is literally not inside the just now created project
 }
